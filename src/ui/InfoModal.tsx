@@ -22,9 +22,10 @@ const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose }) => {
   ];
 
   const paylines = [
-    { combo: '3 in a row', payout: '30 credits (10 × 3)' },
-    { combo: '4 in a row', payout: '40 credits (10 × 4)' },
-    { combo: '5 in a row', payout: '50 credits (10 × 5)' }
+    { combo: '3 consecutive symbols', payout: '30 credits (10 × 3)' },
+    { combo: '4 consecutive symbols', payout: '40 credits (10 × 4)' },
+    { combo: '5 consecutive symbols', payout: '50 credits (10 × 5)' },
+    { combo: '20 different paylines', payout: 'Multiple ways to win!' }
   ];
 
   return (

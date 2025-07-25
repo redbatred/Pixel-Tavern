@@ -137,6 +137,15 @@ const SlotUI: React.FC<SlotUIProps> = ({
       {/* Side Panels */}
       <div className="left-panel">
         <div className="bet-panel">
+          {/* Table Hat Image with Animated Beer Sprite Behind */}
+          <div className="table-hat">
+            <div className="beer-sprite"></div>
+            <img 
+              src="/assets/images/beersprite/table.png" 
+              alt="Tavern Table" 
+              className="table-image"
+            />
+          </div>
           <div className={`bet-frame ${(isSpinning || isAutoSpinning) ? 'disabled' : ''}`}>
             <div className="bet-label">BET</div>
             

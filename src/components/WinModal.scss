@@ -1,0 +1,463 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&display=swap');
+
+.win-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  animation: fadeIn 0.5s ease-out;
+  backdrop-filter: blur(2px);
+}
+
+.win-modal {
+  position: relative;
+  width: 90vw;
+  height: 70vh;
+  max-width: 800px;
+  max-height: 600px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+  animation: modalEnter 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  
+  // Remove solid background - make it transparent
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+// Big Win - Gold Theme
+.win-modal.big-win {
+  .win-title h1 {
+    color: #FFD700;
+    text-shadow: 
+      0 0 10px rgba(255, 215, 0, 0.8),
+      0 0 20px rgba(255, 215, 0, 0.6),
+      0 0 30px rgba(255, 215, 0, 0.4),
+      2px 2px 4px rgba(0, 0, 0, 0.8);
+  }
+  
+  .multiplier {
+    background: rgba(255, 215, 0, 0.2);
+    border: 2px solid rgba(255, 215, 0, 0.6);
+    color: #FFD700;
+    backdrop-filter: blur(10px);
+  }
+  
+
+  
+  .ember {
+    color: #FFD700;
+    filter: drop-shadow(0 0 3px rgba(255, 215, 0, 0.8));
+  }
+}
+
+// Mega Win - Red/Orange Theme
+.win-modal.mega-win {
+  .win-title h1 {
+    color: #FF6B6B;
+    text-shadow: 
+      0 0 10px rgba(255, 107, 107, 0.9),
+      0 0 20px rgba(255, 107, 107, 0.7),
+      0 0 30px rgba(255, 107, 107, 0.5),
+      2px 2px 4px rgba(0, 0, 0, 0.8);
+  }
+  
+  .multiplier {
+    background: rgba(255, 107, 107, 0.2);
+    border: 2px solid rgba(255, 107, 107, 0.6);
+    color: #FF6B6B;
+    backdrop-filter: blur(10px);
+  }
+  
+
+  
+  .ember {
+    color: #FF6B6B;
+    filter: drop-shadow(0 0 3px rgba(255, 107, 107, 0.8));
+  }
+}
+
+// Epic Win - Purple/Violet Theme
+.win-modal.epic-win {
+  .win-title h1 {
+    color: #9B59B6;
+    text-shadow: 
+      0 0 10px rgba(155, 89, 182, 0.9),
+      0 0 20px rgba(155, 89, 182, 0.7),
+      0 0 30px rgba(155, 89, 182, 0.5),
+      2px 2px 4px rgba(0, 0, 0, 0.8);
+  }
+  
+  .multiplier {
+    background: rgba(155, 89, 182, 0.2);
+    border: 2px solid rgba(155, 89, 182, 0.6);
+    color: #9B59B6;
+    backdrop-filter: blur(10px);
+  }
+  
+
+  
+  .ember {
+    color: #9B59B6;
+    filter: drop-shadow(0 0 3px rgba(155, 89, 182, 0.8));
+  }
+}
+
+.win-content {
+  position: relative;
+  text-align: center;
+  z-index: 5;
+  padding: 40px;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 20px;
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.win-title {
+  margin-bottom: 40px;
+  
+  h1 {
+    font-family: 'Cinzel', serif;
+    font-size: 5rem;
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: 4px;
+    animation: titlePulse 2s ease-in-out infinite;
+    text-transform: uppercase;
+    filter: drop-shadow(0 0 10px currentColor);
+  }
+  
+  .multiplier {
+    display: inline-block;
+    margin-top: 15px;
+    padding: 12px 25px;
+    border-radius: 30px;
+    font-family: 'Cinzel', serif;
+    font-size: 1.8rem;
+    font-weight: 600;
+    letter-spacing: 2px;
+    animation: multiplierGlow 1.5s ease-in-out infinite alternate;
+  }
+}
+
+.win-amount {
+  animation: amountSlideUp 0.8s ease-out;
+  
+  .amount-label {
+    font-family: 'Cinzel', serif;
+    font-size: 1.4rem;
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 15px;
+    text-shadow: 
+      0 0 5px rgba(255, 255, 255, 0.5),
+      1px 1px 3px rgba(0, 0, 0, 0.8);
+    letter-spacing: 1px;
+  }
+  
+  .amount-value {
+    font-family: 'Cinzel', serif;
+    font-size: 3.5rem;
+    font-weight: 700;
+    color: #FFFFFF;
+    text-shadow: 
+      0 0 10px rgba(255, 255, 255, 0.8),
+      0 0 20px rgba(255, 255, 255, 0.6),
+      2px 2px 6px rgba(0, 0, 0, 0.8);
+    letter-spacing: 2px;
+    
+    &.pulsing {
+      animation: finalPulse 1.5s ease-in-out infinite;
+    }
+  }
+}
+
+
+
+// Falling Coins
+.falling-coins {
+  position: fixed;
+  top: -100px;
+  left: 0;
+  width: 100vw;
+  height: calc(100vh + 200px);
+  pointer-events: none;
+  z-index: 3;
+  overflow: hidden;
+  
+  .coin {
+    position: absolute;
+    font-size: 2.5rem;
+    color: #FFD700;
+    animation: coinFall ease-in-out infinite;
+    filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.9)) 
+            drop-shadow(0 0 15px rgba(255, 215, 0, 0.6))
+            drop-shadow(0 0 25px rgba(255, 215, 0, 0.3));
+    text-shadow: 
+      0 0 5px rgba(255, 215, 0, 1),
+      0 0 10px rgba(255, 215, 0, 0.8),
+      0 0 20px rgba(255, 215, 0, 0.6);
+    
+    &:nth-child(odd) {
+      animation-name: coinFallRotate;
+      animation-timing-function: ease-in-out;
+    }
+    
+    &:nth-child(3n) {
+      font-size: 2rem;
+      animation-duration: 8s;
+      color: #FFA500; // Slightly different gold shade
+    }
+    
+    &:nth-child(4n) {
+      font-size: 3rem;
+      animation-duration: 10s;
+      color: #FFDF00; // Brighter gold
+    }
+    
+    &:nth-child(5n) {
+      font-size: 1.8rem;
+      animation-duration: 12s;
+      color: #FFE55C; // Light gold
+    }
+  }
+}
+
+// Flying Embers
+.embers {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 4;
+  overflow: hidden;
+  
+  .ember {
+    position: absolute;
+    font-size: 1.2rem;
+    animation: emberRise ease-out infinite;
+    opacity: 0.9;
+  }
+}
+
+// Magical Sparkles
+.sparkles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+  
+  .sparkle {
+    position: absolute;
+    font-size: 1rem;
+    animation: sparkleShimmer 2s ease-in-out infinite;
+    opacity: 0.7;
+    
+    &:nth-child(odd) {
+      animation-delay: 1s;
+    }
+    
+    &:nth-child(3n) {
+      font-size: 1.5rem;
+      animation-duration: 3s;
+    }
+  }
+}
+
+.close-button {
+  position: absolute;
+  top: 20px;
+  right: 25px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 1.8rem;
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  z-index: 10;
+  backdrop-filter: blur(10px);
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    transform: scale(1.1);
+    border-color: rgba(255, 255, 255, 0.6);
+  }
+}
+
+// Animations
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modalEnter {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) rotate(-10deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05) rotate(2deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@keyframes titlePulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+@keyframes multiplierGlow {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+  }
+  100% {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
+  }
+}
+
+@keyframes amountSlideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(50px) scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes finalPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+// New Particle Animations
+@keyframes coinFall {
+  0% {
+    transform: translateY(-150px) rotate(0deg) scale(0.8);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(calc(100vh + 150px)) rotate(720deg) scale(1);
+    opacity: 0;
+  }
+}
+
+@keyframes coinFallRotate {
+  0% {
+    transform: translateY(-150px) rotate(0deg) scale(0.5);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  25% {
+    transform: translateY(25vh) rotate(90deg) scale(1.1);
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(50vh) rotate(270deg) scale(1.3);
+    opacity: 0.9;
+  }
+  75% {
+    transform: translateY(75vh) rotate(450deg) scale(1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(calc(100vh + 150px)) rotate(720deg) scale(0.7);
+    opacity: 0;
+  }
+}
+
+@keyframes emberRise {
+  0% {
+    transform: translateY(0) translateX(0) scale(0.5);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(-100vh) translateX(50px) scale(1.5);
+    opacity: 0;
+  }
+}
+
+@keyframes sparkleShimmer {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(0.5) rotate(0deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2) rotate(180deg);
+  }
+}
+
+@keyframes borderGlow {
+  0%, 100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .win-modal {
+    width: 90vw;
+    height: 300px;
+    
+    .win-title h1 {
+      font-size: 2.5rem;
+    }
+    
+    .amount-value {
+      font-size: 1.8rem;
+    }
+  }
+}
