@@ -1,0 +1,598 @@
+/* Colors - Medieval Tavern Theme */
+$dark-wood: #2c1810;
+$tavern-gold: #d4af37;
+$warm-amber: #ffb347;
+$fire-orange: #ff6b35;
+$deep-brown: #4a2c17;
+$parchment: #f4e4bc;
+$royal-purple: #6b46c1;
+$emerald-green: #10b981;
+
+/* Remove button outlines globally */
+button, .close-btn, .bet-btn, .side-btn, .spin-btn, .auto-spin-btn, .max-bet-btn {
+  outline: none !important;
+  
+  &:focus {
+    outline: none !important;
+  }
+  
+  &:active {
+    outline: none !important;
+  }
+}
+
+/* Info Modal Overlay */
+.info-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  animation: modal-fade-in 0.3s ease-out;
+  pointer-events: auto;
+  
+  // Ensure all interactive elements work
+  * {
+    pointer-events: auto;
+  }
+}
+
+/* Main Modal Container */
+.info-modal {
+  background: linear-gradient(135deg, 
+    rgba(44, 24, 16, 0.98), 
+    rgba(74, 44, 23, 0.95),
+    rgba(44, 24, 16, 0.98)
+  );
+  border: 4px solid $tavern-gold;
+  border-radius: 20px;
+  width: 90%;
+  max-width: 800px;
+  height: 80vh;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.6),
+    0 0 40px rgba(212, 175, 55, 0.3),
+    inset 0 2px 0 rgba(212, 175, 55, 0.2),
+    inset 0 -2px 8px rgba(0, 0, 0, 0.3);
+  animation: modal-slide-in 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  pointer-events: auto;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: -3px;
+    left: -3px;
+    right: -3px;
+    bottom: -3px;
+    background: linear-gradient(45deg, 
+      $tavern-gold, 
+      $warm-amber, 
+      $fire-orange,
+      $tavern-gold, 
+      $warm-amber
+    );
+    border-radius: 20px;
+    z-index: -1;
+    animation: modal-border-glow 3s ease-in-out infinite;
+  }
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    border: 1px solid rgba(212, 175, 55, 0.2);
+    border-radius: 12px;
+    pointer-events: none;
+  }
+}
+
+/* Modal Header */
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 32px 16px;
+  border-bottom: 2px solid rgba(212, 175, 55, 0.3);
+  margin-bottom: 0;
+  flex-shrink: 0;
+}
+
+.modal-title {
+  font-size: 28px;
+  font-weight: bold;
+  color: $tavern-gold;
+  text-shadow: 
+    2px 2px 4px rgba(0, 0, 0, 0.8),
+    0 0 15px rgba(212, 175, 55, 0.5);
+  letter-spacing: 2px;
+  margin: 0;
+  /* Removed gradient text effect that was causing visibility issues */
+}
+
+.close-btn {
+  background: linear-gradient(135deg, $deep-brown, $dark-wood);
+  border: 2px solid $tavern-gold;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  &:hover {
+    border-color: $fire-orange;
+    transform: scale(1.1) rotate(90deg);
+    box-shadow: 0 0 20px rgba(255, 107, 53, 0.6);
+  }
+}
+
+.close-icon {
+  color: $tavern-gold;
+  font-size: 24px;
+  font-weight: bold;
+  line-height: 1;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  transition: color 0.3s ease;
+  
+  .close-btn:hover & {
+    color: $fire-orange;
+  }
+}
+
+/* Modal Content */
+.modal-content {
+  padding: 24px 32px 24px;
+  color: #fff;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  pointer-events: auto;
+  
+  /* Custom scrollbar styling */
+  &::-webkit-scrollbar {
+    width: 12px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: rgba(74, 44, 23, 0.5);
+    border-radius: 6px;
+    margin: 4px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, $tavern-gold, $warm-amber);
+    border-radius: 6px;
+    border: 2px solid rgba(74, 44, 23, 0.5);
+    
+    &:hover {
+      background: linear-gradient(135deg, $warm-amber, $fire-orange);
+    }
+    
+    &:active {
+      background: linear-gradient(135deg, $fire-orange, $tavern-gold);
+    }
+  }
+  
+  &::-webkit-scrollbar-corner {
+    background: rgba(74, 44, 23, 0.5);
+  }
+}
+
+/* Info Sections */
+.info-section {
+  margin-bottom: 32px;
+  
+  &:last-child {
+    margin-bottom: 32px; /* Ensure last section has bottom margin for scrolling */
+  }
+}
+
+.section-title {
+  font-size: 22px;
+  font-weight: bold;
+  color: $warm-amber;
+  text-shadow: 
+    2px 2px 4px rgba(0, 0, 0, 0.8),
+    0 0 10px rgba(255, 179, 71, 0.4);
+  margin: 0 0 20px 0;
+  letter-spacing: 1px;
+  position: relative;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, $warm-amber, transparent);
+    border-radius: 1px;
+  }
+}
+
+/* Game Rules Section */
+.rules-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.rule-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  background: linear-gradient(135deg, 
+    rgba(74, 44, 23, 0.3), 
+    rgba(44, 24, 16, 0.3)
+  );
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 12px;
+  padding: 16px;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    border-color: rgba(212, 175, 55, 0.5);
+    transform: translateX(8px);
+    box-shadow: 0 4px 20px rgba(212, 175, 55, 0.2);
+  }
+}
+
+.rule-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+  filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.8));
+}
+
+.rule-text {
+  line-height: 1.6;
+  
+  strong {
+    color: $tavern-gold;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  }
+}
+
+/* Symbols Section */
+.symbols-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 16px;
+}
+
+.symbol-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: linear-gradient(135deg, 
+    rgba(74, 44, 23, 0.4), 
+    rgba(44, 24, 16, 0.4)
+  );
+  border: 2px solid rgba(212, 175, 55, 0.3);
+  border-radius: 12px;
+  padding: 16px;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    border-color: $tavern-gold;
+    transform: scale(1.02);
+    box-shadow: 0 8px 25px rgba(212, 175, 55, 0.3);
+  }
+}
+
+.symbol-icon {
+  width: 60px;
+  height: 60px;
+  border: 2px solid $tavern-gold;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, $deep-brown, $dark-wood);
+  flex-shrink: 0;
+}
+
+.character-sprite {
+  width: 40px;
+  height: 40px;
+  background: url('/assets/images/characters.png') no-repeat;
+  background-size: 300% 200%;
+  
+  &.character-0 { background-position: 0% 0%; } /* Knight */
+  &.character-1 { background-position: 50% 0%; } /* Wizard */
+  &.character-2 { background-position: 100% 0%; } /* Archer */
+  &.character-3 { background-position: 0% 100%; } /* Warrior */
+  &.character-4 { background-position: 50% 100%; } /* Barmaid */
+  &.character-5 { background-position: 100% 100%; } /* King */
+}
+
+.symbol-info {
+  flex: 1;
+}
+
+.symbol-name {
+  font-size: 18px;
+  font-weight: bold;
+  color: $tavern-gold;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  margin-bottom: 4px;
+}
+
+.symbol-multiplier {
+  font-size: 16px;
+  font-weight: bold;
+  color: $emerald-green;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  margin-bottom: 4px;
+}
+
+.symbol-description {
+  font-size: 14px;
+  color: #ccc;
+  font-style: italic;
+}
+
+/* Paylines Section */
+.paylines-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.payline-item {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: linear-gradient(135deg, 
+    rgba(74, 44, 23, 0.3), 
+    rgba(44, 24, 16, 0.3)
+  );
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    border-color: rgba(212, 175, 55, 0.5);
+    transform: translateX(8px);
+    box-shadow: 0 4px 20px rgba(212, 175, 55, 0.2);
+  }
+}
+
+.combo-visual {
+  flex-shrink: 0;
+}
+
+.combo-slots {
+  display: flex;
+  gap: 4px;
+}
+
+.combo-slot {
+  width: 24px;
+  height: 24px;
+  border: 2px solid #666;
+  border-radius: 4px;
+  background: linear-gradient(135deg, #333, #555);
+  
+  &.active {
+    border-color: $emerald-green;
+    background: linear-gradient(135deg, $emerald-green, rgba(16, 185, 129, 0.8));
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+    animation: combo-pulse 2s ease-in-out infinite;
+  }
+}
+
+.combo-info {
+  flex: 1;
+}
+
+.combo-name {
+  font-size: 16px;
+  font-weight: bold;
+  color: $tavern-gold;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  margin-bottom: 4px;
+}
+
+.combo-payout {
+  font-size: 14px;
+  color: $emerald-green;
+  font-weight: bold;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+/* Tips Section */
+.tips-list {
+  display: grid;
+  gap: 12px;
+}
+
+.tip-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, 
+    rgba(74, 44, 23, 0.2), 
+    rgba(44, 24, 16, 0.2)
+  );
+  border-left: 4px solid $warm-amber;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background: linear-gradient(135deg, 
+      rgba(74, 44, 23, 0.4), 
+      rgba(44, 24, 16, 0.4)
+    );
+    transform: translateX(8px);
+    border-left-color: $fire-orange;
+  }
+}
+
+.tip-bullet {
+  font-size: 18px;
+  flex-shrink: 0;
+  filter: drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.8));
+}
+
+/* Modal Footer */
+.modal-footer {
+  border-top: 2px solid rgba(212, 175, 55, 0.3);
+  padding: 20px 32px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.footer-text {
+  font-size: 16px;
+  color: $warm-amber;
+  font-style: italic;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  animation: footer-glow 3s ease-in-out infinite;
+}
+
+/* Animations */
+@keyframes modal-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modal-slide-in {
+  from { 
+    opacity: 0;
+    transform: translateY(-50px) scale(0.9);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes modal-border-glow {
+  0%, 100% {
+    background: linear-gradient(45deg, 
+      $tavern-gold, 
+      $warm-amber, 
+      $fire-orange,
+      $tavern-gold, 
+      $warm-amber
+    );
+  }
+  50% {
+    background: linear-gradient(45deg, 
+      $fire-orange,
+      $tavern-gold, 
+      $warm-amber, 
+      $fire-orange,
+      $tavern-gold
+    );
+  }
+}
+
+/* Removed title-shimmer animation as it was causing text visibility issues */
+
+@keyframes combo-pulse {
+  0%, 100% { 
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+    transform: scale(1);
+  }
+  50% { 
+    box-shadow: 0 0 16px rgba(16, 185, 129, 0.8);
+    transform: scale(1.05);
+  }
+}
+
+@keyframes footer-glow {
+  0%, 100% { 
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  }
+  50% { 
+    text-shadow: 
+      1px 1px 2px rgba(0, 0, 0, 0.8),
+      0 0 15px rgba(255, 179, 71, 0.6);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .info-modal {
+    width: 95%;
+    height: 85vh;
+    margin: 20px;
+  }
+  
+  .modal-header {
+    padding: 20px 24px 12px;
+  }
+  
+  .modal-title {
+    font-size: 24px;
+  }
+  
+  .modal-content {
+    padding: 20px 24px 20px;
+  }
+  
+  .modal-footer {
+    padding: 16px 24px;
+  }
+  
+  .symbols-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .symbol-item {
+    padding: 12px;
+  }
+  
+  .section-title {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .info-modal {
+    width: 98%;
+    height: 90vh;
+    margin: 10px;
+  }
+  
+  .modal-header {
+    padding: 16px 20px 8px;
+  }
+  
+  .modal-title {
+    font-size: 20px;
+  }
+  
+  .modal-content {
+    padding: 16px 20px 16px;
+  }
+  
+  .modal-footer {
+    padding: 12px 20px;
+  }
+  
+  .close-btn {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .close-icon {
+    font-size: 20px;
+  }
+} 

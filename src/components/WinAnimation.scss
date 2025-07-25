@@ -1,0 +1,420 @@
+/* Colors - Medieval Tavern Theme */
+$dark-wood: #2c1810;
+$tavern-gold: #d4af37;
+$warm-amber: #ffb347;
+$fire-orange: #ff6b35;
+$deep-brown: #4a2c17;
+
+/* Win Animation Overlay */
+.win-animation-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 5000;
+  animation: overlay-fade-in 0.3s ease-out;
+}
+
+/* Win Animation Container */
+.win-animation-container {
+  position: relative;
+  width: 400px;
+  height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: container-bounce-in 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  
+  /* Medieval themed background effects */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 350px;
+    height: 350px;
+    background: radial-gradient(
+      circle,
+      rgba(212, 175, 55, 0.15) 0%,
+      rgba(255, 179, 71, 0.1) 30%,
+      rgba(139, 69, 19, 0.08) 60%,
+      transparent 100%
+    );
+    border-radius: 50%;
+    z-index: 1;
+    animation: background-pulse 2s ease-in-out infinite;
+  }
+  
+  /* Medieval border effect */
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 320px;
+    height: 320px;
+    border: 3px solid transparent;
+    border-radius: 50%;
+    background: 
+      linear-gradient(45deg, transparent, transparent) padding-box,
+      linear-gradient(45deg, rgba(212, 175, 55, 0.3), rgba(255, 179, 71, 0.2), rgba(212, 175, 55, 0.3)) border-box;
+    z-index: 1;
+    animation: border-rotate 4s linear infinite;
+  }
+}
+
+/* Win Animation Canvas */
+.win-animation-canvas {
+  position: relative;
+  z-index: 3;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: all 0.4s ease;
+  filter: drop-shadow(0 0 25px rgba(212, 175, 55, 0.9));
+  background: transparent !important; /* Ensure no white background */
+  
+  &.loaded {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Golden Glow Effect */
+.win-animation-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(
+    circle,
+    rgba(212, 175, 55, 0.4) 0%,
+    rgba(255, 179, 71, 0.3) 30%,
+    rgba(255, 107, 53, 0.2) 60%,
+    transparent 100%
+  );
+  border-radius: 50%;
+  z-index: 1;
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+/* Particle Effects */
+.win-animation-particles {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+}
+
+.particle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: linear-gradient(45deg, $tavern-gold, $warm-amber);
+  border-radius: 50%;
+  opacity: 0;
+  animation: particle-float 3s ease-in-out infinite;
+  box-shadow: 0 0 8px rgba(212, 175, 55, 0.8);
+}
+
+/* Individual Particle Positioning and Timing */
+.particle-0 {
+  top: 10%;
+  left: 50%;
+  animation-delay: 0s;
+  animation-duration: 2.5s;
+}
+
+.particle-1 {
+  top: 20%;
+  left: 80%;
+  animation-delay: 0.2s;
+  animation-duration: 3s;
+}
+
+.particle-2 {
+  top: 50%;
+  left: 90%;
+  animation-delay: 0.4s;
+  animation-duration: 2.8s;
+}
+
+.particle-3 {
+  top: 80%;
+  left: 70%;
+  animation-delay: 0.6s;
+  animation-duration: 3.2s;
+}
+
+.particle-4 {
+  top: 90%;
+  left: 50%;
+  animation-delay: 0.8s;
+  animation-duration: 2.6s;
+}
+
+.particle-5 {
+  top: 80%;
+  left: 30%;
+  animation-delay: 1s;
+  animation-duration: 3.1s;
+}
+
+.particle-6 {
+  top: 50%;
+  left: 10%;
+  animation-delay: 1.2s;
+  animation-duration: 2.9s;
+}
+
+.particle-7 {
+  top: 20%;
+  left: 20%;
+  animation-delay: 1.4s;
+  animation-duration: 2.7s;
+}
+
+.particle-8 {
+  top: 35%;
+  left: 15%;
+  animation-delay: 0.3s;
+  animation-duration: 3.3s;
+}
+
+.particle-9 {
+  top: 65%;
+  left: 85%;
+  animation-delay: 0.7s;
+  animation-duration: 2.4s;
+}
+
+.particle-10 {
+  top: 15%;
+  left: 65%;
+  animation-delay: 1.1s;
+  animation-duration: 3.4s;
+}
+
+.particle-11 {
+  top: 75%;
+  left: 45%;
+  animation-delay: 1.5s;
+  animation-duration: 2.3s;
+}
+
+/* Animations */
+@keyframes overlay-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes container-bounce-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) rotate(-10deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1) rotate(2deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@keyframes glow-pulse {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.6;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.2);
+    opacity: 0.8;
+  }
+}
+
+@keyframes particle-float {
+  0% {
+    opacity: 0;
+    transform: translateY(0px) scale(0.5);
+  }
+  20% {
+    opacity: 1;
+    transform: translateY(-20px) scale(1);
+  }
+  80% {
+    opacity: 1;
+    transform: translateY(-60px) scale(1.2);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-100px) scale(0.3);
+  }
+}
+
+@keyframes background-pulse {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.6;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.1);
+    opacity: 0.8;
+  }
+}
+
+@keyframes border-rotate {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+/* Special Effects for Different Characters */
+.win-animation-container.knight {
+  .particle {
+    background: linear-gradient(45deg, #c0c0c0, $tavern-gold);
+    box-shadow: 0 0 8px rgba(192, 192, 192, 0.8);
+  }
+}
+
+.win-animation-container.wizard {
+  .particle {
+    background: linear-gradient(45deg, #4169e1, $warm-amber);
+    box-shadow: 0 0 8px rgba(65, 105, 225, 0.8);
+  }
+  
+  .win-animation-glow {
+    background: radial-gradient(
+      circle,
+      rgba(65, 105, 225, 0.4) 0%,
+      rgba(212, 175, 55, 0.3) 30%,
+      rgba(255, 179, 71, 0.2) 60%,
+      transparent 100%
+    );
+  }
+}
+
+.win-animation-container.archer {
+  .particle {
+    background: linear-gradient(45deg, #228b22, $tavern-gold);
+    box-shadow: 0 0 8px rgba(34, 139, 34, 0.8);
+  }
+}
+
+.win-animation-container.warrior {
+  .particle {
+    background: linear-gradient(45deg, #8b4513, $fire-orange);
+    box-shadow: 0 0 8px rgba(139, 69, 19, 0.8);
+  }
+}
+
+.win-animation-container.barmaid {
+  .particle {
+    background: linear-gradient(45deg, #ff69b4, $warm-amber);
+    box-shadow: 0 0 8px rgba(255, 105, 180, 0.8);
+  }
+}
+
+.win-animation-container.king {
+  .particle {
+    background: linear-gradient(45deg, #800080, $tavern-gold);
+    box-shadow: 0 0 12px rgba(128, 0, 128, 1);
+    width: 12px;
+    height: 12px;
+  }
+  
+  .win-animation-glow {
+    background: radial-gradient(
+      circle,
+      rgba(128, 0, 128, 0.5) 0%,
+      rgba(212, 175, 55, 0.4) 30%,
+      rgba(255, 179, 71, 0.3) 60%,
+      transparent 100%
+    );
+    animation-duration: 1.5s;
+  }
+  
+  .win-animation-canvas {
+    filter: drop-shadow(0 0 30px rgba(128, 0, 128, 0.8));
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .win-animation-container {
+    width: 300px;
+    height: 300px;
+    
+    &::before {
+      width: 250px;
+      height: 250px;
+    }
+    
+    &::after {
+      width: 220px;
+      height: 220px;
+    }
+  }
+  
+  .win-animation-glow {
+    width: 250px;
+    height: 250px;
+  }
+  
+  .particle {
+    width: 6px;
+    height: 6px;
+  }
+  
+  .win-animation-container.king .particle {
+    width: 8px;
+    height: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .win-animation-container {
+    width: 250px;
+    height: 250px;
+    
+    &::before {
+      width: 200px;
+      height: 200px;
+    }
+    
+    &::after {
+      width: 180px;
+      height: 180px;
+    }
+  }
+  
+  .win-animation-glow {
+    width: 200px;
+    height: 200px;
+  }
+  
+  .particle {
+    width: 4px;
+    height: 4px;
+  }
+  
+  .win-animation-container.king .particle {
+    width: 6px;
+    height: 6px;
+  }
+} 

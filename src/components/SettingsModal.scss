@@ -1,0 +1,365 @@
+// Medieval Settings Modal Styling
+$dark-wood: #2c1810;
+$tavern-gold: #d4af37;
+$warm-amber: #ffb347;
+$fire-orange: #ff6b35;
+$deep-brown: #4a2c17;
+
+.settings-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  animation: modal-fade-in 0.3s ease-out;
+  pointer-events: auto;
+  
+  // Ensure all interactive elements work
+  * {
+    pointer-events: auto;
+  }
+}
+
+@keyframes modal-fade-in {
+  0% {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+  }
+  100% {
+    opacity: 1;
+    backdrop-filter: blur(5px);
+  }
+}
+
+.settings-modal {
+  background: linear-gradient(135deg, 
+    rgba($dark-wood, 0.98), 
+    rgba($deep-brown, 0.95)
+  );
+  border: 3px solid $tavern-gold;
+  border-radius: 16px;
+  max-width: 600px;
+  max-height: 80vh;
+  width: 90%;
+  color: #fff;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.8),
+    inset 0 1px 0 rgba($tavern-gold, 0.3),
+    0 0 50px rgba($tavern-gold, 0.2);
+  animation: modal-slide-in 0.4s ease-out;
+  overflow: hidden;
+  position: relative;
+  pointer-events: auto;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, 
+      $tavern-gold, 
+      $warm-amber, 
+      $fire-orange, 
+      $warm-amber, 
+      $tavern-gold
+    );
+    animation: border-glow 3s ease-in-out infinite;
+  }
+}
+
+@keyframes modal-slide-in {
+  0% {
+    transform: translateY(-50px) scale(0.9);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes border-glow {
+  0%, 100% {
+    background: linear-gradient(90deg, 
+      $tavern-gold, 
+      $warm-amber, 
+      $fire-orange, 
+      $warm-amber, 
+      $tavern-gold
+    );
+  }
+  50% {
+    background: linear-gradient(90deg, 
+      $fire-orange, 
+      $tavern-gold, 
+      $warm-amber, 
+      $tavern-gold, 
+      $fire-orange
+    );
+  }
+}
+
+.settings-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 2px solid rgba($tavern-gold, 0.3);
+  background: linear-gradient(135deg, 
+    rgba($deep-brown, 0.8), 
+    rgba($dark-wood, 0.6)
+  );
+
+  h2 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: bold;
+    color: $tavern-gold;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+  }
+
+  .close-btn {
+    background: linear-gradient(135deg, $fire-orange, #d32f2f);
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    color: #fff;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+
+    &:hover {
+      transform: scale(1.1) rotate(90deg);
+      box-shadow: 0 6px 20px rgba($fire-orange, 0.6);
+    }
+
+    &:active {
+      transform: scale(0.95) rotate(90deg);
+    }
+  }
+}
+
+.settings-modal-content {
+  padding: 24px;
+  max-height: 60vh;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: $tavern-gold rgba($deep-brown, 0.3);
+  position: relative;
+  z-index: 1;
+  pointer-events: auto;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba($deep-brown, 0.3);
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, $tavern-gold, $warm-amber);
+    border-radius: 4px;
+    transition: background 0.3s ease;
+
+    &:hover {
+      background: linear-gradient(180deg, $warm-amber, $fire-orange);
+    }
+  }
+}
+
+.settings-section {
+  margin-bottom: 32px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  h3 {
+    margin: 0 0 16px 0;
+    font-size: 18px;
+    font-weight: bold;
+    color: $warm-amber;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+    border-bottom: 1px solid rgba($tavern-gold, 0.2);
+    padding-bottom: 8px;
+  }
+}
+
+.setting-item {
+  margin-bottom: 16px;
+
+  label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    font-weight: 500;
+
+    span {
+      color: $warm-amber;
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.6);
+    }
+
+    select {
+      background: linear-gradient(135deg, $deep-brown, $dark-wood);
+      border: 1px solid $tavern-gold;
+      border-radius: 6px;
+      padding: 6px 12px;
+      color: #fff;
+      font-size: 13px;
+      cursor: pointer;
+      min-width: 120px;
+      transition: all 0.3s ease;
+
+      &:hover {
+        border-color: $warm-amber;
+        box-shadow: 0 0 8px rgba($tavern-gold, 0.4);
+      }
+
+      &:focus {
+        outline: none;
+        border-color: $fire-orange;
+        box-shadow: 0 0 12px rgba($fire-orange, 0.6);
+      }
+
+      option {
+        background: $dark-wood;
+        color: #fff;
+      }
+    }
+  }
+}
+
+.about-content {
+  background: rgba($deep-brown, 0.5);
+  border: 1px solid rgba($tavern-gold, 0.3);
+  border-radius: 8px;
+  padding: 16px;
+  font-size: 14px;
+  line-height: 1.5;
+
+  p {
+    margin: 0 0 8px 0;
+    color: #ddd;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    strong {
+      color: $tavern-gold;
+      font-weight: bold;
+    }
+  }
+}
+
+.settings-modal-footer {
+  padding: 20px 24px;
+  border-top: 2px solid rgba($tavern-gold, 0.3);
+  background: linear-gradient(135deg, 
+    rgba($deep-brown, 0.8), 
+    rgba($dark-wood, 0.6)
+  );
+  display: flex;
+  justify-content: center;
+
+  .settings-btn {
+    background: linear-gradient(135deg, $tavern-gold, $warm-amber);
+    border: none;
+    border-radius: 8px;
+    padding: 12px 24px;
+    color: $dark-wood;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    text-shadow: none;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba($tavern-gold, 0.4);
+      background: linear-gradient(135deg, $warm-amber, $fire-orange);
+    }
+
+    &:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .settings-modal {
+    width: 95%;
+    max-height: 90vh;
+
+    .settings-modal-header {
+      padding: 16px 20px;
+
+      h2 {
+        font-size: 20px;
+      }
+
+      .close-btn {
+        width: 32px;
+        height: 32px;
+        font-size: 16px;
+      }
+    }
+
+    .settings-modal-content {
+      padding: 20px;
+    }
+
+    .settings-modal-footer {
+      padding: 16px 20px;
+
+      .settings-btn {
+        padding: 10px 20px;
+        font-size: 14px;
+      }
+    }
+  }
+
+  .setting-item label {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+
+    select {
+      min-width: 100%;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .settings-modal {
+    width: 98%;
+    margin: 10px;
+
+    .settings-section {
+      margin-bottom: 24px;
+    }
+
+    .about-content {
+      padding: 12px;
+      font-size: 13px;
+    }
+  }
+} 

@@ -1,0 +1,141 @@
+//Colors - Medieval Tavern Theme
+$dark-wood: #2c1810;
+$tavern-gold: #d4af37;
+$warm-amber: #ffb347;
+$fire-orange: #ff6b35;
+$deep-brown: #4a2c17;
+$parchment: #f4e4bc;
+
+.animated-counter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.counter-label {
+  font-size: 14px;
+  color: $tavern-gold;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8), 0 0 4px $warm-amber;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.counter-display {
+  display: flex;
+  gap: 8px;
+  padding: 8px;
+  background: linear-gradient(135deg, rgba(44, 24, 16, 0.8), rgba(74, 44, 23, 0.6));
+  border-radius: 8px;
+  border: 2px solid $tavern-gold;
+  box-shadow: 
+    inset 0 1px 0 rgba(212, 175, 55, 0.3),
+    0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+.digit {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.digit-row {
+  display: flex;
+  gap: 2px;
+}
+
+.box {
+  width: 8px;
+  height: 8px;
+  border-radius: 1px;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  
+  &.on {
+    background: linear-gradient(45deg, $warm-amber, $tavern-gold);
+    box-shadow: 
+      0 0 4px $warm-amber,
+      0 0 8px rgba(255, 179, 71, 0.5),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  }
+  
+  &.off {
+    background: linear-gradient(45deg, $dark-wood, $deep-brown);
+    opacity: 0.4;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5);
+  }
+}
+
+// Animation when counter is updating
+.counter-display.animating {
+  .box {
+    animation: counterUpdate 2s ease-in-out;
+  }
+}
+
+@keyframes counterUpdate {
+  0% {
+    transform: scale(1);
+  }
+  
+  10% {
+    transform: scale(1.2) rotateZ(-10deg);
+    background: linear-gradient(45deg, $fire-orange, #ff4444) !important;
+    box-shadow: 0 0 8px $fire-orange !important;
+  }
+  
+  20% {
+    transform: scale(0.8) rotateZ(5deg);
+    background: linear-gradient(45deg, $warm-amber, $tavern-gold) !important;
+  }
+  
+  30% {
+    transform: scale(1.1) rotateZ(-5deg);
+  }
+  
+  40% {
+    transform: scale(0.9) rotateZ(3deg);
+  }
+  
+  50% {
+    transform: scale(1.05) rotateZ(-2deg);
+  }
+  
+  60% {
+    transform: scale(0.95) rotateZ(1deg);
+  }
+  
+  70% {
+    transform: scale(1.02) rotateZ(-1deg);
+  }
+  
+  80% {
+    transform: scale(0.98);
+  }
+  
+  90% {
+    transform: scale(1.01);
+  }
+  
+  100% {
+    transform: scale(1) rotateZ(0deg);
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .counter-display {
+    gap: 6px;
+    padding: 6px;
+  }
+  
+  .box {
+    width: 6px;
+    height: 6px;
+  }
+  
+  .counter-label {
+    font-size: 12px;
+  }
+} 
