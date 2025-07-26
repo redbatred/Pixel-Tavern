@@ -136,10 +136,12 @@ const SlotUI: React.FC<SlotUIProps> = ({
 
       {/* Side Panels */}
       <div className="left-panel">
-        <div className="bet-panel">
-          {/* Table Hat Image with Animated Beer Sprite Behind */}
+        <div className={`bet-panel ${showCustomInput ? 'custom-input-open' : ''}`}>
+          {/* Animated Beer Sprite Behind bet board */}
+          <div className="beer-sprite"></div>
+          
+          {/* Table Hat Image */}
           <div className="table-hat">
-            <div className="beer-sprite"></div>
             <img 
               src="/assets/images/beersprite/table.png" 
               alt="Tavern Table" 

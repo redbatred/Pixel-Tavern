@@ -456,6 +456,32 @@ button {
   padding: 0;
   min-width: 100px;
   position: relative;
+  overflow: visible; /* Ensure beer sprite isn't clipped */
+}
+
+/* Animated Beer Sprite - Behind the bet board */
+.bet-panel .beer-sprite {
+  position: absolute;
+  top: 3%;
+  left: 80%;
+  scale: 2.5;
+  transform: translate(-50%, -50%);
+  width: 80px;
+  height: 80px;
+  background-image: url("/assets/images/beersprite/spritesheet (1).png");
+  background-size: 160px 80px;
+  background-repeat: no-repeat;
+  background-position: -0.078px -0.078px; /* Show only beer1 frame by default */
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+  z-index: 0;
+  transition: all 0.3s ease;
+  opacity: 1;
+}
+
+/* Beer sprite positioning and animation when custom input is open */
+.bet-panel.custom-input-open .beer-sprite {
+  left: 63%; /* Adjust X position when custom input is open */
+  animation: beerAnimation 2s infinite; /* Start animation only when custom input is open */
 }
 
 /* Table Hat - Positioned on top of bet panel */
@@ -466,25 +492,6 @@ button {
   scale: 2.5;
   transform: translateX(-50%);
   z-index: 10;
-
-  /* Animated Beer Sprite - Behind the table */
-  .beer-sprite {
-    position: absolute;
-    top: -35px; /* Position above the table */
-    left: 50%;
-    transform: translateX(-50%);
-    width: 80px;
-    height: 80px;
-    background-image: url("/assets/images/beersprite/spritesheet (1).png");
-    background-size: 160px 80px; /* Scale down the 2052x1026 spritesheet proportionally */
-    background-repeat: no-repeat;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
-    z-index: -1; /* Behind the table */
-    transition: all 0.3s ease;
-
-    /* Animation between beer1 and beer2 frames */
-    animation: beerAnimation 2s infinite;
-  }
 
   .table-image {
     width: 120px;
@@ -500,21 +507,28 @@ button {
       transform: scale(1.05);
       filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.7));
     }
-
-    .beer-sprite {
-      transform: translateX(-50%) scale(1.05);
-      filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5));
-    }
   }
+}
+
+/* Table Hat width adjustment when custom input is open */
+/* Table Hat adjustments when custom input is open */
+.bet-panel.custom-input-open .table-hat {
+  top: -40px; /* Position higher when custom input is open */
+}
+
+.bet-panel.custom-input-open .table-hat .table-image {
+  width: 280px; /* Wider table when custom input is open */
+  height: 96px; /* Fixed height to maintain scale (120px * 0.8 aspect ratio) */
+  object-fit: fill; /* Stretch horizontally to fill width while keeping height fixed */
 }
 
 /* Beautiful Medieval Bet Frame */
 .bet-frame {
   background: linear-gradient(
     135deg,
-    rgba(44, 24, 16, 0.9),
-    rgba(74, 44, 23, 0.8),
-    rgba(44, 24, 16, 0.9)
+    rgba(44, 24, 16, 1),
+    rgba(74, 44, 23, 1),
+    rgba(44, 24, 16, 0.95)
   );
   border: 3px solid $tavern-gold;
   border-radius: 12px;
