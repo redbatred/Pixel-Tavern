@@ -1,0 +1,400 @@
+import { setup, assign } from "xstate";
+
+export interface GameContext {
+  credits: number;
+  betAmount: number;
+  maxBet: number;
+  lastWin: number;
+  isAutoSpinning: boolean;
+  stopAutoSpinAfterRound: boolean;
+  animationSpeed: "slow" | "normal" | "fast";
+  slotResults?: number[][];
+  winAmount?: number;
+  winningPositions?: Array<{ payline: number; positions: [number, number][] }>;
+  winningCharacter?: number | null;
+}
+
+export type GameEvent =
+  | { type: "SPIN" }
+  | { type: "SPIN_COMPLETE"; results: number[][] }
+  | {
+      type: "WIN_CHECK_COMPLETE";
+      winAmount: number;
+      winningPositions: Array<{
+        payline: number;
+        positions: [number, number][];
+      }>;
+      winningCharacter: number | null;
+    }
+  | { type: "WIN_ANIMATION_COMPLETE" }
+  | { type: "SET_BET"; amount: number }
+  | { type: "MAX_BET" }
+  | { type: "TOGGLE_AUTO_SPIN" }
+  | { type: "REQUEST_AUTO_SPIN_STOP" }
+  | { type: "AUTO_SPIN_TIMEOUT" }
+  | { type: "SET_ANIMATION_SPEED"; speed: "slow" | "normal" | "fast" }
+  | { type: "SET_AUTO_SPIN_DELAY"; delay: number }
+  | { type: "PAUSE" }
+  | { type: "RESUME" };
+
+export const gameStateMachine = setup({
+  types: {
+    context: {} as GameContext,
+    events: {} as GameEvent,
+  },
+  guards: {
+    hasCredits: ({ context }) => context.credits >= context.betAmount,
+    hasWin: ({ context }) => {
+      const hasWinResult = (context.winAmount || 0) > 0;
+      return hasWinResult;
+    },
+    isAutoSpinning: ({ context }) => context.isAutoSpinning,
+    shouldShowWinModal: ({ context }) => {
+      const multiplier = (context.winAmount || 0) / context.betAmount;
+      return multiplier >= 5; // Show modal for 5x+ wins
+    },
+    canAffordBet: ({ context, event }) => {
+      if (event.type === "SET_BET") {
+        return context.credits >= event.amount;
+      }
+      return context.credits >= context.betAmount;
+    },
+    isEpicWin: ({ context }) => {
+      const multiplier = (context.winAmount || 0) / context.betAmount;
+      return multiplier >= 50;
+    },
+    isMegaWin: ({ context }) => {
+      const multiplier = (context.winAmount || 0) / context.betAmount;
+      return multiplier >= 20 && multiplier < 50;
+    },
+  },
+  actions: {
+    deductBet: assign({
+      credits: ({ context }) => context.credits - context.betAmount,
+    }),
+    setBet: assign({
+      betAmount: ({ event }) => {
+        if (event.type === "SET_BET") {
+          return event.amount;
+        }
+        return 10;
+      },
+    }),
+    setMaxBet: assign({
+      betAmount: ({ context }) => context.maxBet,
+    }),
+    addWinToCredits: assign({
+      credits: ({ context }) => context.credits + (context.winAmount || 0),
+    }),
+    setSlotResults: assign({
+      slotResults: ({ event }) => {
+        if (event.type === "SPIN_COMPLETE") {
+          return event.results;
+        }
+        return undefined;
+      },
+    }),
+    setWinResults: assign({
+      winAmount: ({ event }) => {
+        if (event.type === "WIN_CHECK_COMPLETE") {
+          return event.winAmount;
+        }
+        return 0;
+      },
+      lastWin: ({ event }) => {
+        if (event.type === "WIN_CHECK_COMPLETE") {
+          return event.winAmount;
+        }
+        return 0;
+      },
+      winningPositions: ({ event }) => {
+        if (event.type === "WIN_CHECK_COMPLETE") {
+          return event.winningPositions;
+        }
+        return [];
+      },
+      winningCharacter: ({ event }) => {
+        if (event.type === "WIN_CHECK_COMPLETE") {
+          return event.winningCharacter;
+        }
+        return null;
+      },
+    }),
+    toggleAutoSpin: assign({
+      isAutoSpinning: ({ context }) => !context.isAutoSpinning,
+      stopAutoSpinAfterRound: false, // Reset the stop flag when toggling
+    }),
+    requestAutoSpinStop: assign({
+      stopAutoSpinAfterRound: true, // Set flag to stop after current round
+    }),
+    setAnimationSpeed: assign({
+      animationSpeed: ({ event }) => {
+        if (event.type === "SET_ANIMATION_SPEED") {
+          return event.speed;
+        }
+        return "normal";
+      },
+    }),
+    clearWinState: assign({
+      winAmount: 0,
+      lastWin: 0,
+      winningPositions: [],
+      winningCharacter: null,
+    }),
+  },
+  delays: {
+    spinDuration: ({ context }) => {
+      switch (context.animationSpeed) {
+        case "slow":
+          return 2000;
+        case "fast":
+          return 500;
+        default:
+          return 800;
+      }
+    },
+    autoSpinDelay: ({ context }) => {
+      // Much shorter delay for faster auto-spin
+      switch (context.animationSpeed) {
+        case "slow":
+          return 300;
+        case "fast":
+          return 70;
+        default:
+          return 150;
+      }
+    },
+    winDisplayDuration: ({ context }) => {
+      // Show win longer for bigger wins
+      const multiplier = (context.winAmount || 0) / context.betAmount;
+      if (multiplier >= 50) return 5000;
+      if (multiplier >= 20) return 4000;
+      if (multiplier >= 10) return 3000;
+      return 2100;
+    },
+  },
+}).createMachine({
+  id: "pixelTavernSlotMachine",
+  initial: "idle",
+  context: ({ input }: any) => ({
+    credits: input?.credits || 1000,
+    betAmount: input?.betAmount || 10,
+    maxBet: input?.maxBet || 100,
+    lastWin: 0,
+    isAutoSpinning: false,
+    stopAutoSpinAfterRound: false,
+    animationSpeed: "normal" as const,
+    slotResults: undefined,
+    winAmount: 0,
+    winningPositions: [],
+    winningCharacter: null,
+  }),
+  states: {
+    idle: {
+      on: {
+        SPIN: {
+          target: "spinning",
+          guard: "hasCredits",
+          actions: ["deductBet", "clearWinState"],
+        },
+        SET_BET: {
+          guard: "canAffordBet",
+          actions: "setBet",
+        },
+        MAX_BET: {
+          guard: ({ context }) => context.credits >= context.maxBet,
+          actions: "setMaxBet",
+        },
+        TOGGLE_AUTO_SPIN: [
+          {
+            target: "spinning",
+            guard: ({ context }) =>
+              !context.isAutoSpinning && context.credits >= context.betAmount,
+            actions: ["toggleAutoSpin"],
+          },
+          {
+            // If auto-spinning is active, request stop after current round
+            guard: ({ context }) =>
+              context.isAutoSpinning && !context.stopAutoSpinAfterRound,
+            actions: ["requestAutoSpinStop"],
+          },
+          {
+            // If not auto-spinning, just toggle normally
+            actions: ["toggleAutoSpin"],
+          },
+        ],
+        SET_ANIMATION_SPEED: {
+          actions: "setAnimationSpeed",
+        },
+        REQUEST_AUTO_SPIN_STOP: {
+          // Safe to set stop flag in idle state
+          guard: ({ context }) =>
+            context.isAutoSpinning && !context.stopAutoSpinAfterRound,
+          actions: ["requestAutoSpinStop"],
+        },
+        PAUSE: "paused",
+      },
+    },
+    spinning: {
+      on: {
+        SPIN_COMPLETE: {
+          target: "checkingWin",
+          actions: "setSlotResults",
+        },
+        REQUEST_AUTO_SPIN_STOP: {
+          actions: ["requestAutoSpinStop"],
+        },
+      },
+    },
+    checkingWin: {
+      on: {
+        WIN_CHECK_COMPLETE: {
+          target: "evaluatingWin",
+          actions: "setWinResults",
+        },
+        REQUEST_AUTO_SPIN_STOP: {
+          actions: ["requestAutoSpinStop"],
+        },
+      },
+    },
+    evaluatingWin: {
+      always: [
+        {
+          target: "showingWin",
+          guard: "hasWin",
+        },
+        {
+          target: "checkingAutoSpin",
+        },
+      ],
+    },
+    showingWin: {
+      after: {
+        winDisplayDuration: "collectingWin",
+      },
+      on: {
+        WIN_ANIMATION_COMPLETE: "collectingWin",
+        REQUEST_AUTO_SPIN_STOP: {
+          actions: ["requestAutoSpinStop"],
+        },
+      },
+    },
+    collectingWin: {
+      entry: ["addWinToCredits"],
+      always: "checkingAutoSpin",
+    },
+    checkingAutoSpin: {
+      always: [
+        {
+          // Stop auto-spin if stop was requested
+          target: "idle",
+          guard: ({ context }) => context.stopAutoSpinAfterRound,
+          actions: [
+            assign({ isAutoSpinning: false, stopAutoSpinAfterRound: false }),
+          ],
+        },
+        {
+          // Continue auto-spin if still active and has credits
+          target: "autoSpinDelay",
+          guard: ({ context }) =>
+            context.isAutoSpinning &&
+            !context.stopAutoSpinAfterRound &&
+            context.credits >= context.betAmount,
+        },
+        {
+          // Stop auto-spin if no credits
+          target: "idle",
+          guard: ({ context }) => context.credits < context.betAmount,
+          actions: [
+            assign({ isAutoSpinning: false, stopAutoSpinAfterRound: false }),
+          ],
+        },
+        {
+          // Default to idle
+          target: "idle",
+          actions: [
+            assign({ isAutoSpinning: false, stopAutoSpinAfterRound: false }),
+          ],
+        },
+      ],
+    },
+    autoSpinDelay: {
+      after: {
+        autoSpinDelay: {
+          target: "checkingAutoSpinContinue",
+        },
+      },
+      on: {
+        TOGGLE_AUTO_SPIN: {
+          // Always stop auto-spin when toggled during delay
+          target: "idle",
+          actions: [
+            assign({ isAutoSpinning: false, stopAutoSpinAfterRound: false }),
+          ],
+        },
+        REQUEST_AUTO_SPIN_STOP: {
+          // Set stop flag during delay - will be checked on next transition
+          guard: ({ context }) =>
+            context.isAutoSpinning && !context.stopAutoSpinAfterRound,
+          actions: [assign({ stopAutoSpinAfterRound: true })],
+        },
+        SPIN: {
+          target: "spinning",
+          actions: ["deductBet", "clearWinState"],
+        },
+        PAUSE: "paused",
+      },
+    },
+    checkingAutoSpinContinue: {
+      always: [
+        {
+          // Stop auto-spin if stop was requested
+          target: "idle",
+          guard: ({ context }) => context.stopAutoSpinAfterRound === true,
+          actions: [
+            assign({ isAutoSpinning: false, stopAutoSpinAfterRound: false }),
+          ],
+        },
+        {
+          // Stop auto-spin if no credits
+          target: "idle",
+          guard: ({ context }) => context.credits < context.betAmount,
+          actions: [
+            assign({ isAutoSpinning: false, stopAutoSpinAfterRound: false }),
+          ],
+        },
+        {
+          // Stop auto-spin if not auto-spinning anymore
+          target: "idle",
+          guard: ({ context }) => !context.isAutoSpinning,
+          actions: [assign({ stopAutoSpinAfterRound: false })],
+        },
+        {
+          // Continue spinning if all conditions are met
+          target: "spinning",
+          guard: ({ context }) =>
+            context.isAutoSpinning &&
+            !context.stopAutoSpinAfterRound &&
+            context.credits >= context.betAmount,
+          actions: ["deductBet", "clearWinState"],
+        },
+        {
+          // Default fallback to idle
+          target: "idle",
+          actions: [
+            assign({ isAutoSpinning: false, stopAutoSpinAfterRound: false }),
+          ],
+        },
+      ],
+    },
+    paused: {
+      on: {
+        RESUME: "idle",
+        TOGGLE_AUTO_SPIN: {
+          target: "idle",
+          actions: "toggleAutoSpin",
+        },
+      },
+    },
+  },
+});

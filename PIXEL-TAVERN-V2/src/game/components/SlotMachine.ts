@@ -1,0 +1,458 @@
+import { Application, Container, Sprite, Graphics } from 'pixi.js'
+import { gsap } from 'gsap'
+import { GameConfig } from '../config/GameConfig'
+import type { GameTextures } from '../assets/AssetLoader'
+
+export interface SlotSymbol {
+  sprite: Sprite
+  symbolId: number
+}
+
+export class SlotMachine {
+  public container: Container
+  private app: Application
+  private slotColumns: Container[] = []
+  private slotGrid: Sprite[][] = []
+  private columnSymbols: Sprite[][] = []
+  private spinEffects: Container[] = []
+  private winHighlights: Graphics[] = []
+  private textures: GameTextures | null = null
+  private background: Sprite | null = null
+  private frame: Sprite | null = null
+
+  constructor(app: Application) {
+    this.app = app
+    this.container = new Container()
+  }
+
+  async init(textures: GameTextures): Promise<void> {
+    this.textures = textures
+    
+    // Create background
+    this.createBackground()
+    
+    // Create slot grid
+    this.createSlotGrid()
+    
+    // Create frame (on top)
+    this.createFrame()
+  }
+
+  private createBackground(): void {
+    if (!this.textures) return
+    
+    this.background = new Sprite(this.textures.background)
+    this.background.anchor.set(0.5)
+    
+    // Scale to cover screen
+    const scaleX = this.app.screen.width / this.background.width
+    const scaleY = this.app.screen.height / this.background.height
+    const scale = Math.max(scaleX, scaleY)
+    this.background.scale.set(scale)
+    
+    this.container.addChild(this.background)
+  }
+
+  private createFrame(): void {
+    if (!this.textures) return
+    
+    this.frame = new Sprite(this.textures.frame)
+    this.frame.anchor.set(0.5)
+    this.frame.scale.set(GameConfig.SLOT_MACHINE.FRAME_SCALE)
+    
+    this.container.addChild(this.frame)
+  }
+
+  private createSlotGrid(): void {
+    if (!this.textures) return
+    
+    const slotContainer = new Container()
+    
+    // Create mask for the transparent window area
+    const maskGraphics = new Graphics()
+    maskGraphics.rect(
+      -GameConfig.SLOT_MACHINE.MASK_WIDTH / 2,
+      -GameConfig.SLOT_MACHINE.MASK_HEIGHT / 2,
+      GameConfig.SLOT_MACHINE.MASK_WIDTH,
+      GameConfig.SLOT_MACHINE.MASK_HEIGHT
+    )
+    maskGraphics.fill(0xffffff)
+    slotContainer.addChild(maskGraphics)
+    slotContainer.mask = maskGraphics
+
+    // Initialize arrays
+    this.slotColumns = []
+    this.slotGrid = Array(GameConfig.SLOT_ROWS).fill(null).map(() => Array(GameConfig.SLOT_COLUMNS).fill(null))
+    this.columnSymbols = Array(GameConfig.SLOT_COLUMNS).fill(null).map(() => [])
+    this.spinEffects = []
+
+    // Create 5 columns
+    for (let col = 0; col < GameConfig.SLOT_COLUMNS; col++) {
+      const columnContainer = new Container()
+      
+      // Create 3 copies for seamless scrolling
+      const numCopies = 3
+      const copyHeight = GameConfig.SLOT_MACHINE.SLOT_HEIGHT * GameConfig.SLOT_ROWS
+      
+      for (let copy = 0; copy < numCopies; copy++) {
+        const copyContainer = new Container()
+        const copyYOffset = (copy - 1) * copyHeight * 0.95
+        
+        // Add column background
+        const columnBg = new Sprite(this.textures.columnBg)
+        columnBg.anchor.set(0.5, 0.5)
+        columnBg.scale.x = GameConfig.SLOT_MACHINE.COLUMN_WIDTHS[col]
+        columnBg.scale.y = 0.38
+        columnBg.x = 0
+        columnBg.y = copyYOffset
+        copyContainer.addChild(columnBg)
+        
+        // Add symbols with precise vertical alignment
+        for (let row = 0; row < GameConfig.SLOT_ROWS; row++) {
+          const symbolX = 0
+          // Calculate precise Y position for consistent vertical alignment
+          const baseY = -280
+          const rowSpacing = GameConfig.SLOT_MACHINE.SLOT_HEIGHT
+          const centerOffset = GameConfig.SLOT_MACHINE.SLOT_HEIGHT / 2
+          const symbolY = baseY + (row * rowSpacing) + centerOffset + copyYOffset
+          
+          const randomSymbol = Math.floor(Math.random() * this.textures.symbols.length)
+          const sprite = this.createSlotSymbol(randomSymbol, symbolX, symbolY)
+          
+          copyContainer.addChild(sprite)
+          
+          // Store middle copy as main grid reference
+          if (copy === 1) {
+            if (!this.columnSymbols[col]) {
+              this.columnSymbols[col] = []
+            }
+            this.columnSymbols[col].push(sprite)
+            this.slotGrid[row][col] = sprite
+          }
+        }
+        
+        columnContainer.addChild(copyContainer)
+      }
+      
+      // Position column
+      columnContainer.x = GameConfig.SLOT_MACHINE.COLUMN_X_POSITIONS[col]
+      columnContainer.y = 20 // startY
+      
+      // Create spinning effects container
+      const spinEffectsContainer = new Container()
+      spinEffectsContainer.x = GameConfig.SLOT_MACHINE.COLUMN_X_POSITIONS[col]
+      spinEffectsContainer.y = 20
+      spinEffectsContainer.visible = false
+      
+      // Create particles
+      for (let p = 0; p < GameConfig.SLOT_MACHINE.PARTICLE_COUNT; p++) {
+        const particle = new Sprite()
+        particle.width = 2
+        particle.height = 2
+        particle.tint = 0xd4af37 // Golden color
+        particle.alpha = 0.6
+        particle.x = (Math.random() - 0.5) * 60
+        particle.y = (Math.random() - 0.5) * 400
+        spinEffectsContainer.addChild(particle)
+      }
+      
+      slotContainer.addChild(columnContainer)
+      slotContainer.addChild(spinEffectsContainer)
+      this.slotColumns.push(columnContainer)
+      this.spinEffects.push(spinEffectsContainer)
+    }
+    
+    this.container.addChild(slotContainer)
+  }
+
+  private createSlotSymbol(symbolIndex: number, x: number, y: number): Sprite {
+    if (!this.textures) throw new Error('Textures not loaded')
+    
+    const texture = this.textures.symbols[symbolIndex % this.textures.symbols.length]
+    const sprite = new Sprite(texture)
+    
+    // Do NOT apply character-specific Y offset here - all symbols use the standard grid position
+    // Character-specific adjustments will be applied only for final results
+    
+    // Ensure consistent vertical alignment by setting anchor to center
+    sprite.anchor.set(0.5, 0.5)
+    sprite.x = x
+    sprite.y = y // Use the exact Y position passed in (no character offset)
+    
+    // Apply consistent scaling
+    sprite.scale.set(GameConfig.SLOT_MACHINE.SYMBOL_SCALE)
+    
+    return sprite
+  }
+
+  // Spin animation
+  async spinReels(duration: number, scrollSpeed: number): Promise<number[][]> {
+    
+    // FIRST: Generate final results before animation starts (like original game)
+    const finalResults = this.generateFinalResults()
+    
+    // Show spin effects
+    this.spinEffects.forEach(effect => {
+      effect.visible = true
+    })
+
+    const spinPromises = this.slotColumns.map((column, colIndex) => {
+      return new Promise<void>((resolve) => {
+        const spinDuration = duration + colIndex * 200 // Staggered stops (reduced from 300ms to 200ms)
+        let scrollOffset = 0
+        const originalY = column.y
+        
+        const spinEffects = this.spinEffects
+        
+        gsap.to({}, {
+          duration: spinDuration / 1000,
+          ease: 'power2.out',
+          onUpdate: function() {
+            scrollOffset += scrollSpeed
+            const cycleDistance = GameConfig.SLOT_MACHINE.SLOT_HEIGHT * 3
+            const smoothOffset = scrollOffset % cycleDistance
+            column.y = originalY + smoothOffset
+            
+            // Animate spin effects
+            const effectsContainer = spinEffects[colIndex]
+            if (effectsContainer && effectsContainer.visible) {
+              effectsContainer.children.forEach((particle: any, index: number) => {
+                if (particle instanceof Sprite) {
+                  particle.y += scrollSpeed * 1.5
+                  if (particle.y > 200) {
+                    particle.y = -200
+                    particle.x = (Math.random() - 0.5) * 60
+                  }
+                  particle.alpha = 0.3 + Math.sin(Date.now() * 0.01 + index) * 0.3
+                }
+              })
+            }
+          },
+          onComplete: () => {
+            // Snap to clean position
+            column.y = originalY
+            
+            // Hide effects
+            spinEffects[colIndex].visible = false
+            
+            // Set final symbols to pre-generated results
+            this.setFinalSymbolsForColumn(colIndex, finalResults)
+            
+            resolve()
+          }
+        })
+      })
+    })
+
+    await Promise.all(spinPromises)
+    
+    // Return the pre-generated results (guaranteed to match what's displayed)
+    return finalResults
+  }
+
+  private generateFinalResults(): number[][] {
+    const results: number[][] = []
+    
+    // Normal random generation
+    for (let row = 0; row < GameConfig.SLOT_ROWS; row++) {
+      results[row] = []
+      for (let col = 0; col < GameConfig.SLOT_COLUMNS; col++) {
+        results[row][col] = Math.floor(Math.random() * (this.textures?.symbols.length || 6))
+      }
+    }
+    
+    return results
+  }
+
+  // Helper function to get Y offset for each character
+  private getCharacterYOffset(symbolIndex: number): number {
+    const characterYOffsets = [
+      -5,    // Character 0 (King) - baseline
+      0,   // Character 1 (Knight/Warrior) - move up 3px
+      -5,    // Character 2 (Viking/Barbarian) - move down 2px  
+      10,   // Character 3 (Mage/Wizard) - move up 5px
+      10,    // Character 4 (Archer) - move down 1px
+      10    // Character 5 (Knight in armor) - move up 2px
+    ]
+    return characterYOffsets[symbolIndex] || 0
+  }
+
+  private setFinalSymbolsForColumn(columnIndex: number, finalResults: number[][]): void {
+    if (!this.textures) return
+    
+    const columnSymbols = this.columnSymbols[columnIndex]
+    columnSymbols.forEach((sprite, rowIndex) => {
+      const symbolIndex = finalResults[rowIndex][columnIndex]
+      
+      // Get the character-specific Y offset
+      const yOffset = this.getCharacterYOffset(symbolIndex)
+      
+      // Calculate the base grid Y position for this row
+      const baseY = -280 + (rowIndex * GameConfig.SLOT_MACHINE.SLOT_HEIGHT) + (GameConfig.SLOT_MACHINE.SLOT_HEIGHT / 2)
+      
+      // Apply texture change
+      sprite.texture = this.textures!.symbols[symbolIndex]
+      
+      // Ensure consistent properties after texture change
+      sprite.anchor.set(0.5, 0.5)
+      sprite.scale.set(GameConfig.SLOT_MACHINE.SYMBOL_SCALE)
+      
+      // Apply the character-specific Y position (base position + character offset)
+      sprite.y = baseY + yOffset
+    })
+  }
+
+  // Win highlighting with advanced GSAP animations
+  showWinHighlights(winningPositions: Array<{ payline: number; positions: [number, number][] }>): void {
+    this.clearWinHighlights()
+    
+    // Colors for different paylines
+    const paylineColors = [
+      0xffd700, 0xff6b6b, 0x4ecdc4, 0x45b7d1, 0x96ceb4,
+      0xfeca57, 0xff9ff3, 0x54a0ff, 0x5f27cd, 0x00d2d3,
+      0xff9f43, 0x1dd1a1, 0xfd79a8, 0x6c5ce7, 0xa29bfe,
+      0xfd79a8, 0x00b894, 0xe17055, 0x74b9ff, 0xe84393
+    ]
+
+    winningPositions.forEach(({ payline, positions }) => {
+      const color = paylineColors[(payline - 1) % paylineColors.length]
+      
+      positions.forEach(([row, col], index) => {
+        const highlight = new Graphics()
+        const symbol = this.slotGrid[row][col]
+        
+        if (!symbol) {
+          return
+        }
+        
+        const symbolWidth = symbol.texture.width * symbol.scale.x
+        const symbolHeight = symbol.texture.height * symbol.scale.y
+        const padding = 10
+        
+        highlight.beginFill(color, 0.3)
+        highlight.lineStyle(5, color, 0.9)
+        highlight.drawRoundedRect(
+          -symbolWidth / 2 - padding,
+          -symbolHeight / 2 - padding,
+          symbolWidth + padding * 2,
+          symbolHeight + padding * 2,
+          15
+        )
+        highlight.endFill()
+        
+        // Position relative to symbol
+        const symbolColumn = this.slotColumns[col]
+        if (symbolColumn) {
+          highlight.x = symbolColumn.x + symbol.x
+          highlight.y = symbolColumn.y + symbol.y
+        }
+        
+        // Advanced GSAP Timeline for win animations
+        const tl = gsap.timeline({ repeat: -1 })
+        
+        // Initial scale from 0
+        gsap.set(highlight, { scale: 0, alpha: 0 })
+        
+        // Staggered entrance animation
+        tl.to(highlight, {
+          scale: 1,
+          alpha: 0.8,
+          duration: 0.3,
+          ease: "back.out(1.7)",
+          delay: index * 0.1
+        })
+        // Pulsing effect
+        .to(highlight, {
+          scale: 1.1,
+          alpha: 0.6,
+          duration: 0.5,
+          ease: "power2.inOut"
+        })
+        .to(highlight, {
+          scale: 1,
+          alpha: 0.8,
+          duration: 0.5,
+          ease: "power2.inOut"
+        })
+        // Glow effect
+        .to(highlight, {
+          pixi: { 
+            tint: 0xffffff,
+            brightness: 1.5
+          },
+          duration: 0.2,
+          ease: "power2.inOut"
+        })
+        .to(highlight, {
+          pixi: { 
+            tint: color,
+            brightness: 1
+          },
+          duration: 0.2,
+          ease: "power2.inOut"
+        })
+        
+        this.container.addChild(highlight)
+        this.winHighlights.push(highlight)
+      })
+    })
+    
+    // Auto-clear with fade out animation
+    gsap.delayedCall(3, () => {
+      // Advanced fade out with stagger
+      gsap.to(this.winHighlights, {
+        alpha: 0,
+        scale: 0,
+        duration: 0.5,
+        stagger: 0.05,
+        ease: "back.in(1.7)",
+        onComplete: () => {
+          this.clearWinHighlights()
+        }
+      })
+    })
+  }
+
+  clearWinHighlights(): void {
+    this.winHighlights.forEach(highlight => {
+      gsap.killTweensOf(highlight)
+      if (highlight.parent) {
+        highlight.parent.removeChild(highlight)
+      }
+      highlight.destroy()
+    })
+    this.winHighlights = []
+  }
+
+  // Handle state changes
+  handleStateChange(stateValue: string, _context: any): void {
+    switch (stateValue) {
+      case 'spinning':
+        // Clear any existing highlights
+        this.clearWinHighlights()
+        break
+      case 'showingWin':
+        // Disabled slot win highlights - using only PIXI character animation
+        // if (context.winningPositions && context.winningPositions.length > 0) {
+        //   this.showWinHighlights(context.winningPositions)
+        // }
+        break
+    }
+  }
+
+  // Handle window resize
+  handleResize(width: number, height: number): void {
+    if (this.background) {
+      const scaleX = width / this.background.texture.width
+      const scaleY = height / this.background.texture.height
+      const scale = Math.max(scaleX, scaleY)
+      this.background.scale.set(scale)
+    }
+  }
+
+  destroy(): void {
+    this.clearWinHighlights()
+    gsap.killTweensOf(this.slotColumns)
+    this.container.destroy({ children: true })
+  }
+}
