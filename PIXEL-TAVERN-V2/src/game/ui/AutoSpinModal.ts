@@ -15,10 +15,18 @@ export class AutoSpinModal {
   private counterDisplay: HTMLElement | null = null
 
   private autoSpinOptions: AutoSpinOption[] = [
+    { count: 5, display: '5 SPINS' },
     { count: 10, display: '10 SPINS' },
+    { count: 15, display: '15 SPINS' },
+    { count: 20, display: '20 SPINS' },
     { count: 25, display: '25 SPINS' },
+    { count: 30, display: '30 SPINS' },
+    { count: 40, display: '40 SPINS' },
     { count: 50, display: '50 SPINS' },
+    { count: 75, display: '75 SPINS' },
     { count: 100, display: '100 SPINS' },
+    { count: 150, display: '150 SPINS' },
+    { count: 200, display: '200 SPINS' },
     { count: -1, display: 'INFINITE', isInfinite: true }
   ]
 
@@ -112,7 +120,8 @@ export class AutoSpinModal {
         
         <div class="auto-spin-content">
           <p class="auto-spin-description">
-            Choose how many spins to play automatically
+            Choose how many spins to play automatically<br>
+            <small style="opacity: 0.7; font-size: 12px;">Scroll to see more options</small>
           </p>
           
           <div class="auto-spin-options">
@@ -407,6 +416,32 @@ export class AutoSpinModal {
         grid-template-columns: repeat(2, 1fr);
         gap: 16px;
         margin-bottom: 35px;
+        max-height: 400px;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding-right: 8px;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255, 215, 0, 0.5) rgba(45, 45, 74, 0.3);
+      }
+
+      /* Custom scrollbar styling for webkit browsers */
+      .auto-spin-options::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      .auto-spin-options::-webkit-scrollbar-track {
+        background: rgba(45, 45, 74, 0.3);
+        border-radius: 4px;
+      }
+
+      .auto-spin-options::-webkit-scrollbar-thumb {
+        background: linear-gradient(180deg, rgba(255, 215, 0, 0.6) 0%, rgba(255, 215, 0, 0.3) 100%);
+        border-radius: 4px;
+        border: 1px solid rgba(255, 215, 0, 0.2);
+      }
+
+      .auto-spin-options::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(180deg, rgba(255, 215, 0, 0.8) 0%, rgba(255, 215, 0, 0.5) 100%);
       }
 
       .auto-spin-option {

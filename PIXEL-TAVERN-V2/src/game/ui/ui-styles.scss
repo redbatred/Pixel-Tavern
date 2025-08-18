@@ -237,8 +237,8 @@ button {
 /* Engraved Medieval Win Display - Carved into wooden slot frame */
 .win-display {
   position: fixed;
-  top: 822px; /* Fixed distance from top (5% of 1080px) */
-  left: 380%;
+  top: 818px; /* Fixed distance from top */
+  left: 210%;
   transform: translateX(-50%);
   z-index: 9999;
 
@@ -246,6 +246,18 @@ button {
   align-items: center;
   justify-content: center;
   gap: 8px;
+  min-width: 200px; /* Ensure consistent width for proper centering */
+  
+  /* Initial state - hidden and positioned correctly */
+  opacity: 0;
+  transform: translateX(-50%) scale(0.8);
+  
+  /* Show state */
+  &.show {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+    animation: win-popup 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
   
   /* Wooden engraved plaque effect */
   background: 
@@ -382,19 +394,27 @@ button {
 }
 
 .win-label {
-  font-size: 14px;
-  font-weight: bold;
-  color: $warm-amber;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  font-size: 18px;
+  font-weight: 900;
+  color: $tavern-gold;
+  text-shadow: 
+    2px 2px 4px rgba(0, 0, 0, 0.9),
+    0 0 8px rgba(212, 175, 55, 0.8);
+  letter-spacing: 1px;
+  text-transform: uppercase;
 }
 
 .win-amount {
-  font-size: 18px;
-  font-weight: bold;
+  font-size: 28px;
+  font-weight: 900;
   color: $tavern-gold;
   text-shadow: 
-    1px 1px 2px rgba(0, 0, 0, 0.8),
-    0 0 10px rgba(212, 175, 55, 0.5);
+    2px 2px 4px rgba(0, 0, 0, 0.9),
+    0 0 15px rgba(212, 175, 55, 0.8),
+    0 0 25px rgba(255, 215, 0, 0.6);
+  min-width: 120px;
+  text-align: center;
+  letter-spacing: 1px;
 }
 
 .menu-btn {
@@ -1834,6 +1854,19 @@ button {
     animation: status-bounce 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55),
                warning-pulse 2s ease-in-out infinite alternate 0.6s;
   }
+  
+  &.keyboard-hint {
+    background: rgba(212, 175, 55, 0.15);
+    border: 2px solid rgba(212, 175, 55, 0.4);
+    box-shadow: 
+      0 8px 32px rgba(0, 0, 0, 0.3),
+      0 0 30px rgba(212, 175, 55, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    animation: status-bounce 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55),
+               hint-glow 3s ease-in-out infinite alternate 1s;
+    font-size: 14px;
+    opacity: 0.8;
+  }
 }
 
 @keyframes status-bounce {
@@ -1861,6 +1894,25 @@ button {
       0 8px 32px rgba(0, 0, 0, 0.4),
       0 0 60px rgba(255, 107, 53, 0.7),
       inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+}
+
+@keyframes hint-glow {
+  0% { 
+    border-color: rgba(212, 175, 55, 0.4);
+    box-shadow: 
+      0 8px 32px rgba(0, 0, 0, 0.3),
+      0 0 30px rgba(212, 175, 55, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    opacity: 0.8;
+  }
+  100% { 
+    border-color: rgba(212, 175, 55, 0.6);
+    box-shadow: 
+      0 8px 32px rgba(0, 0, 0, 0.3),
+      0 0 45px rgba(212, 175, 55, 0.5),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    opacity: 0.9;
   }
 }
 
@@ -1972,6 +2024,218 @@ button {
     min-width: 44px;
     min-height: 44px;
     touch-action: manipulation;
+  }
+
+  /* Fix right panel positioning for small screens */
+  .right-panel {
+    right: 20px; /* Reduced from 58px for better positioning on small screens */
+  }
+
+  .left-panel {
+    left: 20px; /* Consistent spacing on both sides */
+  }
+}
+
+/* iPhone SE and ultra-small screens (375px and below) */
+@media screen and (max-width: 375px) {
+  :root {
+    --right-panel-position: 0px;
+    --left-panel-position: 0px;
+  }
+
+  .right-panel {
+    right: 0px !important;
+    /* Ensure the panel doesn't shift during interactions */
+    transform: translateY(-50%) !important;
+    position: absolute !important;
+    /* Prevent any flex or layout changes that could affect positioning */
+    display: flex !important;
+    flex-direction: column !important;
+    /* Add explicit z-index to prevent layering issues */
+    z-index: 100 !important;
+    /* Force tighter positioning with additional specificity */
+    margin-right: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .left-panel {
+    left: 0px !important;
+    z-index: 100 !important;
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+  }
+
+  .side-btn {
+    font-size: 11px;
+    padding: 8px 10px;
+    min-width: 50px;
+    min-height: 44px;
+    /* Prevent any layout shifts */
+    box-sizing: border-box !important;
+    flex-shrink: 0 !important;
+    /* Ensure no transforms that could cause movement */
+    transform: none !important;
+    /* Prevent position changes from any inherited styles */
+    position: relative !important;
+    /* Lock down dimensions */
+    width: auto !important;
+    max-width: none !important;
+  }
+
+  .side-btn .icon {
+    font-size: 28px; /* Slightly smaller icons for tight spacing */
+  }
+
+  /* Ensure info button stays in place with maximum specificity */
+  .info-btn,
+  .right-panel .info-btn,
+  .side-btn.info-btn,
+  #info-btn {
+    position: relative !important;
+    /* Prevent any transform or position changes on interaction */
+    transition: color 0.3s ease, text-shadow 0.3s ease !important;
+    transform: none !important;
+    /* Lock positioning completely */
+    left: auto !important;
+    right: auto !important;
+    top: auto !important;
+    bottom: auto !important;
+    margin: 0 !important;
+  }
+
+  .info-btn:hover,
+  .info-btn:active,
+  .right-panel .info-btn:hover,
+  .right-panel .info-btn:active,
+  .side-btn.info-btn:hover,
+  .side-btn.info-btn:active,
+  #info-btn:hover,
+  #info-btn:active {
+    /* Override any transforms that might cause movement */
+    transform: none !important;
+    /* Only allow safe visual changes */
+    color: #d4af37 !important;
+    text-shadow: 0 0 15px rgba(212, 175, 55, 0.8) !important;
+    /* Prevent any position changes */
+    position: relative !important;
+    left: auto !important;
+    right: auto !important;
+    top: auto !important;
+    bottom: auto !important;
+  }
+
+  /* Override any mobile-ui class conflicts */
+  .mobile-ui .right-panel,
+  body .mobile-ui .right-panel,
+  html .mobile-ui .right-panel {
+    right: var(--right-panel-position) !important;
+  }
+
+  .mobile-ui .left-panel,
+  body .mobile-ui .left-panel,
+  html .mobile-ui .left-panel {
+    left: var(--left-panel-position) !important;
+  }
+
+  /* Override any viewport scaling effects */
+  [style*="--viewport-scale"] .right-panel {
+    right: var(--right-panel-position) !important;
+  }
+
+  [style*="--viewport-scale"] .left-panel {
+    left: var(--left-panel-position) !important;
+  }
+}
+
+/* Extra small screens - iPhone SE 1st gen and similar (320px) */
+@media screen and (max-width: 320px) {
+  .right-panel {
+    right: 3px !important;
+    gap: 12px !important;
+  }
+
+  .left-panel {
+    left: 3px !important;
+    gap: 12px !important;
+  }
+
+  .side-btn {
+    font-size: 10px;
+    padding: 6px 8px;
+    min-width: 45px;
+    min-height: 44px;
+  }
+
+  .side-btn .icon {
+    font-size: 24px;
+  }
+}
+
+/* Specific iPhone SE (375x667) media query */
+@media screen and (max-width: 375px) and (max-height: 667px) {
+  .right-panel {
+    right: 0px !important;
+    /* Additional specificity for iPhone SE */
+    margin-right: 0 !important;
+    padding-right: 0 !important;
+    max-width: 80px !important;
+    /* Force edge positioning */
+    border-right: none !important;
+  }
+
+  .left-panel {
+    left: 0px !important;
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+    max-width: 80px !important;
+    border-left: none !important;
+  }
+
+  .side-btn {
+    min-width: 45px;
+    padding: 8px 6px;
+    font-size: 11px;
+    /* Ensure no extra spacing */
+    margin: 0 !important;
+    border: none !important;
+  }
+
+  .side-btn .icon {
+    font-size: 26px;
+  }
+}
+
+/* Ultra-aggressive positioning for iPhone SE - handles viewport scaling */
+@media screen and (max-device-width: 375px), 
+       screen and (max-width: 375px),
+       (max-width: 375px) and (-webkit-device-pixel-ratio: 2) {
+  
+  html .right-panel,
+  body .right-panel,
+  * .right-panel {
+    right: 0px !important;
+    position: absolute !important;
+    transform: translateY(-50%) !important;
+    /* Remove any potential overflow */
+    overflow: visible !important;
+    /* Ensure no transforms are applied that could move it */
+    will-change: auto !important;
+    backface-visibility: visible !important;
+  }
+
+  html .left-panel,
+  body .left-panel,
+  * .left-panel {
+    left: 0px !important;
+    position: absolute !important;
+    transform: translateY(-50%) !important;
+  }
+
+  /* Override any container padding/margin that might affect positioning */
+  .slot-ui-overlay {
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
   }
 }
 

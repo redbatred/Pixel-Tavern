@@ -208,15 +208,15 @@ export class WinAnimation {
       this.frames.push(frameTexture)
     }
     
-    // Start animation loop
+    // Start frame-rate independent animation loop
     let currentFrame = 0
-    let frameCounter = 0
+    let lastFrameTime = performance.now()
     let loops = 0
     
-    const frameRate = isMage ? 6 : 15 // Slower for better visibility
+    const frameInterval = isMage ? 100 : 67 // MS per frame: 100ms = 10fps, 67ms = 15fps
     const maxLoops = isMage ? 1 : 2 // Play once for mage, twice for knight
     
-    const animate = () => {
+    const animate = (currentTime: number) => {
       // Stop animation if no longer animating
       if (!this.isAnimating) {
         if (this.animationFrameId) {
@@ -226,9 +226,11 @@ export class WinAnimation {
         return
       }
       
-      frameCounter++
-      if (frameCounter >= frameRate) {
-        frameCounter = 0
+      // Frame-rate independent timing
+      const deltaTime = currentTime - lastFrameTime
+      
+      if (deltaTime >= frameInterval) {
+        lastFrameTime = currentTime
         currentFrame = (currentFrame + 1) % this.frames.length
         
         if (this.characterSprite && this.frames[currentFrame]) {
@@ -258,7 +260,7 @@ export class WinAnimation {
       this.animationFrameId = requestAnimationFrame(animate)
     }
     
-    animate()
+    this.animationFrameId = requestAnimationFrame(animate)
   }
 
   private clear(): void {

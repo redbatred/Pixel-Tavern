@@ -1065,12 +1065,22 @@ class UIManager {
     const winAmount = document.getElementById('win-amount')
     if (winDisplay && winAmount) {
       if (this.state.lastWin > 0) {
+        // Show total payout (bet amount + win amount) instead of just win amount
+        const totalPayout = this.state.lastWin + this.state.betAmount
+        winAmount.textContent = totalPayout % 1 === 0 ? 
+          totalPayout.toLocaleString() : 
+          totalPayout.toFixed(2)
+        
+        // Use class-based animation to prevent positioning jumps
         winDisplay.style.display = 'block'
-        winAmount.textContent = this.state.lastWin % 1 === 0 ? 
-          this.state.lastWin.toLocaleString() : 
-          this.state.lastWin.toFixed(2)
+        winDisplay.classList.add('show')
       } else {
-        winDisplay.style.display = 'none'
+        winDisplay.classList.remove('show')
+        setTimeout(() => {
+          if (!winDisplay.classList.contains('show')) {
+            winDisplay.style.display = 'none'
+          }
+        }, 800) // Wait for animation to complete
       }
     }
 

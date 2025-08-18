@@ -1,7 +1,7 @@
 import { AudioManager } from '../audio/AudioManager'
 
 interface SettingsState {
-  animationSpeed: 'slow' | 'normal' | 'fast'
+  animationSpeed: 'very-slow' | 'slow' | 'normal' | 'fast' | 'very-fast'
   autoSpinDelay: number
   masterVolume: number
   musicVolume: number
@@ -174,23 +174,29 @@ export class SettingsModal {
             <h3>🎮 Game Settings</h3>
             <div class="setting-item">
               <label>
-                <span>Auto-spin delay:</span>
-                <select id="autoSpinDelaySelect">
-                  <option value="1000" ${this.settings.autoSpinDelay === 1000 ? 'selected' : ''}>1 second</option>
-                  <option value="1500" ${this.settings.autoSpinDelay === 1500 ? 'selected' : ''}>1.5 seconds</option>
-                  <option value="2000" ${this.settings.autoSpinDelay === 2000 ? 'selected' : ''}>2 seconds</option>
-                  <option value="3000" ${this.settings.autoSpinDelay === 3000 ? 'selected' : ''}>3 seconds</option>
+                <span>Animation speed:</span>
+                <select id="animationSpeedSelect" title="Controls how fast the reels spin">
+                  <option value="very-slow" ${this.settings.animationSpeed === 'very-slow' ? 'selected' : ''}>Very Slow (3.5s)</option>
+                  <option value="slow" ${this.settings.animationSpeed === 'slow' ? 'selected' : ''}>Slow (2.5s)</option>
+                  <option value="normal" ${this.settings.animationSpeed === 'normal' ? 'selected' : ''}>Normal (1.5s)</option>
+                  <option value="fast" ${this.settings.animationSpeed === 'fast' ? 'selected' : ''}>Fast (0.8s)</option>
+                  <option value="very-fast" ${this.settings.animationSpeed === 'very-fast' ? 'selected' : ''}>Very Fast (0.5s)</option>
                 </select>
               </label>
             </div>
             
             <div class="setting-item">
               <label>
-                <span>Animation speed:</span>
-                <select id="animationSpeedSelect">
-                  <option value="slow" ${this.settings.animationSpeed === 'slow' ? 'selected' : ''}>Slow</option>
-                  <option value="normal" ${this.settings.animationSpeed === 'normal' ? 'selected' : ''}>Normal</option>
-                  <option value="fast" ${this.settings.animationSpeed === 'fast' ? 'selected' : ''}>Fast</option>
+                <span>Auto-spin delay:</span>
+                <select id="autoSpinDelaySelect" title="Delay between automatic spins">
+                  <option value="500" ${this.settings.autoSpinDelay === 500 ? 'selected' : ''}>0.5 seconds (Rapid)</option>
+                  <option value="1000" ${this.settings.autoSpinDelay === 1000 ? 'selected' : ''}>1 second (Fast)</option>
+                  <option value="1500" ${this.settings.autoSpinDelay === 1500 ? 'selected' : ''}>1.5 seconds (Quick)</option>
+                  <option value="2000" ${this.settings.autoSpinDelay === 2000 ? 'selected' : ''}>2 seconds (Normal)</option>
+                  <option value="2500" ${this.settings.autoSpinDelay === 2500 ? 'selected' : ''}>2.5 seconds (Relaxed)</option>
+                  <option value="3000" ${this.settings.autoSpinDelay === 3000 ? 'selected' : ''}>3 seconds (Slow)</option>
+                  <option value="4000" ${this.settings.autoSpinDelay === 4000 ? 'selected' : ''}>4 seconds (Very Slow)</option>
+                  <option value="5000" ${this.settings.autoSpinDelay === 5000 ? 'selected' : ''}>5 seconds (Maximum)</option>
                 </select>
               </label>
             </div>
@@ -322,7 +328,7 @@ export class SettingsModal {
     })
 
     animationSelect.addEventListener('change', (e) => {
-      this.settings.animationSpeed = (e.target as HTMLSelectElement).value as 'slow' | 'normal' | 'fast'
+      this.settings.animationSpeed = (e.target as HTMLSelectElement).value as 'very-slow' | 'slow' | 'normal' | 'fast' | 'very-fast'
       this.notifySettingsChange({ animationSpeed: this.settings.animationSpeed })
       this.audioManager.playImmediateSound('UI_CLICK')
     })

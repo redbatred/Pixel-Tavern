@@ -54,6 +54,16 @@ export class UserInterface {
     this.settingsModal = new SettingsModal(document.body, audioManager)
     this.autoSpinModal = new AutoSpinModal(document.body, audioManager)
     
+    // Connect settings modal to game actions
+    this.settingsModal.setOnSettingsChange((settings) => {
+      if (settings.animationSpeed) {
+        this.onGameAction?.('setAnimationSpeed', settings.animationSpeed)
+      }
+      if (settings.autoSpinDelay !== undefined) {
+        this.onGameAction?.('setAutoSpinDelay', settings.autoSpinDelay)
+      }
+    })
+    
     this.initializeUI()
     this.setupKeyboardHandlers()
   }
@@ -76,6 +86,30 @@ export class UserInterface {
         if (this.state.showCustomBetInput) {
           this.hideCustomBetInput()
         }
+      } else if (e.key === ' ' || e.code === 'Space') {
+        // Spacebar hotkey for spin button
+        e.preventDefault() // Prevent page scroll
+        
+        // Don't trigger if modals are open or input fields are focused
+        const activeElement = document.activeElement
+        if (activeElement?.tagName === 'INPUT' || 
+            activeElement?.tagName === 'SELECT' || 
+            activeElement?.tagName === 'TEXTAREA' ||
+            (this.infoModal as any).isOpen ||
+            (this.settingsModal as any).isOpen ||
+            (this.autoSpinModal as any).isVisible ||
+            this.state.showCustomBetInput) {
+          return
+        }
+        
+        // Check if spin is possible
+        if (this.state.isSpinning || this.state.isAutoSpinning || this.state.credits < this.state.betAmount) {
+          return
+        }
+        
+        // Trigger spin
+        this.audioManager.playImmediateSound('UI_CLICK')
+        this.onGameAction?.('spin')
       }
     })
   }
@@ -270,6 +304,7 @@ export class UserInterface {
           <button 
             class="spin-btn ${this.state.isSpinning ? 'spinning' : ''}" 
             id="spin-btn"
+            title="Click to spin or press Spacebar"
           >
             <div class="spin-btn-inner">
               <div class="spin-icon">
@@ -579,12 +614,22 @@ export class UserInterface {
     const winAmount = document.getElementById('win-amount')
     if (winDisplay && winAmount) {
       if (this.state.lastWin > 0) {
+        // Show total payout (bet amount + win amount) instead of just win amount
+        const totalPayout = this.state.lastWin + this.state.betAmount
+        winAmount.textContent = totalPayout % 1 === 0 
+          ? totalPayout.toLocaleString() 
+          : totalPayout.toFixed(2)
+        
+        // Use class-based animation to prevent positioning jumps
         winDisplay.style.display = 'flex'
-        winAmount.textContent = this.state.lastWin % 1 === 0 
-          ? this.state.lastWin.toLocaleString() 
-          : this.state.lastWin.toFixed(2)
+        winDisplay.classList.add('show')
       } else {
-        winDisplay.style.display = 'none'
+        winDisplay.classList.remove('show')
+        setTimeout(() => {
+          if (!winDisplay.classList.contains('show')) {
+            winDisplay.style.display = 'none'
+          }
+        }, 800) // Wait for animation to complete
       }
     }
 

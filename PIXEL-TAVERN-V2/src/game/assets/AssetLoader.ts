@@ -1,4 +1,5 @@
 import { Assets, Texture, Rectangle } from 'pixi.js'
+import { WebPSupport } from '../utils/webpSupport'
 
 export interface GameTextures {
   background: Texture
@@ -13,14 +14,16 @@ export class AssetLoader {
 
   async loadAssets(): Promise<void> {
     try {
+      // Get optimal asset paths based on WebP support
+      const assetPaths = await WebPSupport.getAssetPaths([
+        '/assets/images/background.png',
+        '/assets/images/Frame.png',
+        '/assets/images/characters.png',
+        '/assets/images/slot-column-bg.png'
+      ])
 
-      // Load all textures in parallel with error handling
-      const assetPromises = [
-        Assets.load('/assets/images/background.png').catch(() => null),
-        Assets.load('/assets/images/Frame.png').catch(() => null),
-        Assets.load('/assets/images/characters.png').catch(() => null),
-        Assets.load('/assets/images/slot-column-bg.png').catch(() => null)
-      ]
+      // Load all textures in parallel with error handling (optimized format)
+      const assetPromises = assetPaths.map(path => Assets.load(path).catch(() => null))
 
       const [backgroundTexture, frameTexture, charactersTexture, columnBgTexture] = await Promise.all(assetPromises)
 

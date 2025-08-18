@@ -9,6 +9,8 @@ import { OrientationOverlay } from './ui/OrientationOverlay'
 import { AssetLoader } from './assets/AssetLoader'
 import { GameConfig } from './config/GameConfig'
 import { DeviceUtils } from './utils/deviceUtils'
+import { PerformanceOptimizer } from './utils/performanceOptimizer'
+import { OptimizedAnimations } from './utils/optimizedAnimations'
 import { checkWins, getSpinDuration, getScrollSpeed, getWinTier } from './utils/winChecker'
 import './ui/SpinEffects.css'
 
@@ -115,10 +117,29 @@ export class PixelTavernGame {
       height: GameConfig.RESPONSIVE.BASE_HEIGHT,
       backgroundColor: 0x000000, // Transparent background since CSS handles it
       backgroundAlpha: 0,
-      antialias: true,
+      antialias: false, // Disable for better performance
       autoDensity: true,
-      resolution: window.devicePixelRatio || 1
+      resolution: Math.min(window.devicePixelRatio || 1, 2), // Cap at 2x for performance
+      powerPreference: 'high-performance', // Request high-performance GPU
+      hello: false, // Disable PIXI hello message for slight perf gain
+      eventFeatures: {
+        move: true,
+        globalMove: false, // Disable global move events for performance
+        click: true,
+        wheel: false // Disable wheel events if not needed
+      }
     })
+
+    // Initialize performance optimizer after PIXI app is ready
+    PerformanceOptimizer.init(this.app)
+    
+    // Initialize optimized animations
+    OptimizedAnimations.initializeGSAP()
+
+    // Performance optimizations for PIXI v8
+    // Enable texture garbage collection
+    this.app.renderer.textureGC.maxIdle = 60 * 60 // 1 hour
+    this.app.renderer.textureGC.checkCountMax = 600 // Check every 10 seconds at 60fps
 
     // Setup responsive viewport container
     this.setupResponsiveViewport()
@@ -159,10 +180,12 @@ export class PixelTavernGame {
           this.requestAutoSpinStop()
           break
         case 'setAutoSpinDelay':
-          // Handle auto spin delay setting
+          // Update auto spin delay in game state
+          this.gameActor.send({ type: 'SET_AUTO_SPIN_DELAY', delay: payload })
           break
         case 'setAnimationSpeed':
-          // Handle animation speed setting
+          // Update animation speed in game state
+          this.gameActor.send({ type: 'SET_ANIMATION_SPEED', speed: payload })
           break
         case 'continueAfterWin':
           // Continue after win modal

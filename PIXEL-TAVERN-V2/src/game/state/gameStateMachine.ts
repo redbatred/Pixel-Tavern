@@ -11,7 +11,8 @@ export interface GameContext {
   autoSpinRemaining: number;
   isInfiniteAutoSpin: boolean;
   spinsCompleted: number;
-  animationSpeed: "slow" | "normal" | "fast";
+  animationSpeed: "very-slow" | "slow" | "normal" | "fast" | "very-fast";
+  autoSpinDelay: number;
   slotResults?: number[][];
   winAmount?: number;
   winningPositions?: Array<{ payline: number; positions: [number, number][] }>;
@@ -37,7 +38,7 @@ export type GameEvent =
   | { type: "START_AUTO_SPIN"; count: number; isInfinite: boolean }
   | { type: "REQUEST_AUTO_SPIN_STOP" }
   | { type: "AUTO_SPIN_TIMEOUT" }
-  | { type: "SET_ANIMATION_SPEED"; speed: "slow" | "normal" | "fast" }
+  | { type: "SET_ANIMATION_SPEED"; speed: "very-slow" | "slow" | "normal" | "fast" | "very-fast" }
   | { type: "SET_AUTO_SPIN_DELAY"; delay: number }
   | { type: "PAUSE" }
   | { type: "RESUME" };
@@ -178,6 +179,14 @@ export const gameStateMachine = setup({
         return "normal";
       },
     }),
+    setAutoSpinDelay: assign({
+      autoSpinDelay: ({ event }) => {
+        if (event.type === "SET_AUTO_SPIN_DELAY") {
+          return event.delay;
+        }
+        return 2000; // Default delay
+      },
+    }),
     clearWinState: assign({
       winAmount: 0,
       lastWin: 0,
@@ -188,23 +197,31 @@ export const gameStateMachine = setup({
   delays: {
     spinDuration: ({ context }) => {
       switch (context.animationSpeed) {
+        case "very-slow":
+          return 3000;
         case "slow":
           return 2000;
         case "fast":
           return 500;
+        case "very-fast":
+          return 300;
         default:
-          return 800;
+          return 800; // Back to original normal speed
       }
     },
     autoSpinDelay: ({ context }) => {
-      // Much shorter delay for faster auto-spin
+      // Original delays
       switch (context.animationSpeed) {
+        case "very-slow":
+          return 400;
         case "slow":
           return 300;
         case "fast":
           return 70;
+        case "very-fast":
+          return 50;
         default:
-          return 150;
+          return 150; // Back to original
       }
     },
     winDisplayDuration: ({ context }) => {
@@ -231,6 +248,7 @@ export const gameStateMachine = setup({
     isInfiniteAutoSpin: false,
     spinsCompleted: 0,
     animationSpeed: "normal" as const,
+    autoSpinDelay: 2000,
     slotResults: undefined,
     winAmount: 0,
     winningPositions: [],
@@ -272,6 +290,9 @@ export const gameStateMachine = setup({
         },
         SET_ANIMATION_SPEED: {
           actions: "setAnimationSpeed",
+        },
+        SET_AUTO_SPIN_DELAY: {
+          actions: "setAutoSpinDelay",
         },
         REQUEST_AUTO_SPIN_STOP: {
           // Safe to set stop flag in idle state

@@ -2,6 +2,7 @@ import { Application, Container, Sprite, Graphics } from 'pixi.js'
 import { gsap } from 'gsap'
 import { GameConfig } from '../config/GameConfig'
 import type { GameTextures } from '../assets/AssetLoader'
+import { PerformanceOptimizer } from '../utils/performanceOptimizer'
 
 export interface SlotSymbol {
   sprite: Sprite
@@ -21,10 +22,21 @@ export class SlotMachine {
   private background: Sprite | null = null
   private frame: Sprite | null = null
   private isSpinning: boolean = false
+  private symbolPool: Sprite[] = [] // Object pool for sprites
+  private effectsPool: Graphics[] = [] // Pool for graphics objects
+  private frameCount: number = 0 // For performance monitoring
+  private lastLightningTime: number = 0 // For frame-rate independent lightning animations
 
   constructor(app: Application) {
     this.app = app
     this.container = new Container()
+    
+    // Optimize container for better batching
+    PerformanceOptimizer.optimizeContainer(this.container)
+    
+    // Initialize object pools
+    this.symbolPool = []
+    this.effectsPool = []
   }
 
   async init(textures: GameTextures): Promise<void> {
@@ -171,7 +183,11 @@ export class SlotMachine {
     if (!this.textures) throw new Error('Textures not loaded')
     
     const texture = this.textures.symbols[symbolIndex % this.textures.symbols.length]
-    const sprite = new Sprite(texture)
+    const sprite = PerformanceOptimizer.getSprite()
+    sprite.texture = texture
+    
+    // Optimize sprite for better performance
+    PerformanceOptimizer.optimizeSprite(sprite)
     
     // Do NOT apply character-specific Y offset here - all symbols use the standard grid position
     // Character-specific adjustments will be applied only for final results
@@ -183,6 +199,7 @@ export class SlotMachine {
     
     // Apply consistent scaling
     sprite.scale.set(GameConfig.SLOT_MACHINE.SYMBOL_SCALE)
+    sprite.visible = true
     
     return sprite
   }
@@ -193,7 +210,7 @@ export class SlotMachine {
     // FIRST: Generate final results before animation starts (like original game)
     const finalResults = this.generateFinalResults()
     
-    // Show spin effects
+    // Show spin effects (but reduce in low performance mode)
     this.spinEffects.forEach(effect => {
       effect.visible = true
     })
@@ -203,6 +220,7 @@ export class SlotMachine {
         const spinDuration = duration + colIndex * 200 // Staggered stops (reduced from 300ms to 200ms)
         let scrollOffset = 0
         const originalY = column.y
+        let lastTime = performance.now()
         
         const spinEffects = this.spinEffects
         
@@ -210,17 +228,22 @@ export class SlotMachine {
           duration: spinDuration / 1000,
           ease: 'power2.out',
           onUpdate: function() {
-            scrollOffset += scrollSpeed
+            // Make animation frame-rate independent using delta time
+            const currentTime = performance.now()
+            const deltaTime = (currentTime - lastTime) / 16.67 // Normalize to 60fps (16.67ms per frame)
+            lastTime = currentTime
+            
+            scrollOffset += scrollSpeed * deltaTime
             const cycleDistance = GameConfig.SLOT_MACHINE.SLOT_HEIGHT * 3
             const smoothOffset = scrollOffset % cycleDistance
             column.y = originalY + smoothOffset
             
-            // Animate spin effects
+            // Animate spin effects with frame-rate independence
             const effectsContainer = spinEffects[colIndex]
             if (effectsContainer && effectsContainer.visible) {
               effectsContainer.children.forEach((particle: any, index: number) => {
-                if (particle instanceof Sprite) {
-                  particle.y += scrollSpeed * 1.5
+                if (particle instanceof Sprite && particle.visible) {
+                  particle.y += scrollSpeed * 1.5 * deltaTime
                   if (particle.y > 200) {
                     particle.y = -200
                     particle.x = (Math.random() - 0.5) * 60
@@ -326,10 +349,11 @@ export class SlotMachine {
       const color = paylineColors[(payline - 1) % paylineColors.length]
       
       positions.forEach(([row, col], index) => {
-        const highlight = new Graphics()
+        const highlight = PerformanceOptimizer.getGraphics()
         const symbol = this.slotGrid[row][col]
         
         if (!symbol) {
+          PerformanceOptimizer.returnGraphics(highlight)
           return
         }
         
@@ -434,7 +458,7 @@ export class SlotMachine {
       if (highlight.parent) {
         highlight.parent.removeChild(highlight)
       }
-      highlight.destroy()
+      PerformanceOptimizer.returnGraphics(highlight)
     })
     this.winHighlights = []
   }
@@ -445,6 +469,7 @@ export class SlotMachine {
       case 'spinning':
         // Clear any existing highlights
         this.clearWinHighlights()
+        this.updatePerformanceMetrics()
         break
       case 'showingWin':
         // Show slot win highlights along with PIXI character animation
@@ -636,11 +661,14 @@ export class SlotMachine {
         }
       }
 
-      // Animate particles
+      // Animate particles with frame-rate independence
       if (particles) {
         const time = Date.now()
+        const deltaTime = this.lastLightningTime ? (time - this.lastLightningTime) / 16.67 : 1 // Normalize to 60fps
+        this.lastLightningTime = time
+        
         particles.forEach((particle, pIndex) => {
-          particle.y += 2
+          particle.y += 2 * deltaTime // Frame-rate independent movement
           if (particle.y > 125) { // Reduced from 200 to 125 to match shorter lightning
             particle.y = -125  // Reduced from -200 to -125
             particle.x = (Math.random() - 0.5) * 20
@@ -716,6 +744,33 @@ export class SlotMachine {
     this.clearLightningEffects()
     this.stopSpinEffects()
     gsap.killTweensOf(this.slotColumns)
+    
+    // Return symbols to pool before destroying
+    this.slotGrid.forEach(row => {
+      row.forEach(sprite => {
+        if (sprite) {
+          PerformanceOptimizer.returnSprite(sprite)
+        }
+      })
+    })
+    
+    // Clean up object pools
+    this.symbolPool.forEach(sprite => sprite.destroy())
+    this.effectsPool.forEach(graphic => graphic.destroy())
+    this.symbolPool.length = 0
+    this.effectsPool.length = 0
+    
     this.container.destroy({ children: true })
+  }
+
+  // Performance monitoring
+  private updatePerformanceMetrics(): void {
+    this.frameCount++
+    
+    // Clean up pools every 1000 frames to prevent memory leaks
+    if (this.frameCount % 1000 === 0) {
+      // Let the PerformanceOptimizer handle cleanup
+      // This is now handled centrally
+    }
   }
 }

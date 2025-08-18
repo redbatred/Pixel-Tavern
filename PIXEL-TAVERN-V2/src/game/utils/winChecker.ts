@@ -8,48 +8,39 @@ export interface WinResult {
 
 export type WinTier = 'big' | 'mega' | 'epic'
 
-// Paylines for 3x5 slot machine (3 rows, 5 columns) - EXACT MATCH to your winning patterns image
+// Paylines for 3x5 slot machine (3 rows, 5 columns) - Fixed and simplified
 export const PAYLINES: [number, number][][] = [
-  // Payline 1: Bottom row (all bottom)
-  [[2, 0], [2, 1], [2, 2], [2, 3], [2, 4]],
-  // Payline 2: Top row (all top)
-  [[0, 0], [0, 1], [0, 2], [0, 3], [0, 4]], 
-  // Payline 3: Bottom row (all bottom) 
-  [[2, 0], [2, 1], [2, 2], [2, 3], [2, 4]],
-  // Payline 4: Top-bottom-middle-bottom-top pattern
-  [[0, 0], [2, 1], [1, 2], [2, 3], [0, 4]],
-  // Payline 5: Bottom-top-middle-top-bottom pattern  
-  [[2, 0], [0, 1], [1, 2], [0, 3], [2, 4]],
-  // Payline 6: Bottom-bottom-top-top-top pattern
-  [[2, 0], [2, 1], [0, 2], [0, 3], [0, 4]],
-  // Payline 7: Bottom-bottom-middle-top-top pattern
-  [[2, 0], [2, 1], [1, 2], [0, 3], [0, 4]],
-  // Payline 8: Middle-bottom-middle-top-middle pattern
-  [[1, 0], [2, 1], [1, 2], [0, 3], [1, 4]],
-  // Payline 9: Middle-top-middle-bottom-middle pattern  
-  [[1, 0], [0, 1], [1, 2], [2, 3], [1, 4]],
-  // Payline 10: Top-middle-middle-middle-bottom pattern
-  [[0, 0], [1, 1], [1, 2], [1, 3], [2, 4]],
-  // Payline 11: Bottom-top-middle-middle-middle pattern
-  [[2, 0], [0, 1], [1, 2], [1, 3], [1, 4]],
-  // Payline 12: Top-bottom-middle-bottom-top pattern
-  [[0, 0], [2, 1], [1, 2], [2, 3], [0, 4]],
-  // Payline 13: Bottom-bottom-middle-top-bottom pattern
-  [[2, 0], [2, 1], [1, 2], [0, 3], [2, 4]],
-  // Payline 14: Bottom-top-middle-top-bottom pattern
-  [[2, 0], [0, 1], [1, 2], [0, 3], [2, 4]],
-  // Payline 15: Top-bottom-middle-bottom-top pattern
-  [[0, 0], [2, 1], [1, 2], [2, 3], [0, 4]],
-  // Payline 16: Bottom-bottom-middle-top-bottom pattern
-  [[2, 0], [2, 1], [1, 2], [0, 3], [2, 4]],
-  // Payline 17: Bottom-bottom-middle-bottom-top pattern
-  [[2, 0], [2, 1], [1, 2], [2, 3], [0, 4]],
-  // Payline 18: Middle-top-bottom-top-bottom pattern
-  [[1, 0], [0, 1], [2, 2], [0, 3], [2, 4]],
-  // Payline 19: Top-top-bottom-top-top pattern
-  [[0, 0], [0, 1], [2, 2], [0, 3], [0, 4]],
-  // Payline 20: Top-top-top-middle-bottom pattern
-  [[0, 0], [0, 1], [0, 2], [1, 3], [2, 4]],
+  // Basic horizontal lines
+  [[0, 0], [0, 1], [0, 2], [0, 3], [0, 4]], // Payline 1: Top row
+  [[1, 0], [1, 1], [1, 2], [1, 3], [1, 4]], // Payline 2: Middle row
+  [[2, 0], [2, 1], [2, 2], [2, 3], [2, 4]], // Payline 3: Bottom row
+  
+  // Diagonal lines
+  [[0, 0], [1, 1], [2, 2], [1, 3], [0, 4]], // Payline 4: V shape (top-middle-bottom-middle-top)
+  [[2, 0], [1, 1], [0, 2], [1, 3], [2, 4]], // Payline 5: Inverted V (bottom-middle-top-middle-bottom)
+  
+  // Zigzag patterns
+  [[0, 0], [2, 1], [1, 2], [2, 3], [0, 4]], // Payline 6: Top-bottom-middle-bottom-top
+  [[2, 0], [0, 1], [1, 2], [0, 3], [2, 4]], // Payline 7: Bottom-top-middle-top-bottom
+  
+  // More complex patterns
+  [[1, 0], [0, 1], [0, 2], [0, 3], [1, 4]], // Payline 8: Middle-top-top-top-middle
+  [[1, 0], [2, 1], [2, 2], [2, 3], [1, 4]], // Payline 9: Middle-bottom-bottom-bottom-middle
+  [[0, 0], [0, 1], [1, 2], [2, 3], [2, 4]], // Payline 10: Top-top-middle-bottom-bottom
+  
+  // Additional patterns for more win opportunities
+  [[2, 0], [2, 1], [1, 2], [0, 3], [0, 4]], // Payline 11: Bottom-bottom-middle-top-top
+  [[0, 0], [1, 1], [1, 2], [1, 3], [2, 4]], // Payline 12: Top-middle-middle-middle-bottom
+  [[2, 0], [1, 1], [1, 2], [1, 3], [0, 4]], // Payline 13: Bottom-middle-middle-middle-top
+  [[1, 0], [0, 1], [2, 2], [0, 3], [1, 4]], // Payline 14: Middle-top-bottom-top-middle
+  [[1, 0], [2, 1], [0, 2], [2, 3], [1, 4]], // Payline 15: Middle-bottom-top-bottom-middle
+  
+  // Extra patterns
+  [[0, 0], [2, 1], [0, 2], [2, 3], [0, 4]], // Payline 16: Top-bottom-top-bottom-top
+  [[2, 0], [0, 1], [2, 2], [0, 3], [2, 4]], // Payline 17: Bottom-top-bottom-top-bottom
+  [[1, 0], [1, 1], [0, 2], [1, 3], [1, 4]], // Payline 18: Middle-middle-top-middle-middle
+  [[1, 0], [1, 1], [2, 2], [1, 3], [1, 4]], // Payline 19: Middle-middle-bottom-middle-middle
+  [[0, 0], [1, 1], [2, 2], [2, 3], [2, 4]], // Payline 20: Top-middle-bottom-bottom-bottom
 ]
 
 export const checkWins = (slotResults: number[][]): WinResult => {
@@ -59,6 +50,8 @@ export const checkWins = (slotResults: number[][]): WinResult => {
   const winningColumns: number[] = []
   const winningPaylines: number[] = []
   const winningPositions: Array<{ payline: number; positions: [number, number][] }> = []
+
+  console.log('🎰 Checking wins for slot results:', slotResults)
 
   // Check each payline
   PAYLINES.forEach((payline, paylineIndex) => {
@@ -75,6 +68,14 @@ export const checkWins = (slotResults: number[][]): WinResult => {
       } else {
         break
       }
+    }
+
+    // Debug: Log each payline check
+    if (consecutiveCount >= 3) {
+      console.log(`🏆 Payline ${paylineIndex + 1} WIN: ${consecutiveCount} consecutive ${firstSymbol}s`)
+      console.log(`   Positions:`, payline.slice(0, consecutiveCount))
+    } else if (consecutiveCount === 2) {
+      console.log(`💸 Payline ${paylineIndex + 1}: Only ${consecutiveCount} consecutive ${firstSymbol}s (need 3+)`)
     }
 
     // Award win if 3 or more consecutive symbols (matching original game)
@@ -95,7 +96,7 @@ export const checkWins = (slotResults: number[][]): WinResult => {
           winAmount = 10
       }
       
-      console.log(`Win detected! Payline ${paylineIndex + 1}: ${consecutiveCount} consecutive ${firstSymbol}s = ${winAmount} credits`)
+      console.log(`💰 Win detected! Payline ${paylineIndex + 1}: ${consecutiveCount} consecutive ${firstSymbol}s = ${winAmount} credits`)
       
       totalWin += winAmount
       winningPaylines.push(paylineIndex + 1)
@@ -122,6 +123,7 @@ export const checkWins = (slotResults: number[][]): WinResult => {
     }
   })
 
+  console.log(`🎯 Total wins: ${winningPaylines.length} paylines, ${totalWin} credits`)
   const result = { winAmount: totalWin, winningCharacter, winningColumns, winningPaylines, winningPositions }
   return result
 }
@@ -138,20 +140,24 @@ export const shouldShowWinModal = (winAmount: number, betAmount: number): boolea
   return getWinTier(winAmount, betAmount) !== null
 }
 
-export const getSpinDuration = (speed: 'slow' | 'normal' | 'fast'): number => {
+export const getSpinDuration = (speed: 'very-slow' | 'slow' | 'normal' | 'fast' | 'very-fast'): number => {
   switch (speed) {
+    case 'very-slow': return 3500
     case 'slow': return 2500
     case 'normal': return 1500
     case 'fast': return 800
+    case 'very-fast': return 500
     default: return 1500
   }
 }
 
-export const getScrollSpeed = (speed: 'slow' | 'normal' | 'fast'): number => {
+export const getScrollSpeed = (speed: 'very-slow' | 'slow' | 'normal' | 'fast' | 'very-fast'): number => {
   switch (speed) {
-    case 'slow': return 6
-    case 'normal': return 10
-    case 'fast': return 16
+    case 'very-slow': return 4   // Back to original
+    case 'slow': return 6        // Back to original
+    case 'normal': return 10     // Back to original
+    case 'fast': return 16       // Back to original
+    case 'very-fast': return 22  // Back to original
     default: return 10
   }
 }
