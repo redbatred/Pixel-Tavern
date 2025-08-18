@@ -174,7 +174,7 @@ export class AutoSpinModal {
     // Close button
     const closeBtn = this.modal.querySelector('#auto-spin-close')
     closeBtn?.addEventListener('click', () => {
-      this.audioManager.playUIClickSound()
+      this.audioManager.playImmediateSound('UI_CLICK')
       this.hide()
     })
 
@@ -188,7 +188,7 @@ export class AutoSpinModal {
         // Add selection animation
         button.classList.add('selected')
         
-        this.audioManager.playUIClickSound()
+        this.audioManager.playImmediateSound('UI_CLICK')
         
         setTimeout(() => {
           this.onSelectionCallback?.(count, isInfinite)
@@ -208,7 +208,7 @@ export class AutoSpinModal {
     // Click outside to close
     this.modal.addEventListener('click', (e) => {
       if (e.target === this.modal) {
-        this.audioManager.playUIClickSound()
+        this.audioManager.playImmediateSound('UI_CLICK')
         this.hide()
       }
     })
@@ -216,7 +216,7 @@ export class AutoSpinModal {
     // Escape key to close
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        this.audioManager.playUIClickSound()
+        this.audioManager.playImmediateSound('UI_CLICK')
         this.hide()
         document.removeEventListener('keydown', handleKeyDown)
       }

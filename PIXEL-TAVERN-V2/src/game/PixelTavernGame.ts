@@ -289,13 +289,13 @@ export class PixelTavernGame {
       case 'spinning':
         if (!this.isHandlingSpin) {
           this.isHandlingSpin = true
-          this.audioManager.playSpinSound()
+          this.audioManager.startAllColumnSpinSounds() // Start all column spinning sounds
           this.slotMachine.startSpinEffects() // Start lightning effects
           this.handleSpin()
         }
         break
       case 'checkingWin':
-        this.audioManager.stopSpinSound()
+        this.audioManager.stopAllColumnSpinSounds() // Stop any remaining column sounds
         this.slotMachine.stopSpinEffects() // Stop lightning effects
         this.isHandlingSpin = false // Reset spin flag
         this.handleWinCheck()
@@ -372,8 +372,11 @@ export class PixelTavernGame {
       const duration = getSpinDuration(context.animationSpeed)
       const scrollSpeed = getScrollSpeed(context.animationSpeed)
       
-      // Start spinning animation
-      const results = await this.slotMachine.spinReels(duration, scrollSpeed)
+      // Start spinning animation with column stop callback
+      const results = await this.slotMachine.spinReels(duration, scrollSpeed, (columnIndex) => {
+        // Stop spinning sound for this specific column and play stop sound
+        this.audioManager.stopColumnSpinSound(columnIndex)
+      })
       
       // Send results to state machine - let it handle win checking
       this.gameActor.send({ type: 'SPIN_COMPLETE', results })

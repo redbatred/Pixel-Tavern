@@ -15,7 +15,7 @@ export class InfoModal {
     if (this.isOpen) return
     
     this.isOpen = true
-    this.audioManager.playUIClickSound()
+    this.audioManager.playImmediateSound('UI_CLICK')
     this.createModal()
     document.body.style.overflow = 'hidden'
   }
@@ -24,7 +24,7 @@ export class InfoModal {
     if (!this.isOpen) return
     
     this.isOpen = false
-    this.audioManager.playUIClickSound()
+    this.audioManager.playImmediateSound('UI_CLICK')
     
     if (this.modal) {
       this.modal.style.animation = 'modal-fade-out 0.3s ease-out'

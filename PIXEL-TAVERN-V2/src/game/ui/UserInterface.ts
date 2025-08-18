@@ -310,7 +310,7 @@ export class UserInterface {
         // Immediately update UI state for instant feedback
         this.updateState({ betAmount: amount })
         
-        this.audioManager.playUIClickSound()
+        this.audioManager.playImmediateSound('UI_CLICK')
         this.onGameAction?.('setBet', amount)
       })
     })
@@ -326,7 +326,7 @@ export class UserInterface {
       // Immediately update UI state for instant feedback
       this.updateState({ betAmount: maxBet })
       
-      this.audioManager.playUIClickSound()
+      this.audioManager.playImmediateSound('UI_CLICK')
       this.onGameAction?.('maxBet')
     })
 
@@ -334,7 +334,7 @@ export class UserInterface {
     const showCustomBetBtn = document.getElementById('show-custom-bet')
     showCustomBetBtn?.addEventListener('click', () => {
       if (this.state.isSpinning || this.state.isAutoSpinning) return
-      this.audioManager.playUIClickSound()
+      this.audioManager.playImmediateSound('UI_CLICK')
       this.showCustomBetInput()
     })
 
@@ -346,7 +346,7 @@ export class UserInterface {
 
     const cancelCustomBetBtn = document.getElementById('cancel-custom-bet')
     cancelCustomBetBtn?.addEventListener('click', () => {
-      this.audioManager.playUIClickSound()
+      this.audioManager.playImmediateSound('UI_CLICK')
       this.hideCustomBetInput()
     })
 
@@ -359,7 +359,7 @@ export class UserInterface {
       if (e.key === 'Enter') {
         this.handleCustomBetSubmit()
       } else if (e.key === 'Escape') {
-        this.audioManager.playUIClickSound()
+        this.audioManager.playImmediateSound('UI_CLICK')
         this.hideCustomBetInput()
       }
     })
@@ -368,7 +368,7 @@ export class UserInterface {
     const spinBtn = document.getElementById('spin-btn')
     spinBtn?.addEventListener('click', () => {
       if (this.state.isSpinning || this.state.isAutoSpinning || this.state.credits < this.state.betAmount) return
-      this.audioManager.playUIClickSound()
+      this.audioManager.playImmediateSound('UI_CLICK')
       this.onGameAction?.('spin')
     })
 
@@ -382,7 +382,7 @@ export class UserInterface {
       
       if (!this.state.isAutoSpinning && (this.state.isSpinning || this.state.credits < this.state.betAmount)) return
       
-      this.audioManager.playUIClickSound()
+      this.audioManager.playImmediateSound('UI_CLICK')
       
       // If auto-spinning, request stop
       if (this.state.isAutoSpinning) {
@@ -402,14 +402,14 @@ export class UserInterface {
     // Info button
     const infoBtn = document.getElementById('info-btn')
     infoBtn?.addEventListener('click', () => {
-      this.audioManager.playUIClickSound()
+      this.audioManager.playImmediateSound('UI_CLICK')
       this.showInfoModal()
     })
 
     // Settings button
     const settingsBtn = document.getElementById('settings-btn')
     settingsBtn?.addEventListener('click', () => {
-      this.audioManager.playUIClickSound()
+      this.audioManager.playImmediateSound('UI_CLICK')
       this.showSettingsModal()
     })
   }
@@ -444,7 +444,7 @@ export class UserInterface {
     // Immediately update UI state for instant feedback
     this.updateState({ betAmount: amount })
     
-    this.audioManager.playUIClickSound()
+    this.audioManager.playImmediateSound('UI_CLICK')
     this.onGameAction?.('setBet', amount)
     this.hideCustomBetInput()
   }
@@ -465,7 +465,7 @@ export class UserInterface {
   }
 
   private showAutoSpinModal(): void {
-    this.audioManager.playUIClickSound()
+    this.audioManager.playImmediateSound('UI_CLICK')
     this.autoSpinModal.show((count, isInfinite) => {
       // Handle auto spin selection
       this.onGameAction?.('startAutoSpin', { count, isInfinite })

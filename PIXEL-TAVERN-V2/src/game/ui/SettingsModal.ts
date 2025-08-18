@@ -49,7 +49,7 @@ export class SettingsModal {
     if (this.isOpen) return
     
     this.isOpen = true
-    this.audioManager.playUIClickSound()
+    this.audioManager.playImmediateSound('UI_CLICK')
     this.createModal()
     document.body.style.overflow = 'hidden'
   }
@@ -58,7 +58,7 @@ export class SettingsModal {
     if (!this.isOpen) return
     
     this.isOpen = false
-    this.audioManager.playUIClickSound()
+    this.audioManager.playImmediateSound('UI_CLICK')
     
     if (this.modal) {
       this.modal.style.animation = 'modal-fade-out 0.3s ease-out'
@@ -263,7 +263,7 @@ export class SettingsModal {
       this.updateUI()
       // Play click sound after updating mute state
       if (!this.settings.muted) {
-        this.audioManager.playUIClickSound()
+        this.audioManager.playImmediateSound('UI_CLICK')
       }
     })
 
@@ -275,7 +275,7 @@ export class SettingsModal {
       console.log('⚙️ Setting music volume to:', volumeToSet)
       this.audioManager.setMusicVolume(volumeToSet)
       this.updateUI()
-      this.audioManager.playUIClickSound()
+      this.audioManager.playImmediateSound('UI_CLICK')
     })
 
     // SFX toggle
@@ -283,7 +283,7 @@ export class SettingsModal {
       this.settings.sfxEnabled = !this.settings.sfxEnabled
       this.audioManager.setSfxVolume(this.settings.sfxEnabled ? this.settings.sfxVolume : 0)
       this.updateUI()
-      this.audioManager.playUIClickSound()
+      this.audioManager.playImmediateSound('UI_CLICK')
     })
 
     // Volume sliders
@@ -318,13 +318,13 @@ export class SettingsModal {
     autoSpinSelect.addEventListener('change', (e) => {
       this.settings.autoSpinDelay = parseInt((e.target as HTMLSelectElement).value)
       this.notifySettingsChange({ autoSpinDelay: this.settings.autoSpinDelay })
-      this.audioManager.playUIClickSound()
+      this.audioManager.playImmediateSound('UI_CLICK')
     })
 
     animationSelect.addEventListener('change', (e) => {
       this.settings.animationSpeed = (e.target as HTMLSelectElement).value as 'slow' | 'normal' | 'fast'
       this.notifySettingsChange({ animationSpeed: this.settings.animationSpeed })
-      this.audioManager.playUIClickSound()
+      this.audioManager.playImmediateSound('UI_CLICK')
     })
   }
 

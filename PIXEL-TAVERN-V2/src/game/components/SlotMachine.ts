@@ -188,7 +188,7 @@ export class SlotMachine {
   }
 
   // Spin animation
-  async spinReels(duration: number, scrollSpeed: number): Promise<number[][]> {
+  async spinReels(duration: number, scrollSpeed: number, onColumnStop?: (columnIndex: number) => void): Promise<number[][]> {
     
     // FIRST: Generate final results before animation starts (like original game)
     const finalResults = this.generateFinalResults()
@@ -236,6 +236,9 @@ export class SlotMachine {
             
             // Stop lightning effect for this column
             this.stopLightningForColumn(colIndex)
+            
+            // Call callback for column stop (convert to 1-indexed)
+            onColumnStop?.(colIndex + 1)
             
             // Hide effects
             spinEffects[colIndex].visible = false

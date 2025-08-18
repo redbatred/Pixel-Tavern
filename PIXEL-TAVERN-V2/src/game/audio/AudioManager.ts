@@ -48,7 +48,47 @@ export class AudioManager {
       name: 'Reel Spin',
       url: '/assets/images/UI Sounds/spin-sound.wav',
       volume: 0.8,
-      loop: false,
+      loop: true, // Changed to loop for continuous spinning
+      category: 'sfx'
+    },
+    SPIN_SOUND_1: {
+      id: 'spin_sound_1',
+      name: 'Reel Spin Column 1',
+      url: '/assets/images/UI Sounds/spin-sound.wav',
+      volume: 0.8,
+      loop: true,
+      category: 'sfx'
+    },
+    SPIN_SOUND_2: {
+      id: 'spin_sound_2',
+      name: 'Reel Spin Column 2',
+      url: '/assets/images/UI Sounds/spin-sound.wav',
+      volume: 0.8,
+      loop: true,
+      category: 'sfx'
+    },
+    SPIN_SOUND_3: {
+      id: 'spin_sound_3',
+      name: 'Reel Spin Column 3',
+      url: '/assets/images/UI Sounds/spin-sound.wav',
+      volume: 0.8,
+      loop: true,
+      category: 'sfx'
+    },
+    SPIN_SOUND_4: {
+      id: 'spin_sound_4',
+      name: 'Reel Spin Column 4',
+      url: '/assets/images/UI Sounds/spin-sound.wav',
+      volume: 0.8,
+      loop: true,
+      category: 'sfx'
+    },
+    SPIN_SOUND_5: {
+      id: 'spin_sound_5',
+      name: 'Reel Spin Column 5',
+      url: '/assets/images/UI Sounds/spin-sound.wav',
+      volume: 0.8,
+      loop: true,
       category: 'sfx'
     },
     REEL_STOP: {
@@ -95,15 +135,45 @@ export class AudioManager {
 
   async init(): Promise<void> {
     try {
+      // Prioritize UI sounds for immediate responsiveness
+      const prioritySounds = ['UI_CLICK', 'SPIN_SOUND', 'SPIN_SOUND_1', 'SPIN_SOUND_2', 'SPIN_SOUND_3', 'SPIN_SOUND_4', 'SPIN_SOUND_5', 'REEL_STOP']
+      const otherSounds = Object.values(this.AUDIO_TRACKS)
+        .filter(track => !prioritySounds.includes(track.id.toUpperCase()))
 
-      // Preload all audio files
-      const loadPromises = Object.values(this.AUDIO_TRACKS).map(track => 
-        sound.add(track.id, track.url)
-      )
+      // Load priority sounds first
+      for (const soundId of prioritySounds) {
+        const track = this.AUDIO_TRACKS[soundId]
+        if (track) {
+          try {
+            await sound.add(track.id, {
+              url: track.url,
+              preload: true,
+              loaded: () => {
+                console.log(`✅ Priority sound loaded: ${soundId}`)
+              }
+            })
+          } catch (error) {
+            console.warn(`Failed to load priority sound ${soundId}:`, error)
+          }
+        }
+      }
+
+      // Load other sounds in parallel
+      const loadPromises = otherSounds.map(async track => {
+        try {
+          await sound.add(track.id, {
+            url: track.url,
+            preload: true
+          })
+        } catch (error) {
+          console.warn(`Failed to load sound ${track.id}:`, error)
+        }
+      })
 
       await Promise.allSettled(loadPromises)
+      console.log('🎵 Audio system initialized')
     } catch (error) {
-      // Failed to initialize audio
+      console.error('Failed to initialize audio:', error)
     }
   }
 
@@ -206,7 +276,8 @@ export class AudioManager {
   }
 
   // Sound Effects
-  async playSoundEffect(soundId: string, customVolume?: number): Promise<void> {
+  // Fast, synchronous sound effect playback for immediate response
+  playSoundEffect(soundId: string, customVolume?: number): void {
     const track = this.AUDIO_TRACKS[soundId]
 
     if (!track || !this.sfxEnabled || this.isMuted) {
@@ -218,26 +289,114 @@ export class AudioManager {
         ? customVolume * this.masterVolume
         : this.masterVolume * this.sfxVolume * track.volume
 
-      // For pixi-sound, we need to ensure the sound is loaded before playing
+      // Immediate playback for responsive audio
       if (sound.exists(track.id)) {
-        sound.play(track.id, { volume })
+        sound.play(track.id, { 
+          volume,
+          speed: 1.0 // Ensure normal playback speed
+        })
+      } else {
+        // Fallback: try to load and play immediately (not recommended for click sounds)
+        console.warn(`Sound ${soundId} not preloaded, attempting immediate load`)
       }
     } catch (error) {
       // Failed to play sound effect, ignore silently
+      console.warn(`Failed to play sound effect ${soundId}:`, error)
     }
   }
 
   // Convenience methods for common game sounds
   playSpinSound(): void {
-    this.playSoundEffect('SPIN_SOUND')
+    // Start all 5 column spin sounds
+    this.startAllColumnSpinSounds()
+  }
+
+  // Start spinning sounds for all columns
+  startAllColumnSpinSounds(): void {
+    for (let i = 1; i <= 5; i++) {
+      this.startColumnSpinSound(i)
+    }
+  }
+
+  // Start spinning sound for a specific column
+  startColumnSpinSound(columnIndex: number): void {
+    const soundId = `SPIN_SOUND_${columnIndex}` as keyof typeof this.AUDIO_TRACKS
+    const track = this.AUDIO_TRACKS[soundId]
+    
+    if (!track) {
+      console.warn(`Spin sound for column ${columnIndex} not found`)
+      return
+    }
+
+    try {
+      const volume = track.category === 'music' 
+        ? this.masterVolume * this.musicVolume * track.volume
+        : this.masterVolume * this.sfxVolume * track.volume
+
+      if (sound.exists(track.id)) {
+        // Stop any existing instance before starting new one
+        sound.stop(track.id)
+        sound.play(track.id, { 
+          volume,
+          loop: true, // Loop the spinning sound
+          speed: 1.0
+        })
+      }
+    } catch (error) {
+      console.warn(`Failed to start spin sound for column ${columnIndex}:`, error)
+    }
+  }
+
+  // Stop spinning sound for a specific column
+  stopColumnSpinSound(columnIndex: number): void {
+    const soundId = `SPIN_SOUND_${columnIndex}` as keyof typeof this.AUDIO_TRACKS
+    const track = this.AUDIO_TRACKS[soundId]
+    
+    if (!track) {
+      console.warn(`Spin sound for column ${columnIndex} not found`)
+      return
+    }
+
+    try {
+      if (sound.exists(track.id)) {
+        sound.stop(track.id)
+        // Always play reel stop sound when each column stops
+        this.playReelStopSound()
+      }
+    } catch (error) {
+      console.warn(`Failed to stop spin sound for column ${columnIndex}:`, error)
+    }
+  }
+
+  // Stop all column spin sounds
+  stopAllColumnSpinSounds(): void {
+    for (let i = 1; i <= 5; i++) {
+      // Stop without playing individual stop sounds (used when stopping all at once)
+      this.stopColumnSpinSoundSilently(i)
+    }
+  }
+
+  // Stop column spin sound without playing stop sound (for bulk operations)
+  private stopColumnSpinSoundSilently(columnIndex: number): void {
+    const soundId = `SPIN_SOUND_${columnIndex}` as keyof typeof this.AUDIO_TRACKS
+    const track = this.AUDIO_TRACKS[soundId]
+    
+    if (!track) {
+      return
+    }
+
+    try {
+      if (sound.exists(track.id)) {
+        sound.stop(track.id)
+      }
+    } catch (error) {
+      // Ignore errors for bulk operations
+    }
   }
 
   stopSpinSound(): void {
-    try {
-      sound.stop('spin_sound')
-    } catch (error) {
-      // Ignore stop errors
-    }
+    // Stop all column spinning sounds for compatibility
+    this.stopAllColumnSpinSounds()
   }
 
   playWinSound(winAmount: number, betAmount: number): void {
@@ -254,11 +413,35 @@ export class AudioManager {
   }
 
   playReelStopSound(): void {
-    this.playSoundEffect('REEL_STOP')
+    this.playImmediateSound('REEL_STOP')
   }
 
   playUIClickSound(): void {
+    // Immediate click sound for maximum responsiveness
     this.playSoundEffect('UI_CLICK')
+  }
+
+  // Immediate play method for critical UI sounds
+  playImmediateSound(soundId: string): void {
+    const track = this.AUDIO_TRACKS[soundId]
+    
+    if (!track || !this.sfxEnabled || this.isMuted) {
+      return
+    }
+
+    try {
+      // Bypass all checks for immediate playback
+      if (sound.exists(track.id)) {
+        const volume = this.masterVolume * this.sfxVolume * track.volume
+        sound.play(track.id, { 
+          volume,
+          speed: 1.0,
+          start: 0 // Start from beginning
+        })
+      }
+    } catch (error) {
+      // Silently handle any playback errors
+    }
   }
 
   // Volume Controls
