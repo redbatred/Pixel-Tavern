@@ -79,7 +79,24 @@ export const checkWins = (slotResults: number[][]): WinResult => {
 
     // Award win if 3 or more consecutive symbols (matching original game)
     if (consecutiveCount >= 3) {
-      const winAmount = consecutiveCount * 10
+      // Enhanced payout structure for different combination lengths
+      let winAmount: number
+      switch (consecutiveCount) {
+        case 3:
+          winAmount = 10  // 3 symbols = 10x
+          break
+        case 4:
+          winAmount = 50  // 4 symbols = 50x (much better payout)
+          break
+        case 5:
+          winAmount = 200 // 5 symbols = 200x (jackpot!)
+          break
+        default:
+          winAmount = 10
+      }
+      
+      console.log(`Win detected! Payline ${paylineIndex + 1}: ${consecutiveCount} consecutive ${firstSymbol}s = ${winAmount} credits`)
+      
       totalWin += winAmount
       winningPaylines.push(paylineIndex + 1)
 

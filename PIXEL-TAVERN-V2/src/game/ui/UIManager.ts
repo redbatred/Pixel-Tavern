@@ -79,7 +79,7 @@ class UIManager {
 
           <div class="info-panel">
             <button class="menu-btn" id="settings-btn">
-              <div class="settings-icon">
+              <div class="settings-icon" id="settings-icon">
                 <div class="gear">
                   <div class="gear-inner"></div>
                 </div>
@@ -153,7 +153,15 @@ class UIManager {
                 <!-- Custom Bet Button -->
                 <button class="control-btn custom-bet-btn" id="show-custom-bet">
                   <div class="btn-content">
-                    <span class="btn-icon">📜</span>
+                    <span class="btn-icon">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14,2 14,8 20,8"/>
+                        <line x1="16" y1="13" x2="8" y2="13"/>
+                        <line x1="16" y1="17" x2="8" y2="17"/>
+                        <polyline points="10,9 9,9 8,9"/>
+                      </svg>
+                    </span>
                     <span class="btn-text">CUSTOM</span>
                   </div>
                 </button>
@@ -161,7 +169,17 @@ class UIManager {
                 <!-- MAX BET Button -->
                 <button class="control-btn max-bet-btn" id="max-bet-btn">
                   <div class="btn-content">
-                    <span class="btn-icon">💰</span>
+                    <span class="btn-icon">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="1" x2="12" y2="23"/>
+                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                        <circle cx="12" cy="12" r="1"/>
+                        <circle cx="8" cy="8" r="1"/>
+                        <circle cx="16" cy="16" r="1"/>
+                        <circle cx="16" cy="8" r="1"/>
+                        <circle cx="8" cy="16" r="1"/>
+                      </svg>
+                    </span>
                     <span class="btn-text">MAX BET</span>
                   </div>
                 </button>
@@ -683,12 +701,12 @@ class UIManager {
     })
 
     // Settings modal
-    const settingsBtn = document.getElementById('settings-btn')
+    const settingsIcon = document.getElementById('settings-icon')
     const settingsModal = document.getElementById('settings-modal')
     const settingsModalClose = document.getElementById('settings-modal-close')
     const saveSettingsBtn = document.getElementById('save-settings-btn')
 
-    settingsBtn?.addEventListener('click', () => {
+    settingsIcon?.addEventListener('click', () => {
       this.audioManager.playSoundEffect('ui')
       this.state.isSettingsModalOpen = true
       if (settingsModal) settingsModal.style.display = 'flex'

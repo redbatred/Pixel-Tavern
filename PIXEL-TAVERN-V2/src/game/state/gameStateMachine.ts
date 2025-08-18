@@ -7,6 +7,10 @@ export interface GameContext {
   lastWin: number;
   isAutoSpinning: boolean;
   stopAutoSpinAfterRound: boolean;
+  autoSpinCount: number;
+  autoSpinRemaining: number;
+  isInfiniteAutoSpin: boolean;
+  spinsCompleted: number;
   animationSpeed: "slow" | "normal" | "fast";
   slotResults?: number[][];
   winAmount?: number;
@@ -30,6 +34,7 @@ export type GameEvent =
   | { type: "SET_BET"; amount: number }
   | { type: "MAX_BET" }
   | { type: "TOGGLE_AUTO_SPIN" }
+  | { type: "START_AUTO_SPIN"; count: number; isInfinite: boolean }
   | { type: "REQUEST_AUTO_SPIN_STOP" }
   | { type: "AUTO_SPIN_TIMEOUT" }
   | { type: "SET_ANIMATION_SPEED"; speed: "slow" | "normal" | "fast" }
@@ -49,6 +54,8 @@ export const gameStateMachine = setup({
       return hasWinResult;
     },
     isAutoSpinning: ({ context }) => context.isAutoSpinning,
+    hasAutoSpinsRemaining: ({ context }) => 
+      context.isInfiniteAutoSpin || context.autoSpinRemaining > 0,
     shouldShowWinModal: ({ context }) => {
       const multiplier = (context.winAmount || 0) / context.betAmount;
       return multiplier >= 5; // Show modal for 5x+ wins
@@ -123,6 +130,42 @@ export const gameStateMachine = setup({
     toggleAutoSpin: assign({
       isAutoSpinning: ({ context }) => !context.isAutoSpinning,
       stopAutoSpinAfterRound: false, // Reset the stop flag when toggling
+      autoSpinCount: 0,
+      autoSpinRemaining: 0,
+      isInfiniteAutoSpin: false,
+      spinsCompleted: 0,
+    }),
+    startAutoSpin: assign({
+      isAutoSpinning: true,
+      stopAutoSpinAfterRound: false,
+      spinsCompleted: 0,
+      autoSpinCount: ({ event }) => {
+        if (event.type === "START_AUTO_SPIN") {
+          return event.count;
+        }
+        return 0;
+      },
+      autoSpinRemaining: ({ event }) => {
+        if (event.type === "START_AUTO_SPIN") {
+          return event.isInfinite ? -1 : event.count;
+        }
+        return 0;
+      },
+      isInfiniteAutoSpin: ({ event }) => {
+        if (event.type === "START_AUTO_SPIN") {
+          return event.isInfinite;
+        }
+        return false;
+      },
+    }),
+    decrementAutoSpinCount: assign({
+      autoSpinRemaining: ({ context }) => {
+        if (context.isInfiniteAutoSpin) {
+          return -1; // Keep infinite
+        }
+        return Math.max(0, context.autoSpinRemaining - 1);
+      },
+      spinsCompleted: ({ context }) => context.spinsCompleted + 1,
     }),
     requestAutoSpinStop: assign({
       stopAutoSpinAfterRound: true, // Set flag to stop after current round
@@ -183,6 +226,10 @@ export const gameStateMachine = setup({
     lastWin: 0,
     isAutoSpinning: false,
     stopAutoSpinAfterRound: false,
+    autoSpinCount: 0,
+    autoSpinRemaining: 0,
+    isInfiniteAutoSpin: false,
+    spinsCompleted: 0,
     animationSpeed: "normal" as const,
     slotResults: undefined,
     winAmount: 0,
@@ -207,22 +254,22 @@ export const gameStateMachine = setup({
         },
         TOGGLE_AUTO_SPIN: [
           {
-            target: "spinning",
-            guard: ({ context }) =>
-              !context.isAutoSpinning && context.credits >= context.betAmount,
-            actions: ["toggleAutoSpin"],
-          },
-          {
             // If auto-spinning is active, request stop after current round
             guard: ({ context }) =>
               context.isAutoSpinning && !context.stopAutoSpinAfterRound,
             actions: ["requestAutoSpinStop"],
           },
           {
-            // If not auto-spinning, just toggle normally
+            // If not auto-spinning, just toggle normally (will show modal in UI)
             actions: ["toggleAutoSpin"],
           },
         ],
+        START_AUTO_SPIN: {
+          target: "spinning",
+          guard: ({ context }) =>
+            !context.isAutoSpinning && context.credits >= context.betAmount,
+          actions: ["startAutoSpin"],
+        },
         SET_ANIMATION_SPEED: {
           actions: "setAnimationSpeed",
         },
@@ -236,6 +283,7 @@ export const gameStateMachine = setup({
       },
     },
     spinning: {
+      entry: ["decrementAutoSpinCount"],
       on: {
         SPIN_COMPLETE: {
           target: "checkingWin",
@@ -290,30 +338,65 @@ export const gameStateMachine = setup({
           target: "idle",
           guard: ({ context }) => context.stopAutoSpinAfterRound,
           actions: [
-            assign({ isAutoSpinning: false, stopAutoSpinAfterRound: false }),
+            assign({ 
+              isAutoSpinning: false, 
+              stopAutoSpinAfterRound: false,
+              autoSpinCount: 0,
+              autoSpinRemaining: 0,
+              isInfiniteAutoSpin: false,
+              spinsCompleted: 0
+            }),
           ],
         },
         {
-          // Continue auto-spin if still active and has credits
+          // Stop auto-spin if no auto spins remaining
+          target: "idle",
+          guard: ({ context }) => 
+            context.isAutoSpinning && !context.isInfiniteAutoSpin && context.autoSpinRemaining <= 0,
+          actions: [
+            assign({ 
+              isAutoSpinning: false, 
+              stopAutoSpinAfterRound: false,
+              autoSpinCount: 0,
+              autoSpinRemaining: 0,
+              isInfiniteAutoSpin: false
+            }),
+          ],
+        },
+        {
+          // Continue auto-spin if still active and has credits and spins remaining
           target: "autoSpinDelay",
           guard: ({ context }) =>
             context.isAutoSpinning &&
             !context.stopAutoSpinAfterRound &&
-            context.credits >= context.betAmount,
+            context.credits >= context.betAmount &&
+            (context.isInfiniteAutoSpin || context.autoSpinRemaining > 0),
         },
         {
           // Stop auto-spin if no credits
           target: "idle",
           guard: ({ context }) => context.credits < context.betAmount,
           actions: [
-            assign({ isAutoSpinning: false, stopAutoSpinAfterRound: false }),
+            assign({ 
+              isAutoSpinning: false, 
+              stopAutoSpinAfterRound: false,
+              autoSpinCount: 0,
+              autoSpinRemaining: 0,
+              isInfiniteAutoSpin: false
+            }),
           ],
         },
         {
           // Default to idle
           target: "idle",
           actions: [
-            assign({ isAutoSpinning: false, stopAutoSpinAfterRound: false }),
+            assign({ 
+              isAutoSpinning: false, 
+              stopAutoSpinAfterRound: false,
+              autoSpinCount: 0,
+              autoSpinRemaining: 0,
+              isInfiniteAutoSpin: false
+            }),
           ],
         },
       ],
@@ -329,7 +412,13 @@ export const gameStateMachine = setup({
           // Always stop auto-spin when toggled during delay
           target: "idle",
           actions: [
-            assign({ isAutoSpinning: false, stopAutoSpinAfterRound: false }),
+            assign({ 
+              isAutoSpinning: false, 
+              stopAutoSpinAfterRound: false,
+              autoSpinCount: 0,
+              autoSpinRemaining: 0,
+              isInfiniteAutoSpin: false
+            }),
           ],
         },
         REQUEST_AUTO_SPIN_STOP: {
@@ -352,7 +441,28 @@ export const gameStateMachine = setup({
           target: "idle",
           guard: ({ context }) => context.stopAutoSpinAfterRound === true,
           actions: [
-            assign({ isAutoSpinning: false, stopAutoSpinAfterRound: false }),
+            assign({ 
+              isAutoSpinning: false, 
+              stopAutoSpinAfterRound: false,
+              autoSpinCount: 0,
+              autoSpinRemaining: 0,
+              isInfiniteAutoSpin: false
+            }),
+          ],
+        },
+        {
+          // Stop auto-spin if no auto spins remaining
+          target: "idle",
+          guard: ({ context }) => 
+            context.isAutoSpinning && !context.isInfiniteAutoSpin && context.autoSpinRemaining <= 0,
+          actions: [
+            assign({ 
+              isAutoSpinning: false, 
+              stopAutoSpinAfterRound: false,
+              autoSpinCount: 0,
+              autoSpinRemaining: 0,
+              isInfiniteAutoSpin: false
+            }),
           ],
         },
         {
@@ -360,14 +470,27 @@ export const gameStateMachine = setup({
           target: "idle",
           guard: ({ context }) => context.credits < context.betAmount,
           actions: [
-            assign({ isAutoSpinning: false, stopAutoSpinAfterRound: false }),
+            assign({ 
+              isAutoSpinning: false, 
+              stopAutoSpinAfterRound: false,
+              autoSpinCount: 0,
+              autoSpinRemaining: 0,
+              isInfiniteAutoSpin: false
+            }),
           ],
         },
         {
           // Stop auto-spin if not auto-spinning anymore
           target: "idle",
           guard: ({ context }) => !context.isAutoSpinning,
-          actions: [assign({ stopAutoSpinAfterRound: false })],
+          actions: [
+            assign({ 
+              stopAutoSpinAfterRound: false,
+              autoSpinCount: 0,
+              autoSpinRemaining: 0,
+              isInfiniteAutoSpin: false
+            })
+          ],
         },
         {
           // Continue spinning if all conditions are met
@@ -375,14 +498,21 @@ export const gameStateMachine = setup({
           guard: ({ context }) =>
             context.isAutoSpinning &&
             !context.stopAutoSpinAfterRound &&
-            context.credits >= context.betAmount,
+            context.credits >= context.betAmount &&
+            (context.isInfiniteAutoSpin || context.autoSpinRemaining > 0),
           actions: ["deductBet", "clearWinState"],
         },
         {
           // Default fallback to idle
           target: "idle",
           actions: [
-            assign({ isAutoSpinning: false, stopAutoSpinAfterRound: false }),
+            assign({ 
+              isAutoSpinning: false, 
+              stopAutoSpinAfterRound: false,
+              autoSpinCount: 0,
+              autoSpinRemaining: 0,
+              isInfiniteAutoSpin: false
+            }),
           ],
         },
       ],

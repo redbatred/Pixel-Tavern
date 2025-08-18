@@ -5,9 +5,12 @@ import { SlotMachine } from './components/SlotMachine'
 import { WinAnimation } from './components/WinAnimation'
 import { AudioManager } from './audio/AudioManager'
 import { UserInterface } from './ui/UserInterface'
+import { OrientationOverlay } from './ui/OrientationOverlay'
 import { AssetLoader } from './assets/AssetLoader'
 import { GameConfig } from './config/GameConfig'
+import { DeviceUtils } from './utils/deviceUtils'
 import { checkWins, getSpinDuration, getScrollSpeed, getWinTier } from './utils/winChecker'
+import './ui/SpinEffects.css'
 
 export class PixelTavernGame {
   private app: Application
@@ -16,9 +19,11 @@ export class PixelTavernGame {
   private winAnimation: WinAnimation
   private audioManager: AudioManager
   private userInterface!: UserInterface
+  private orientationOverlay: OrientationOverlay
   private assetLoader: AssetLoader
   private isInitialized = false
   private autoSpinTimeout: number | null = null
+  private isMobile: boolean = false
 
   constructor() {
     this.app = new Application()
@@ -26,6 +31,16 @@ export class PixelTavernGame {
     this.audioManager = new AudioManager()
     this.slotMachine = new SlotMachine(this.app)
     this.winAnimation = new WinAnimation(this.app)
+    this.orientationOverlay = new OrientationOverlay()
+    
+    // Detect mobile device
+    this.isMobile = DeviceUtils.isMobile()
+    
+    // Setup mobile viewport if needed
+    if (this.isMobile) {
+      DeviceUtils.setupMobileViewport()
+    }
+    
     // UserInterface will be initialized later when we have the DOM element
   }
 
@@ -96,16 +111,20 @@ export class PixelTavernGame {
     
     await this.app.init({
       canvas,
-      width: window.innerWidth,
-      height: window.innerHeight,
-      backgroundColor: GameConfig.BACKGROUND_COLOR,
+      width: GameConfig.RESPONSIVE.BASE_WIDTH,
+      height: GameConfig.RESPONSIVE.BASE_HEIGHT,
+      backgroundColor: 0x000000, // Transparent background since CSS handles it
+      backgroundAlpha: 0,
       antialias: true,
       autoDensity: true,
       resolution: window.devicePixelRatio || 1
     })
 
-    // Setup responsive canvas
-    this.setupResponsiveCanvas()
+    // Setup responsive viewport container
+    this.setupResponsiveViewport()
+    
+    // Initial resize to fit current screen
+    this.handleViewportResize()
   }
 
   private async initUserInterface(): Promise<void> {
@@ -133,6 +152,9 @@ export class PixelTavernGame {
         case 'toggleAutoSpin':
           this.toggleAutoSpin()
           break
+        case 'startAutoSpin':
+          this.startAutoSpin(payload)
+          break
         case 'requestAutoSpinStop':
           this.requestAutoSpinStop()
           break
@@ -151,14 +173,72 @@ export class PixelTavernGame {
     })
   }
 
-  private setupResponsiveCanvas(): void {
+  private setupResponsiveViewport(): void {
     const resizeHandler = () => {
-      this.app.renderer.resize(window.innerWidth, window.innerHeight)
-      this.slotMachine?.handleResize(window.innerWidth, window.innerHeight)
-      this.userInterface?.handleResize(window.innerWidth, window.innerHeight)
+      this.handleViewportResize()
     }
 
     window.addEventListener('resize', resizeHandler)
+  }
+
+  private handleViewportResize(): void {
+    // Get available screen space
+    const screenWidth = window.innerWidth
+    const screenHeight = window.innerHeight
+    
+    // Check if mobile device is in correct orientation
+    if (this.isMobile && !DeviceUtils.isMobileInCorrectOrientation()) {
+      // Don't update layout when orientation overlay is showing
+      return
+    }
+    
+    // Calculate scale for the unified container
+    let scale = this.calculateUnifiedScale(screenWidth, screenHeight)
+    
+    // Get the viewport container
+    const viewportContainer = document.getElementById('viewport-container')
+    if (viewportContainer) {
+      // Apply scale to the entire viewport container
+      viewportContainer.style.setProperty('--viewport-scale', scale.toString())
+    }
+    
+    // Notify UI of resize (but don't apply its own scaling since it's in the unified container)
+    this.userInterface?.handleResize(screenWidth, screenHeight)
+  }
+
+  private calculateUnifiedScale(screenWidth: number, screenHeight: number): number {
+    // Define margins for all screen sizes (not just mobile)
+    const marginX = this.isMobile ? GameConfig.RESPONSIVE.MOBILE.MARGIN_X : 40
+    const marginY = this.isMobile ? GameConfig.RESPONSIVE.MOBILE.MARGIN_Y : 40
+    
+    // Available space after margins
+    const availableWidth = screenWidth - (marginX * 2)
+    const availableHeight = screenHeight - (marginY * 2)
+    
+    // Calculate scale based on available space to maintain aspect ratio
+    const scaleX = availableWidth / GameConfig.RESPONSIVE.BASE_WIDTH
+    const scaleY = availableHeight / GameConfig.RESPONSIVE.BASE_HEIGHT
+    
+    // Use the smaller scale to maintain aspect ratio and fit within margins
+    let scale = Math.min(scaleX, scaleY)
+    
+    if (this.isMobile) {
+      // Apply mobile maximum size constraints
+      const maxWidthScale = (screenWidth * GameConfig.RESPONSIVE.MOBILE.MAX_WIDTH_PERCENT) / GameConfig.RESPONSIVE.BASE_WIDTH
+      const maxHeightScale = (screenHeight * GameConfig.RESPONSIVE.MOBILE.MAX_HEIGHT_PERCENT) / GameConfig.RESPONSIVE.BASE_HEIGHT
+      
+      scale = Math.min(scale, maxWidthScale, maxHeightScale)
+    }
+    
+    // Apply base scale multiplier - for mobile landscape, use a more generous scale since height is limited
+    const BASE_SCALE_MULTIPLIER = this.isMobile ? 1.4 : 1.18 // Standard for mobile, bigger for desktop
+    scale *= BASE_SCALE_MULTIPLIER
+    
+    // Clamp scale within global limits
+    scale = Math.max(GameConfig.RESPONSIVE.MIN_SCALE, 
+             Math.min(GameConfig.RESPONSIVE.MAX_SCALE, scale))
+    
+    return scale
   }
 
   private initStateMachine(): void {
@@ -197,7 +277,11 @@ export class PixelTavernGame {
       lastWin: context.lastWin,
       isSpinning: stateValue === 'spinning',
       isAutoSpinning: context.isAutoSpinning,
-      stopAutoSpinAfterRound: context.stopAutoSpinAfterRound
+      stopAutoSpinAfterRound: context.stopAutoSpinAfterRound,
+      autoSpinCount: context.autoSpinCount,
+      autoSpinRemaining: context.autoSpinRemaining,
+      isInfiniteAutoSpin: context.isInfiniteAutoSpin,
+      spinsCompleted: context.spinsCompleted
     })
 
     // Handle audio based on state
@@ -206,11 +290,13 @@ export class PixelTavernGame {
         if (!this.isHandlingSpin) {
           this.isHandlingSpin = true
           this.audioManager.playSpinSound()
+          this.slotMachine.startSpinEffects() // Start lightning effects
           this.handleSpin()
         }
         break
       case 'checkingWin':
         this.audioManager.stopSpinSound()
+        this.slotMachine.stopSpinEffects() // Stop lightning effects
         this.isHandlingSpin = false // Reset spin flag
         this.handleWinCheck()
         break
@@ -342,9 +428,12 @@ export class PixelTavernGame {
     // Add win animation to stage (on top)
     this.app.stage.addChild(this.winAnimation.container)
 
-    // Position slot machine in center
-    this.slotMachine.container.x = this.app.screen.width / 2
-    this.slotMachine.container.y = this.app.screen.height / 2
+    // Position elements using base dimensions (unified container handles scaling)
+    this.slotMachine.container.x = GameConfig.RESPONSIVE.BASE_WIDTH / 2
+    this.slotMachine.container.y = GameConfig.RESPONSIVE.BASE_HEIGHT / 2
+    
+    this.winAnimation.container.x = GameConfig.RESPONSIVE.BASE_WIDTH / 2
+    this.winAnimation.container.y = GameConfig.RESPONSIVE.BASE_HEIGHT / 2
   }
 
   private setupEventListeners(): void {
@@ -365,6 +454,72 @@ export class PixelTavernGame {
     window.addEventListener('focus', () => {
       this.gameActor.send({ type: 'RESUME' })
     })
+    
+    // Mobile-specific event listeners
+    if (this.isMobile) {
+      // Handle orientation changes with debouncing
+      let orientationTimeout: number | null = null
+      
+      const handleOrientationChange = () => {
+        if (orientationTimeout) {
+          clearTimeout(orientationTimeout)
+        }
+        
+        orientationTimeout = window.setTimeout(() => {
+          // Check if device is now in correct orientation
+          if (DeviceUtils.isMobileInCorrectOrientation()) {
+            // Try to lock orientation to landscape
+            DeviceUtils.lockOrientation()
+            
+            // Resume game if it was paused due to orientation
+            this.gameActor.send({ type: 'RESUME' })
+            
+            // Trigger resize to update layout
+            this.handleViewportResize()
+          } else {
+            // Pause game when in wrong orientation
+            this.gameActor.send({ type: 'PAUSE' })
+          }
+        }, 300)
+      }
+      
+      // Listen for orientation changes
+      window.addEventListener('orientationchange', handleOrientationChange)
+      window.addEventListener('resize', handleOrientationChange)
+      
+      // Listen for orientation overlay events
+      window.addEventListener('orientationOverlayShow', () => {
+        this.gameActor.send({ type: 'PAUSE' })
+      })
+      
+      window.addEventListener('orientationOverlayHide', () => {
+        this.gameActor.send({ type: 'RESUME' })
+        this.handleViewportResize()
+      })
+      
+      // Prevent default touch behaviors that might interfere with the game
+      document.addEventListener('touchstart', (e) => {
+        if (e.touches.length > 1) {
+          e.preventDefault() // Prevent pinch zoom
+        }
+      }, { passive: false })
+      
+      document.addEventListener('touchmove', (e) => {
+        if (e.touches.length > 1) {
+          e.preventDefault() // Prevent pinch zoom
+        }
+      }, { passive: false })
+      
+      // Prevent double-tap zoom
+      let lastTouchEnd = 0
+      document.addEventListener('touchend', (e) => {
+        const now = Date.now()
+        if (now - lastTouchEnd <= 300) {
+          e.preventDefault()
+        }
+        lastTouchEnd = now
+      }, false)
+    }
   }
 
   // Public methods for UI interaction
@@ -382,6 +537,14 @@ export class PixelTavernGame {
 
   public toggleAutoSpin(): void {
     this.gameActor.send({ type: 'TOGGLE_AUTO_SPIN' })
+  }
+
+  public startAutoSpin(payload: { count: number; isInfinite: boolean }): void {
+    this.gameActor.send({ 
+      type: 'START_AUTO_SPIN', 
+      count: payload.count,
+      isInfinite: payload.isInfinite
+    })
   }
 
   public requestAutoSpinStop(): void {
@@ -408,6 +571,7 @@ export class PixelTavernGame {
     this.slotMachine?.destroy()
     this.audioManager?.cleanup()
     this.userInterface?.destroy()
+    this.orientationOverlay?.destroy()
     this.app?.destroy(true)
   }
 }

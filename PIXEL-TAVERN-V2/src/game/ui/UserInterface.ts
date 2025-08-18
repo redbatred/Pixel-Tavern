@@ -1,7 +1,9 @@
 import { AudioManager } from '../audio/AudioManager'
 import { InfoModal } from './InfoModal'
 import { SettingsModal } from './SettingsModal'
+import { AutoSpinModal } from './AutoSpinModal'
 import { GameConfig } from '../config/GameConfig'
+import { DeviceUtils } from '../utils/deviceUtils'
 import './modals.css'
 
 interface UIState {
@@ -11,6 +13,10 @@ interface UIState {
   isSpinning: boolean
   isAutoSpinning: boolean
   stopAutoSpinAfterRound: boolean
+  autoSpinCount: number
+  autoSpinRemaining: number
+  isInfiniteAutoSpin: boolean
+  spinsCompleted: number
   showCustomBetInput: boolean
   customBetInput: string
 }
@@ -23,6 +29,7 @@ export class UserInterface {
   private onGameAction?: (action: string, data?: any) => void
   private infoModal: InfoModal
   private settingsModal: SettingsModal
+  private autoSpinModal: AutoSpinModal
 
   constructor(container: HTMLElement, audioManager: AudioManager) {
     this.container = container
@@ -34,6 +41,10 @@ export class UserInterface {
       isSpinning: false,
       isAutoSpinning: false,
       stopAutoSpinAfterRound: false,
+      autoSpinCount: 0,
+      autoSpinRemaining: 0,
+      isInfiniteAutoSpin: false,
+      spinsCompleted: 0,
       showCustomBetInput: false,
       customBetInput: ''
     }
@@ -41,6 +52,7 @@ export class UserInterface {
     // Initialize modals
     this.infoModal = new InfoModal(document.body, audioManager)
     this.settingsModal = new SettingsModal(document.body, audioManager)
+    this.autoSpinModal = new AutoSpinModal(document.body, audioManager)
     
     this.initializeUI()
     this.setupKeyboardHandlers()
@@ -169,7 +181,15 @@ export class UserInterface {
                 style="display: ${this.state.showCustomBetInput ? 'none' : 'flex'};"
               >
                 <div class="btn-content">
-                  <span class="btn-icon">📜</span>
+                  <span class="btn-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                      <polyline points="14,2 14,8 20,8"/>
+                      <line x1="16" y1="13" x2="8" y2="13"/>
+                      <line x1="16" y1="17" x2="8" y2="17"/>
+                      <polyline points="10,9 9,9 8,9"/>
+                    </svg>
+                  </span>
                   <span class="btn-text">CUSTOM</span>
                 </div>
               </button>
@@ -181,7 +201,17 @@ export class UserInterface {
                 style="display: ${this.state.showCustomBetInput ? 'none' : 'flex'};"
               >
                 <div class="btn-content">
-                  <span class="btn-icon">💰</span>
+                  <span class="btn-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <line x1="12" y1="1" x2="12" y2="23"/>
+                      <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                      <circle cx="12" cy="12" r="1"/>
+                      <circle cx="8" cy="8" r="1"/>
+                      <circle cx="16" cy="16" r="1"/>
+                      <circle cx="16" cy="8" r="1"/>
+                      <circle cx="8" cy="16" r="1"/>
+                    </svg>
+                  </span>
                   <span class="btn-text">MAX BET</span>
                 </div>
               </button>
@@ -228,7 +258,10 @@ export class UserInterface {
                   </div>
                 </div>
               </div>
-              <span class="auto-text" id="auto-text">${this.state.stopAutoSpinAfterRound ? 'STOPPING...' : (this.state.isAutoSpinning ? 'STOP' : 'AUTO')}</span>
+              <span class="auto-text" id="auto-text">${this.getAutoSpinButtonText()}</span>
+              ${this.state.isAutoSpinning && !this.state.isInfiniteAutoSpin ? 
+                `<span class="auto-count" id="auto-count">${this.state.autoSpinRemaining} left</span>` : 
+                ''}
             </div>
           </button>
         </div>
@@ -361,8 +394,8 @@ export class UserInterface {
         this.onGameAction?.('requestAutoSpinStop')
         return
       } else {
-        // Safe to send toggle event (idle or autoSpinDelay states)
-        this.onGameAction?.('toggleAutoSpin')
+        // Show auto spin selection modal
+        this.showAutoSpinModal()
       }
     })
 
@@ -431,9 +464,31 @@ export class UserInterface {
     this.settingsModal.show()
   }
 
+  private showAutoSpinModal(): void {
+    this.audioManager.playUIClickSound()
+    this.autoSpinModal.show((count, isInfinite) => {
+      // Handle auto spin selection
+      this.onGameAction?.('startAutoSpin', { count, isInfinite })
+    })
+  }
+
+  private getAutoSpinButtonText(): string {
+    if (this.state.isAutoSpinning) {
+      if (this.state.stopAutoSpinAfterRound) {
+        return 'STOPPING...'
+      }
+      if (this.state.isInfiniteAutoSpin) {
+        return 'AUTO (∞)'
+      }
+      return `AUTO (${this.state.autoSpinRemaining})`
+    }
+    return 'AUTO'
+  }
+
   private closeAllModals(): void {
     this.infoModal.hide()
     this.settingsModal.hide()
+    this.autoSpinModal.hide()
   }
 
   // Public methods for state updates
@@ -450,7 +505,11 @@ export class UserInterface {
       lastWin: context.lastWin,
       isSpinning: context.isSpinning,
       isAutoSpinning: context.isAutoSpinning,
-      stopAutoSpinAfterRound: context.stopAutoSpinAfterRound || false
+      stopAutoSpinAfterRound: context.stopAutoSpinAfterRound || false,
+      autoSpinCount: context.autoSpinCount || 0,
+      autoSpinRemaining: context.autoSpinRemaining || 0,
+      isInfiniteAutoSpin: context.isInfiniteAutoSpin || false,
+      spinsCompleted: context.spinsCompleted || 0
     })
   }
 
@@ -465,8 +524,27 @@ export class UserInterface {
     })
   }
 
-  handleResize(_width: number, _height: number): void {
-    // UI is responsive via CSS, no specific resize handling needed
+  handleResize(width: number, _height: number): void {
+    // With unified container approach, we don't need to apply CSS scaling
+    // The entire viewport container (including UI) scales together
+    
+    // Check if mobile device for mobile-specific classes
+    const isMobile = DeviceUtils.isMobile();
+    
+    // Set mobile-specific CSS class
+    if (isMobile) {
+      this.container.classList.add('mobile-ui');
+      
+      // For very small screens, also adjust positioning
+      if (width < 568) {
+        this.container.style.setProperty('--mobile-compact', '1');
+      } else {
+        this.container.style.setProperty('--mobile-compact', '0');
+      }
+    } else {
+      this.container.classList.remove('mobile-ui');
+      this.container.style.setProperty('--mobile-compact', '0');
+    }
   }
 
   showWinModal(_amount: number, _character: string, _multiplier: number): void {
@@ -546,6 +624,20 @@ export class UserInterface {
     if (insufficientFunds) {
       const shouldShow = this.state.credits < this.state.betAmount && !this.state.isSpinning && !this.state.isAutoSpinning
       insufficientFunds.style.display = shouldShow ? 'block' : 'none'
+    }
+
+    // Update auto spin counter display
+    if (this.state.isAutoSpinning) {
+      const completed = this.state.isInfiniteAutoSpin 
+        ? this.state.spinsCompleted 
+        : this.state.autoSpinCount - this.state.autoSpinRemaining
+      this.autoSpinModal.updateSpinCounter(
+        completed, 
+        this.state.autoSpinCount, 
+        this.state.isInfiniteAutoSpin
+      )
+    } else {
+      this.autoSpinModal.hideSpinCounter()
     }
 
     // Update button states based on spinning/auto-spinning

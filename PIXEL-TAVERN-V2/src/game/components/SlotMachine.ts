@@ -15,10 +15,12 @@ export class SlotMachine {
   private slotGrid: Sprite[][] = []
   private columnSymbols: Sprite[][] = []
   private spinEffects: Container[] = []
+  private lightningEffects: Container[] = []
   private winHighlights: Graphics[] = []
   private textures: GameTextures | null = null
   private background: Sprite | null = null
   private frame: Sprite | null = null
+  private isSpinning: boolean = false
 
   constructor(app: Application) {
     this.app = app
@@ -231,6 +233,9 @@ export class SlotMachine {
           onComplete: () => {
             // Snap to clean position
             column.y = originalY
+            
+            // Stop lightning effect for this column
+            this.stopLightningForColumn(colIndex)
             
             // Hide effects
             spinEffects[colIndex].visible = false
@@ -450,8 +455,256 @@ export class SlotMachine {
     }
   }
 
+  // Create lightning effects for column separators
+  private createLightningEffects(): void {
+    // Clear existing lightning effects
+    this.clearLightningEffects()
+
+    // Create lightning effects between columns (4 separators for 5 columns)
+    for (let i = 0; i < 4; i++) {
+      const lightningContainer = new Container()
+      
+      // Position between columns
+      const columnPositions = GameConfig.SLOT_MACHINE.COLUMN_X_POSITIONS
+      lightningContainer.x = columnPositions[i] + ((columnPositions[i + 1] - columnPositions[i]) / 2)
+      lightningContainer.y = 18
+      lightningContainer.visible = true
+
+      // Create main lightning bolt
+      const lightning = new Graphics()
+      lightningContainer.addChild(lightning)
+
+      // Create particle effects
+      const particles: Sprite[] = []
+      for (let p = 0; p < 6; p++) {
+        const particle = new Sprite()
+        particle.width = 2
+        particle.height = 2
+        particle.tint = 0xd4af37 // Golden color
+        particle.alpha = 0.6
+        particle.x = (Math.random() - 0.5) * 20
+        particle.y = (Math.random() - 0.5) * 250 // Reduced from 400 to 250 to match shorter lightning
+        particles.push(particle)
+        lightningContainer.addChild(particle)
+      }
+
+      // Store references and metadata
+      ;(lightningContainer as any).lightning = lightning
+      ;(lightningContainer as any).particles = particles
+      ;(lightningContainer as any).separatorIndex = i
+      ;(lightningContainer as any).isActive = true
+
+      this.container.addChild(lightningContainer)
+      this.lightningEffects.push(lightningContainer)
+    }
+  }
+
+  // Stop lightning effect for a specific separator (when column stops)
+  stopLightningForColumn(columnIndex: number): void {
+    // Lightning separator index corresponds to the column that just stopped
+    // Separator 0 is between columns 0-1, separator 1 is between columns 1-2, etc.
+    // We want to stop the lightning when the right column stops
+    const separatorIndex = columnIndex - 1
+    
+    if (separatorIndex >= 0 && separatorIndex < this.lightningEffects.length) {
+      const lightningContainer = this.lightningEffects[separatorIndex]
+      if (lightningContainer && (lightningContainer as any).isActive) {
+        // Mark as inactive and fade out
+        ;(lightningContainer as any).isActive = false
+        
+        gsap.to(lightningContainer, {
+          alpha: 0,
+          duration: 0.3,
+          ease: 'power2.out',
+          onComplete: () => {
+            lightningContainer.visible = false
+          }
+        })
+      }
+    }
+  }
+
+  // Animate lightning effects during spinning
+  private animateLightningEffects(): void {
+    if (!this.isSpinning) return
+
+    this.lightningEffects.forEach((container, index) => {
+      // Only animate if this lightning effect is still active
+      if (!(container as any).isActive) return
+
+      const lightning = (container as any).lightning as Graphics
+      const particles = (container as any).particles as Sprite[]
+
+      if (lightning) {
+        // Clear previous drawing
+        lightning.clear()
+
+        // Create realistic lightning bolt effect
+        const time = Date.now()
+        const lightIntensity = 0.8 + Math.sin(time * 0.03 + index) * 0.1
+        const lightHeight = 525 // Reduced from 600 to 350 for shorter lightning
+        const segments = 15
+
+        // Create jagged lightning path
+        const points: number[] = []
+        const centerX = 0
+        const startY = -lightHeight / 2
+        const endY = lightHeight / 2
+        const segmentHeight = lightHeight / segments
+
+        // Start point
+        points.push(centerX, startY)
+
+        // Create zigzag lightning pattern with downward flow
+        for (let i = 1; i < segments; i++) {
+          const y = startY + i * segmentHeight
+          const flowOffset = (time * 0.1) % (segmentHeight * 2)
+          const randomOffset = (Math.sin(time * 0.02 + i + flowOffset * 0.01) + 
+                               Math.cos(time * 0.03 + i * 0.7 + flowOffset * 0.01)) * 6
+          const x = centerX + randomOffset
+          points.push(x, y)
+        }
+
+        // End point
+        points.push(centerX, endY)
+
+        // Draw outer glow with warm amber
+        lightning.lineStyle(4, 0xffb347, lightIntensity * 0.2)
+        lightning.moveTo(points[0], points[1])
+        for (let i = 2; i < points.length; i += 2) {
+          lightning.lineTo(points[i], points[i + 1])
+        }
+
+        // Draw main lightning bolt with tavern gold
+        lightning.lineStyle(2, 0xd4af37, lightIntensity * 0.3)
+        lightning.moveTo(points[0], points[1])
+        for (let i = 2; i < points.length; i += 2) {
+          lightning.lineTo(points[i], points[i + 1])
+        }
+
+        // Draw inner core with bright gold
+        lightning.lineStyle(1, 0xffd700, lightIntensity * 0.3)
+        lightning.moveTo(points[0], points[1])
+        for (let i = 2; i < points.length; i += 2) {
+          lightning.lineTo(points[i], points[i + 1])
+        }
+
+        // Add small branching bolts
+        for (let b = 0; b < 3; b++) {
+          const branchIndex = Math.floor(segments * 0.3 + b * segments * 0.2)
+          if (branchIndex * 2 + 1 < points.length) {
+            const branchX = points[branchIndex * 2]
+            const branchY = points[branchIndex * 2 + 1]
+            const branchLength = 15 + Math.sin(time * 0.04 + b) * 6
+            const branchAngle = (b % 2 === 0 ? 1 : -1) * 
+                               (Math.PI / 4 + Math.sin(time * 0.03 + b) * 0.3)
+
+            const branchEndX = branchX + Math.cos(branchAngle) * branchLength
+            const branchEndY = branchY + Math.sin(branchAngle) * branchLength
+
+            lightning.lineStyle(1, 0xd4af37, lightIntensity * 0.6)
+            lightning.moveTo(branchX, branchY)
+            lightning.lineTo(branchEndX, branchEndY)
+          }
+        }
+
+        // Add flowing sparkling effects
+        for (let spark = 0; spark < 4; spark++) {
+          const sparkFlow = (time * 0.15 + spark * 150) % lightHeight
+          const sparkY = startY + sparkFlow
+
+          const segmentIndex = Math.floor(sparkFlow / segmentHeight)
+          let sparkX = centerX
+          if (segmentIndex * 2 < points.length) {
+            sparkX = points[segmentIndex * 2] + (Math.random() - 0.5) * 4
+          }
+
+          const sparkSize = 0.5 + Math.random() * 1
+          lightning.beginFill(0xffd700, lightIntensity * (0.3 + Math.random() * 0.3))
+          lightning.drawCircle(sparkX, sparkY, sparkSize)
+          lightning.endFill()
+        }
+      }
+
+      // Animate particles
+      if (particles) {
+        const time = Date.now()
+        particles.forEach((particle, pIndex) => {
+          particle.y += 2
+          if (particle.y > 125) { // Reduced from 200 to 125 to match shorter lightning
+            particle.y = -125  // Reduced from -200 to -125
+            particle.x = (Math.random() - 0.5) * 20
+          }
+          particle.alpha = 0.3 + Math.sin(time * 0.01 + pIndex) * 0.3
+        })
+      }
+    })
+
+    // Continue animation if still spinning
+    if (this.isSpinning) {
+      requestAnimationFrame(() => this.animateLightningEffects())
+    }
+  }
+
+  // Clear lightning effects
+  private clearLightningEffects(): void {
+    this.lightningEffects.forEach(container => {
+      // Kill any running animations
+      gsap.killTweensOf(container)
+      
+      if (container.parent) {
+        container.parent.removeChild(container)
+      }
+      container.destroy({ children: true })
+    })
+    this.lightningEffects = []
+  }
+
+  // Start spinning effects
+  startSpinEffects(): void {
+    this.isSpinning = true
+    
+    // Add CSS spinning class to canvas
+    const canvas = this.app.canvas
+    if (canvas) {
+      canvas.classList.add('slot-canvas-spinning')
+    }
+
+    // Activate particle overlay
+    const particleOverlay = document.querySelector('.spin-particles-overlay') as HTMLElement
+    if (particleOverlay) {
+      particleOverlay.classList.add('active')
+    }
+
+    // Create and animate lightning effects
+    this.createLightningEffects()
+    this.animateLightningEffects()
+  }
+
+  // Stop spinning effects
+  stopSpinEffects(): void {
+    this.isSpinning = false
+
+    // Remove CSS spinning class from canvas
+    const canvas = this.app.canvas
+    if (canvas) {
+      canvas.classList.remove('slot-canvas-spinning')
+    }
+
+    // Deactivate particle overlay
+    const particleOverlay = document.querySelector('.spin-particles-overlay') as HTMLElement
+    if (particleOverlay) {
+      particleOverlay.classList.remove('active')
+    }
+
+    // Clear lightning effects
+    this.clearLightningEffects()
+  }
+
   destroy(): void {
     this.clearWinHighlights()
+    this.clearLightningEffects()
+    this.stopSpinEffects()
     gsap.killTweensOf(this.slotColumns)
     this.container.destroy({ children: true })
   }

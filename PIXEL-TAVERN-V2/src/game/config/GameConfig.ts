@@ -89,6 +89,42 @@ export const GameConfig = {
     SFX_VOLUME: 0.8
   },
   
+  // Responsive Design Configuration
+  RESPONSIVE: {
+    // Base design dimensions (what the game was designed for)
+    BASE_WIDTH: 1920,
+    BASE_HEIGHT: 1080,
+    // Minimum scale to prevent game from becoming too small
+    MIN_SCALE: 0.2,
+    // Maximum scale to prevent game from becoming too large
+    MAX_SCALE: 2.0,
+    // Whether to maintain aspect ratio (recommended: true)
+    MAINTAIN_ASPECT_RATIO: true,
+    // Mobile-specific constraints
+    MOBILE: {
+      // Minimum margin from screen edges (in pixels)
+      MARGIN_X: 20,
+      MARGIN_Y: 40,
+      // Maximum percentage of screen that slot machine can occupy
+      MAX_WIDTH_PERCENT: 0.9,
+      MAX_HEIGHT_PERCENT: 0.8,
+      // Scale factor for mobile UI elements
+      UI_SCALE_FACTOR: 0.8
+    }
+  },
+
+  // Mobile Configuration
+  MOBILE: {
+    // Force landscape orientation on mobile devices
+    FORCE_LANDSCAPE: true,
+    // Minimum width for landscape mode
+    MIN_LANDSCAPE_WIDTH: 568,
+    // Mobile breakpoint
+    MOBILE_BREAKPOINT: 768,
+    // Touch-friendly scaling
+    TOUCH_SCALE_FACTOR: 1.1
+  },
+
   // Slot Machine Visual Configuration
   SLOT_MACHINE: {
     SYMBOL_SCALE: 0.19,

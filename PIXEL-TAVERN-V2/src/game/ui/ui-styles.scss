@@ -32,6 +32,23 @@ button {
   color: #fff;
   z-index: 1000;
   
+  /* CSS variables for responsive scaling */
+  --ui-scale: 1;
+  --ui-scale-clamped: 1;
+  --ui-touch-scale: 1;
+  --mobile-compact: 0;
+  
+  /* Apply responsive scaling to the entire UI */
+  transform: scale(var(--ui-scale-clamped));
+  transform-origin: center center;
+  
+  /* Compact mobile layout */
+  &[style*="--mobile-compact: 1"] {
+    .top-info-bar {
+      gap: 5px;
+    }
+  }
+  
   /* Ambient background glow animation */
   &::before {
     content: '';
@@ -67,30 +84,37 @@ button {
   pointer-events: auto;
 }
 
-/* Top Info Bar - Align with side UI positioning */
+/* Top Info Bar - Structured positioning at top center */
 .top-info-bar {
   position: absolute;
-  top: 5%;
-  left: 20px;
-  right: 20px;
+  top: 22px; /* Fixed distance from top (2% of 1080px) */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 900px;
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
   background: transparent;
-  padding: 10px 0;
+  padding: 10px 20px;
+  z-index: 10;
 }
 
 .info-panel {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 80px;
 }
 
 .credits-display {
+  position: absolute;
+  left: 330px;
+  top: 25px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 0px;
+  transform: translateX(0) translateY(0);
+  margin: 0 !important;
 }
 
 .counter-label {
@@ -210,11 +234,11 @@ button {
   gap: 10px;
 }
 
-/* Simple Medieval Win Toast - Enhanced with glassmorphism */
+/* Engraved Medieval Win Display - Carved into wooden slot frame */
 .win-display {
   position: fixed;
-  top: 5%;
-  left: 50%;
+  top: 822px; /* Fixed distance from top (5% of 1080px) */
+  left: 380%;
   transform: translateX(-50%);
   z-index: 9999;
 
@@ -223,54 +247,137 @@ button {
   justify-content: center;
   gap: 8px;
   
-  background: rgba(44, 24, 16, 0.25);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 2px solid rgba(212, 175, 55, 0.6);
-  border-radius: 16px;
-  padding: 12px 20px;
-  box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.4),
-    0 0 40px rgba(212, 175, 55, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  animation: win-popup 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  /* Wooden engraved plaque effect */
+  background: 
+    linear-gradient(145deg, #3d2a1a 0%, #2a1810 25%, #1a0f08 50%, #2a1810 75%, #3d2a1a 100%),
+    radial-gradient(ellipse at center, rgba(139, 69, 19, 0.3) 0%, transparent 70%);
+  background-blend-mode: multiply, overlay;
   
+  /* Deep carved border */
+  border: 3px solid transparent;
+  border-image: linear-gradient(
+    145deg,
+    #1a0f08 0%,
+    #4a3424 25%, 
+    #6b4a2e 50%,
+    #4a3424 75%,
+    #1a0f08 100%
+  ) 1;
+  
+  border-radius: 12px;
+  padding: 12px 20px;
+  
+  /* Deep engraved shadow effects */
+  box-shadow: 
+    /* Outer glow for magical effect */
+    0 0 30px rgba(212, 175, 55, 0.4),
+    0 0 60px rgba(255, 215, 0, 0.2),
+    /* Deep carving inset shadows */
+    inset 4px 4px 8px rgba(0, 0, 0, 0.8),
+    inset -2px -2px 4px rgba(139, 69, 19, 0.3),
+    inset 0 0 20px rgba(0, 0, 0, 0.5),
+    /* Raised gold trim highlight */
+    inset 0 1px 0 rgba(255, 215, 0, 0.15),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.8);
+    
+  /* Wood grain texture overlay */
+  position: relative;
+  overflow: hidden;
+  
+  animation: win-popup 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  
+  /* Golden carved decorative elements */
   &::before {
     content: '';
     position: absolute;
-    top: -2px;
-    left: -2px;
-    right: -2px;
-    bottom: -2px;
-    background: linear-gradient(
-      45deg,
-      rgba(212, 175, 55, 0.6),
-      rgba(255, 179, 71, 0.4),
-      rgba(212, 175, 55, 0.6)
-    );
-    border-radius: 16px;
+    top: 2px;
+    left: 8px;
+    right: 8px;
+    bottom: 2px;
+    background: 
+      linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(212, 175, 55, 0.1) 20%,
+        rgba(255, 215, 0, 0.15) 50%,
+        rgba(212, 175, 55, 0.1) 80%,
+        transparent 100%
+      );
+    border-radius: 8px;
     z-index: -1;
-    animation: win-glow 2s ease-in-out infinite alternate;
+    animation: gold-shimmer 3s ease-in-out infinite;
   }
+  
+  /* Ornate corner decorations */
+  &::after {
+    content: '◆';
+    position: absolute;
+    font-size: 8px;
+    color: rgba(212, 175, 55, 0.6);
+    top: 3px;
+    left: 6px;
+    text-shadow: 
+      0 0 4px rgba(255, 215, 0, 0.8),
+      inset 1px 1px 2px rgba(0, 0, 0, 0.8);
+    animation: corner-glow 2s ease-in-out infinite alternate;
+  }
+  
+  /* Enhanced text styling for carved effect */
+  color: #d4af37;
+  font-weight: 700;
+  text-shadow: 
+    2px 2px 4px rgba(0, 0, 0, 0.9),
+    0 0 8px rgba(212, 175, 55, 0.6),
+    inset 1px 1px 2px rgba(255, 215, 0, 0.3);
+  letter-spacing: 1px;
+  font-family: 'Cinzel', 'serif', system-ui;
 }
 
 @keyframes win-popup {
   0% {
     opacity: 0;
-    transform: translateX(-50%) scale(0.5) rotateY(90deg);
+    transform: translateX(-50%) scale(0.8) rotateX(15deg);
+    filter: brightness(0.5);
+  }
+  50% {
+    transform: translateX(-50%) scale(1.05) rotateX(-2deg);
+    filter: brightness(1.2);
   }
   100% {
     opacity: 1;
-    transform: translateX(-50%) scale(1) rotateY(0deg);
+    transform: translateX(-50%) scale(1) rotateX(0deg);
+    filter: brightness(1);
   }
 }
 
-@keyframes win-glow {
+@keyframes gold-shimmer {
   0% {
-    opacity: 0.6;
+    opacity: 0.3;
+    transform: translateX(-100%);
+  }
+  50% {
+    opacity: 0.8;
+    transform: translateX(0%);
   }
   100% {
-    opacity: 1;
+    opacity: 0.3;
+    transform: translateX(100%);
+  }
+}
+
+@keyframes corner-glow {
+  0% {
+    opacity: 0.4;
+    text-shadow: 
+      0 0 4px rgba(255, 215, 0, 0.6),
+      1px 1px 2px rgba(0, 0, 0, 0.8);
+  }
+  100% {
+    opacity: 0.9;
+    text-shadow: 
+      0 0 12px rgba(255, 215, 0, 1),
+      0 0 20px rgba(212, 175, 55, 0.8),
+      1px 1px 2px rgba(0, 0, 0, 0.8);
   }
 }
 
@@ -291,24 +398,29 @@ button {
 }
 
 .menu-btn {
+  position: absolute;
+  top: 2%;
+  right: -70px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
   background: transparent;
   border: none;
-  padding: 12px 16px;
+  padding: 12px 20px;
   color: #fff;
-  cursor: pointer;
+  cursor: default; /* Remove cursor from button */
+  pointer-events: none; /* Disable clicks on button container */
   transition: all 0.3s ease;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
   font-size: 18px;
+  z-index: 20;
 }
 
 .menu-btn:hover {
   color: #d4af37;
   text-shadow: 0 0 12px rgba(212, 175, 55, 0.8);
-  transform: translateY(-3px) scale(1.15);
+  /* Removed transform to prevent position changes */
 }
 
 /* Custom Settings Gear Icon - Professional CSS Gear */
@@ -318,6 +430,10 @@ button {
   position: relative;
   filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.8));
   font-size: 16px; /* Base size for scaling */
+  cursor: pointer; /* Enable cursor on icon */
+  pointer-events: auto; /* Enable clicks on icon only */
+  transition: all 0.3s ease;
+  margin-top: 160px;
 }
 
 .gear {
@@ -380,11 +496,14 @@ button {
   }
 }
 
-.menu-btn:hover .settings-icon {
+.menu-btn:hover .settings-icon,
+.settings-icon:hover {
   filter: drop-shadow(0 0 12px rgba(212, 175, 55, 0.8));
+  transform: scale(1.1);
 }
 
-.menu-btn:hover .gear {
+.menu-btn:hover .gear,
+.settings-icon:hover .gear {
   background: #d4af37;
   animation-duration: 1s;
 }
@@ -418,7 +537,7 @@ button {
   border-color: rgba(0, 0, 0, 0.4);
 }
 
-/* Side Panels - Position near screen edges */
+/* Side Panels - Position with fixed distances from edges */
 .left-panel,
 .right-panel {
   position: absolute;
@@ -428,14 +547,16 @@ button {
 }
 
 .left-panel {
-  left: 50px; /* Move bet controls to the right */
-  top: 30%; /* Adjust position for bet controls */
-  width: 190px; /* Make it wider */
+  left: 58px; /* Fixed distance from left edge (3% of 1920px) */
+  top: 50%;
+  transform: translateY(-50%);
+  width: 190px;
 }
 
 .right-panel {
-  right: 20px; /* Align with settings icon x position */
-  top: 15%; /* Position it higher, closer to settings icon */
+  right: 58px; /* Fixed distance from right edge (3% of 1920px) */
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 .side-btn {
@@ -462,25 +583,26 @@ button {
 .side-btn:hover {
   color: #d4af37;
   text-shadow: 0 0 15px rgba(212, 175, 55, 0.8);
-  transform: translateX(-4px) scale(1.15);
+  /* Removed transform to prevent position changes */
 }
 
 .side-btn:hover .icon {
   filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.8));
 }
 
-.right-panel .side-btn:hover {
-  transform: translateX(4px) scale(1.15);
-}
+/* Removed right-panel .side-btn:hover transform to prevent position changes */
 
 /* Bet Panel */
 .bet-panel {
   background: transparent;
   border: none;
-  padding: 0;
-  min-width: 100px;
+  padding: 0 10px;
+  min-width:190px;
   position: relative;
   overflow: visible; /* Ensure beer sprite isn't clipped */
+  margin-left: 330px;
+  margin-right: 40px;
+  margin-top: 40px;
 }
 
 @keyframes fadeInScale {
@@ -769,6 +891,13 @@ button {
     inset 0 1px 0 rgba(255, 255, 255, 0.2),
     0 0 15px rgba(212, 175, 55, 0.4);
   text-shadow: 0 0 8px rgba(212, 175, 55, 0.6);
+  
+  /* SVG icon hover effects */
+  .btn-icon svg {
+    color: #ffffff;
+    filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.8));
+    transform: scale(1.1);
+  }
 }
 
 .btn-content {
@@ -781,6 +910,15 @@ button {
 .btn-icon {
   font-size: 20px;
   filter: drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.8));
+  
+  /* SVG icon styling */
+  svg {
+    width: 20px;
+    height: 20px;
+    color: $tavern-gold;
+    filter: drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.8));
+    transition: all 0.3s ease;
+  }
 }
 
 .btn-text {
@@ -1045,19 +1183,19 @@ button {
   }
 }
 
-/* Action Buttons - EXACT positioning from original */
+/* Action Buttons - Structured positioning at bottom */
 .left-action-btn {
   position: absolute;
-  left: 15%;
-  top: 90%;
-  transform: translateY(-50%);
+  left: 480px; /* Fixed distance from left (25% of 1920px) */
+  bottom: 86px; /* Fixed distance from bottom (8% of 1080px) */
+  transform: translateX(-50%);
 }
 
 .right-action-btn {
   position: absolute;
-  right: 15%;
-  top: 90%;
-  transform: translateY(-50%);
+  right: 480px; /* Fixed distance from right (25% of 1920px) */
+  bottom: 86px; /* Fixed distance from bottom (8% of 1080px) */
+  transform: translateX(50%);
 }
 
 /* Medieval Round Action Buttons */
@@ -1578,6 +1716,8 @@ button {
   width: 32px;
   height: 32px;
   filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.8));
+  margin-top: - 300px;
+  margin-right: 400px;
 }
 
 .info-svg {
@@ -1724,33 +1864,8 @@ button {
   }
 }
 
-/* Responsive Design - EXACT from original */
+/* Responsive Design - Enhanced for scaling system */
 @media (max-width: 1200px) {
-  .left-panel {
-    left: 15px;
-    top: 35%;
-  }
-
-  .right-panel {
-    right: 15px;
-    top: 15%;
-  }
-
-  .bet-panel {
-    min-width: 90px;
-    padding: 12px;
-  }
-
-  .left-action-btn {
-    left: 12%;
-    top: 65%;
-  }
-
-  .right-action-btn {
-    right: 12%;
-    top: 65%;
-  }
-
   .spin-btn,
   .auto-spin-btn {
     width: 120px;
@@ -1759,15 +1874,6 @@ button {
 }
 
 @media (max-width: 768px) {
-  .top-info-bar {
-    top: 2%;
-    left: 10px;
-    right: 10px;
-    flex-direction: row;
-    gap: 10px;
-    padding: 8px 0;
-  }
-
   .counter-display {
     gap: 6px;
     padding: 6px;
@@ -1793,13 +1899,11 @@ button {
   }
 
   .left-panel {
-    left: 10px;
-    top: 35%;
+    width: 190px;
   }
 
   .right-panel {
-    right: 10px;
-    top: 15%;
+    width: 190px;
   }
 
   .side-btn {
@@ -1810,16 +1914,6 @@ button {
 
   .side-btn .icon {
     font-size: 24px;
-  }
-
-  .left-action-btn {
-    left: 8%;
-    top: 70%;
-  }
-
-  .right-action-btn {
-    right: 8%;
-    top: 70%;
   }
 
   .spin-btn,
@@ -1843,5 +1937,196 @@ button {
   .spin-text,
   .auto-text {
     font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .counter-display {
+    gap: 4px;
+    padding: 4px;
+  }
+  
+  .box {
+    width: 5px;
+    height: 5px;
+  }
+  
+  .counter-label {
+    font-size: 10px;
+  }
+
+  .side-btn {
+    font-size: 12px;
+    padding: 10px 12px;
+    min-width: 60px;
+    /* Touch-friendly sizing */
+    min-height: 44px;
+    touch-action: manipulation;
+  }
+
+  .spin-btn,
+  .auto-spin-btn {
+    width: 80px;
+    height: 80px;
+    /* Ensure minimum touch target size */
+    min-width: 44px;
+    min-height: 44px;
+    touch-action: manipulation;
+  }
+}
+
+/* Touch device optimizations */
+@media (pointer: coarse) {
+  .side-btn,
+  .spin-btn,
+  .auto-spin-btn,
+  .menu-btn {
+    /* Larger touch targets for better accessibility */
+    padding: 14px 18px;
+    min-height: 48px;
+    touch-action: manipulation;
+    
+    /* Enhanced touch feedback */
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+    
+    &:active {
+      transform: scale(0.95);
+      box-shadow: 
+        0 2px 8px rgba(0, 0, 0, 0.3),
+        inset 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+  }
+  
+  .spin-btn,
+  .auto-spin-btn {
+    min-width: 88px;
+    min-height: 88px;
+    
+    &:active {
+      transform: scale(0.97);
+    }
+  }
+}
+
+/* Landscape mobile optimizations */
+@media (max-width: 768px) and (orientation: landscape) and (max-height: 500px) {
+  .spin-btn,
+  .auto-spin-btn {
+    width: 70px;
+    height: 70px;
+  }
+}
+
+/* Mobile-specific styles */
+.mobile-ui {
+  /* Enhanced touch targets for mobile */
+  .side-btn {
+    min-height: 44px; /* iOS recommended minimum touch target */
+    min-width: 44px;
+    padding: 12px 16px;
+    touch-action: manipulation;
+  }
+  
+  .spin-btn,
+  .auto-spin-btn {
+    min-width: 80px;
+    min-height: 80px;
+    touch-action: manipulation;
+  }
+  
+  /* Larger tap areas for counters */
+  .counter-display {
+    padding: 12px;
+    border-radius: 12px;
+  }
+  
+  /* Better mobile spacing */
+  .top-info-bar {
+    padding: 12px 8px;
+  }
+  
+  .left-panel,
+  .right-panel {
+    gap: 16px;
+  }
+  
+  /* Mobile compact mode for very small screens */
+  &[style*="--mobile-compact: 1"] {
+    .top-info-bar {
+      padding: 8px 4px;
+    }
+    
+    .side-btn {
+      font-size: 10px;
+      padding: 8px 10px;
+      min-width: 40px;
+    }
+    
+    .spin-btn,
+    .auto-spin-btn {
+      width: 60px;
+      height: 60px;
+      min-width: 60px;
+      min-height: 60px;
+    }
+    
+    .counter-display {
+      padding: 8px;
+      gap: 4px;
+    }
+    
+    .box {
+      width: 4px;
+      height: 4px;
+    }
+  }
+}
+
+/* Mobile orientation overlay styles */
+.orientation-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #2c1810, #4a2c17);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+  color: #d4af37;
+  font-family: 'Arial', sans-serif;
+  text-align: center;
+  
+  .rotate-icon {
+    font-size: 64px;
+    margin-bottom: 20px;
+    animation: rotate-pulse 2s ease-in-out infinite;
+  }
+  
+  .message {
+    font-size: 18px;
+    font-weight: bold;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    margin-bottom: 10px;
+  }
+  
+  .submessage {
+    font-size: 14px;
+    opacity: 0.8;
+    max-width: 280px;
+    line-height: 1.4;
+  }
+}
+
+@keyframes rotate-pulse {
+  0%, 100% {
+    transform: rotate(0deg) scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: rotate(90deg) scale(1.1);
+    opacity: 1;
   }
 }
