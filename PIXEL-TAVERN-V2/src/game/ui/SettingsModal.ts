@@ -176,11 +176,11 @@ export class SettingsModal {
               <label>
                 <span>Animation speed:</span>
                 <select id="animationSpeedSelect" title="Controls how fast the reels spin">
-                  <option value="very-slow" ${this.settings.animationSpeed === 'very-slow' ? 'selected' : ''}>Very Slow (3.5s)</option>
-                  <option value="slow" ${this.settings.animationSpeed === 'slow' ? 'selected' : ''}>Slow (2.5s)</option>
-                  <option value="normal" ${this.settings.animationSpeed === 'normal' ? 'selected' : ''}>Normal (1.5s)</option>
-                  <option value="fast" ${this.settings.animationSpeed === 'fast' ? 'selected' : ''}>Fast (0.8s)</option>
-                  <option value="very-fast" ${this.settings.animationSpeed === 'very-fast' ? 'selected' : ''}>Very Fast (0.5s)</option>
+                  <option value="very-slow" ${this.settings.animationSpeed === 'very-slow' ? 'selected' : ''}>Very Slow (2.2s)</option>
+                  <option value="slow" ${this.settings.animationSpeed === 'slow' ? 'selected' : ''}>Slow (1.6s)</option>
+                  <option value="normal" ${this.settings.animationSpeed === 'normal' ? 'selected' : ''}>Normal (1.0s)</option>
+                  <option value="fast" ${this.settings.animationSpeed === 'fast' ? 'selected' : ''}>Fast (0.6s)</option>
+                  <option value="very-fast" ${this.settings.animationSpeed === 'very-fast' ? 'selected' : ''}>Very Fast (0.35s)</option>
                 </select>
               </label>
             </div>

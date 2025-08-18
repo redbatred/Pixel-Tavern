@@ -2,6 +2,7 @@ import { AudioManager } from '../audio/AudioManager'
 import { InfoModal } from './InfoModal'
 import { SettingsModal } from './SettingsModal'
 import { AutoSpinModal } from './AutoSpinModal'
+import { HistoryBoard } from './HistoryBoard'
 import { GameConfig } from '../config/GameConfig'
 import { DeviceUtils } from '../utils/deviceUtils'
 import './modals.css'
@@ -30,6 +31,8 @@ export class UserInterface {
   private infoModal: InfoModal
   private settingsModal: SettingsModal
   private autoSpinModal: AutoSpinModal
+  private historyBoard!: HistoryBoard // Use definite assignment assertion
+
 
   constructor(container: HTMLElement, audioManager: AudioManager) {
     this.container = container
@@ -65,7 +68,9 @@ export class UserInterface {
     })
     
     this.initializeUI()
+    this.initializeHistoryBoard() // Initialize history board after main UI
     this.setupKeyboardHandlers()
+
   }
 
   setOnGameAction(callback: (action: string, data?: any) => void): void {
@@ -77,6 +82,22 @@ export class UserInterface {
     this.setupEventListeners()
     this.updateDisplay()
     this.updateButtonStates() // Ensure button states are set correctly initially
+  }
+
+  private initializeHistoryBoard(): void {
+    // Create history board container after main UI is set up
+    const historyContainer = document.createElement('div')
+    historyContainer.id = 'history-container'
+    historyContainer.style.position = 'absolute'
+    historyContainer.style.pointerEvents = 'auto'
+    // Remove hardcoded positioning to allow CSS media queries to work
+    // historyContainer.style.top = '0'
+    // historyContainer.style.left = '0'
+    historyContainer.style.width = '100%'
+    historyContainer.style.height = '100%'
+    historyContainer.style.zIndex = '5' // Ensure it's visible but below modals
+    this.container.appendChild(historyContainer)
+    this.historyBoard = new HistoryBoard(historyContainer, this.audioManager)
   }
 
   private setupKeyboardHandlers(): void {
@@ -486,6 +507,7 @@ export class UserInterface {
 
   private refreshUI(): void {
     this.container.innerHTML = this.createMainUIHTML()
+    this.initializeHistoryBoard() // Re-initialize history board after refresh
     this.setupEventListeners()
     this.updateDisplay()
     this.updateButtonStates() // Ensure button states are set correctly after refresh
@@ -534,6 +556,11 @@ export class UserInterface {
 
   // For compatibility with PixelTavernGame
   updateStateFromContext(context: any): void {
+    // Check if we have a new win to add to history
+    if (context.lastWin > 0 && context.lastWin !== this.state.lastWin) {
+      this.historyBoard.addWin(context.lastWin, context.betAmount, context.winningCharacter)
+    }
+    
     this.updateState({
       credits: context.credits,
       betAmount: context.betAmount,
@@ -590,6 +617,7 @@ export class UserInterface {
     // Clean up event listeners and modals
     this.infoModal.destroy()
     this.settingsModal.destroy()
+    this.historyBoard.destroy()
   }
 
   private updateDisplay(): void {

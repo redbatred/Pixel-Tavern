@@ -6,17 +6,23 @@
 
 html, body {
   height: 100%;
+  width: 100%;
   overflow: hidden;
   font-family: 'Arial', sans-serif;
-  background: #2c1810;
+  background: #2c1810; /* Fallback background color */
+  position: fixed; /* Ensure no scrolling issues */
+  top: 0;
+  left: 0;
 }
 
 #app {
   height: 100vh;
   width: 100vw;
-  position: relative;
+  position: fixed;
+  top: 0;
+  left: 0;
   overflow: hidden;
-  background: #2c1810;
+  background: transparent;
 }
 
 #viewport-container {

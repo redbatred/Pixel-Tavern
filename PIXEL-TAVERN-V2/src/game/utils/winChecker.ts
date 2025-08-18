@@ -142,22 +142,22 @@ export const shouldShowWinModal = (winAmount: number, betAmount: number): boolea
 
 export const getSpinDuration = (speed: 'very-slow' | 'slow' | 'normal' | 'fast' | 'very-fast'): number => {
   switch (speed) {
-    case 'very-slow': return 3500
-    case 'slow': return 2500
-    case 'normal': return 1500
-    case 'fast': return 800
-    case 'very-fast': return 500
-    default: return 1500
+  case 'very-slow': return 2200
+  case 'slow': return 1600
+  case 'normal': return 1000
+  case 'fast': return 600
+  case 'very-fast': return 350
+  default: return 1000
   }
 }
 
 export const getScrollSpeed = (speed: 'very-slow' | 'slow' | 'normal' | 'fast' | 'very-fast'): number => {
   switch (speed) {
-    case 'very-slow': return 4   // Back to original
-    case 'slow': return 6        // Back to original
-    case 'normal': return 10     // Back to original
-    case 'fast': return 16       // Back to original
-    case 'very-fast': return 22  // Back to original
-    default: return 10
+  case 'very-slow': return 6
+  case 'slow': return 8
+  case 'normal': return 14
+  case 'fast': return 20
+  case 'very-fast': return 28
+  default: return 14
   }
 }

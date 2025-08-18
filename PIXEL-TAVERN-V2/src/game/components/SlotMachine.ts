@@ -42,9 +42,6 @@ export class SlotMachine {
   async init(textures: GameTextures): Promise<void> {
     this.textures = textures
     
-    // Create background
-    this.createBackground()
-    
     // Create slot grid
     this.createSlotGrid()
     
@@ -52,20 +49,21 @@ export class SlotMachine {
     this.createFrame()
   }
 
-  private createBackground(): void {
-    if (!this.textures) return
-    
-    this.background = new Sprite(this.textures.background)
-    this.background.anchor.set(0.5)
-    
-    // Scale to cover screen
-    const scaleX = this.app.screen.width / this.background.width
-    const scaleY = this.app.screen.height / this.background.height
-    const scale = Math.max(scaleX, scaleY)
-    this.background.scale.set(scale)
-    
-    this.container.addChild(this.background)
-  }
+  // Background is now handled by CSS in main.ts
+  // private createBackground(): void {
+  //   if (!this.textures) return
+  //   
+  //   this.background = new Sprite(this.textures.background)
+  //   this.background.anchor.set(0.5)
+  //   
+  //   // Scale to cover screen
+  //   const scaleX = this.app.screen.width / this.background.width
+  //   const scaleY = this.app.screen.height / this.background.height
+  //   const scale = Math.max(scaleX, scaleY)
+  //   this.background.scale.set(scale)
+  //   
+  //   this.container.addChild(this.background)
+  // }
 
   private createFrame(): void {
     if (!this.textures) return

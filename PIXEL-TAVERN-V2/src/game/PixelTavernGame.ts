@@ -2,6 +2,7 @@ import { Application } from 'pixi.js'
 import { createActor } from 'xstate'
 import { gameStateMachine } from './state/gameStateMachine'
 import { SlotMachine } from './components/SlotMachine'
+import { ResponsiveBackground } from './components/ResponsiveBackground'
 import { WinAnimation } from './components/WinAnimation'
 import { AudioManager } from './audio/AudioManager'
 import { UserInterface } from './ui/UserInterface'
@@ -18,6 +19,7 @@ export class PixelTavernGame {
   private app: Application
   private gameActor: any
   private slotMachine: SlotMachine
+  private responsiveBackground: ResponsiveBackground
   private winAnimation: WinAnimation
   private audioManager: AudioManager
   private userInterface!: UserInterface
@@ -25,6 +27,7 @@ export class PixelTavernGame {
   private assetLoader: AssetLoader
   private isInitialized = false
   private autoSpinTimeout: number | null = null
+  private resizeTimeout: number | null = null
   private isMobile: boolean = false
 
   constructor() {
@@ -32,6 +35,7 @@ export class PixelTavernGame {
     this.assetLoader = new AssetLoader()
     this.audioManager = new AudioManager()
     this.slotMachine = new SlotMachine(this.app)
+    this.responsiveBackground = new ResponsiveBackground(this.app)
     this.winAnimation = new WinAnimation(this.app)
     this.orientationOverlay = new OrientationOverlay()
     
@@ -67,6 +71,15 @@ export class PixelTavernGame {
 
       // Initialize game components
       await this.slotMachine.init(this.assetLoader.getTextures())
+
+      // Initialize responsive background
+      const textures = this.assetLoader.getTextures()
+      await this.responsiveBackground.init(textures.background)
+      
+      // Set up resize callback for background
+      this.responsiveBackground.setOnResizeCallback(() => {
+        this.updateGameElementsPosition()
+      })
 
       // Initialize win animation
       await this.winAnimation.init()
@@ -111,12 +124,16 @@ export class PixelTavernGame {
   private async initPixiApp(): Promise<void> {
     const canvas = document.getElementById('pixi-canvas') as HTMLCanvasElement
     
+    // Get initial screen dimensions
+    const screenWidth = window.innerWidth
+    const screenHeight = window.innerHeight
+    
     await this.app.init({
       canvas,
-      width: GameConfig.RESPONSIVE.BASE_WIDTH,
-      height: GameConfig.RESPONSIVE.BASE_HEIGHT,
-      backgroundColor: 0x000000, // Transparent background since CSS handles it
-      backgroundAlpha: 0,
+      width: screenWidth,
+      height: screenHeight,
+      backgroundColor: 0x2c1810, // Fallback background color
+      backgroundAlpha: 1, // Opaque background since PIXI will handle it
       antialias: false, // Disable for better performance
       autoDensity: true,
       resolution: Math.min(window.devicePixelRatio || 1, 2), // Cap at 2x for performance
@@ -194,11 +211,21 @@ export class PixelTavernGame {
           // Unknown UI action
       }
     })
+
+    // Initial UI positioning to match PIXI
+    const initialScale = this.calculateUnifiedScale(window.innerWidth, window.innerHeight)
+    this.synchronizeUIWithPixi(initialScale, window.innerWidth, window.innerHeight)
   }
 
   private setupResponsiveViewport(): void {
     const resizeHandler = () => {
-      this.handleViewportResize()
+      // Debounce resize events to prevent excessive calls
+      if (this.resizeTimeout) {
+        clearTimeout(this.resizeTimeout)
+      }
+      this.resizeTimeout = window.setTimeout(() => {
+        this.handleViewportResize()
+      }, 100)
     }
 
     window.addEventListener('resize', resizeHandler)
@@ -215,17 +242,11 @@ export class PixelTavernGame {
       return
     }
     
-    // Calculate scale for the unified container
-    let scale = this.calculateUnifiedScale(screenWidth, screenHeight)
+    // Update game elements position and scale for PIXI components
+    // This will also synchronize the UI automatically
+    this.updateGameElementsPosition()
     
-    // Get the viewport container
-    const viewportContainer = document.getElementById('viewport-container')
-    if (viewportContainer) {
-      // Apply scale to the entire viewport container
-      viewportContainer.style.setProperty('--viewport-scale', scale.toString())
-    }
-    
-    // Notify UI of resize (but don't apply its own scaling since it's in the unified container)
+    // Notify UI of resize for any internal UI logic
     this.userInterface?.handleResize(screenWidth, screenHeight)
   }
 
@@ -254,7 +275,7 @@ export class PixelTavernGame {
     }
     
     // Apply base scale multiplier - for mobile landscape, use a more generous scale since height is limited
-    const BASE_SCALE_MULTIPLIER = this.isMobile ? 1.4 : 1.18 // Standard for mobile, bigger for desktop
+    const BASE_SCALE_MULTIPLIER = this.isMobile ? 1.35 : 1.18 // Standard for mobile, bigger for desktop
     scale *= BASE_SCALE_MULTIPLIER
     
     // Clamp scale within global limits
@@ -450,18 +471,93 @@ export class PixelTavernGame {
   }
 
   private setupScene(): void {
+    // Add responsive background to stage (first, so it's behind everything)
+    this.app.stage.addChild(this.responsiveBackground.getContainer())
+
     // Add slot machine to stage
     this.app.stage.addChild(this.slotMachine.container)
 
     // Add win animation to stage (on top)
     this.app.stage.addChild(this.winAnimation.container)
 
-    // Position elements using base dimensions (unified container handles scaling)
-    this.slotMachine.container.x = GameConfig.RESPONSIVE.BASE_WIDTH / 2
-    this.slotMachine.container.y = GameConfig.RESPONSIVE.BASE_HEIGHT / 2
+    // Position elements at center of screen (not base dimensions anymore)
+    this.updateGameElementsPosition()
+  }
+
+  private updateGameElementsPosition(): void {
+    // Get current screen dimensions
+    const screenWidth = window.innerWidth
+    const screenHeight = window.innerHeight
     
-    this.winAnimation.container.x = GameConfig.RESPONSIVE.BASE_WIDTH / 2
-    this.winAnimation.container.y = GameConfig.RESPONSIVE.BASE_HEIGHT / 2
+    // Calculate scale based on screen size to maintain responsive design
+    const scale = this.calculateUnifiedScale(screenWidth, screenHeight)
+    
+    // Position slot machine at center of screen
+    this.slotMachine.container.x = screenWidth / 2
+    this.slotMachine.container.y = screenHeight / 2
+    this.slotMachine.container.scale.set(scale)
+    
+    // Position win animation at center of screen
+    this.winAnimation.container.x = screenWidth / 2
+    this.winAnimation.container.y = screenHeight / 2
+    this.winAnimation.container.scale.set(scale)
+    
+    // Synchronize UI viewport container to match PIXI positioning exactly
+    this.synchronizeUIWithPixi(scale, screenWidth, screenHeight)
+  }
+
+  private synchronizeUIWithPixi(pixiScale: number, screenWidth: number, screenHeight: number): void {
+    // Get the viewport container
+    const viewportContainer = document.getElementById('viewport-container')
+    if (viewportContainer) {
+      // Use the exact same positioning logic as PIXI elements
+      const centerX = screenWidth / 2
+      const centerY = screenHeight / 2
+      
+      // Position UI container exactly where PIXI slot machine is positioned
+      viewportContainer.style.position = 'fixed'
+      viewportContainer.style.left = `${centerX}px`
+      viewportContainer.style.top = `${centerY}px`
+      viewportContainer.style.transform = `translate(-50%, -50%) scale(${pixiScale})`
+      viewportContainer.style.transformOrigin = 'center center'
+      viewportContainer.style.width = '1920px'
+      viewportContainer.style.height = '1080px'
+      viewportContainer.style.setProperty('--viewport-scale', pixiScale.toString())
+      
+      // Apply mobile-specific CSS class for responsive adjustments
+      const uiOverlay = document.getElementById('ui-overlay')
+      if (uiOverlay) {
+        if (this.isMobile || screenWidth <= 768) {
+          uiOverlay.classList.add('mobile-ui')
+          
+          // Apply compact mode for very small screens
+          if (screenWidth <= 480) {
+            uiOverlay.style.setProperty('--mobile-compact', '1')
+          } else {
+            uiOverlay.style.setProperty('--mobile-compact', '0')
+          }
+        } else {
+          uiOverlay.classList.remove('mobile-ui')
+          uiOverlay.style.setProperty('--mobile-compact', '0')
+        }
+        
+        // Ensure UI overlay positioning is synchronized
+        uiOverlay.style.position = 'absolute'
+        uiOverlay.style.width = '100%'
+        uiOverlay.style.height = '100%'
+        uiOverlay.style.pointerEvents = 'none'
+        uiOverlay.style.overflow = 'visible'
+      }
+      
+      // Ensure game container maintains proper dimensions
+      const gameContainer = document.getElementById('game-container')
+      if (gameContainer) {
+        gameContainer.style.position = 'relative'
+        gameContainer.style.width = '100%'
+        gameContainer.style.height = '100%'
+        gameContainer.style.overflow = 'visible'
+      }
+    }
   }
 
   private setupEventListeners(): void {
@@ -589,14 +685,20 @@ export class PixelTavernGame {
   }
 
   public destroy(): void {
-    // Clear auto-spin timeout
+    // Clear timeouts
     if (this.autoSpinTimeout) {
       clearTimeout(this.autoSpinTimeout)
       this.autoSpinTimeout = null
     }
     
+    if (this.resizeTimeout) {
+      clearTimeout(this.resizeTimeout)
+      this.resizeTimeout = null
+    }
+    
     this.gameActor?.stop()
     this.slotMachine?.destroy()
+    this.responsiveBackground?.destroy()
     this.audioManager?.cleanup()
     this.userInterface?.destroy()
     this.orientationOverlay?.destroy()

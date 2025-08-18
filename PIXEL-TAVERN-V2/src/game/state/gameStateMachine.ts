@@ -198,15 +198,15 @@ export const gameStateMachine = setup({
     spinDuration: ({ context }) => {
       switch (context.animationSpeed) {
         case "very-slow":
-          return 3000;
-        case "slow":
           return 2000;
+        case "slow":
+          return 1000;
         case "fast":
-          return 500;
+          return 400;
         case "very-fast":
-          return 300;
+          return 250;
         default:
-          return 800; // Back to original normal speed
+          return 550; // Back to original normal speed
       }
     },
     autoSpinDelay: ({ context }) => {

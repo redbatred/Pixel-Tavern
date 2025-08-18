@@ -1,3 +1,18 @@
+/* Root CSS variables for responsive scaling */
+:root {
+  --viewport-scale: 1;
+  --mobile-compact: 0;
+}
+
+/* Background Optimization for Pixel Art */
+#background-container {
+  image-rendering: pixelated !important;
+  image-rendering: -moz-crisp-edges !important;
+  image-rendering: crisp-edges !important;
+  image-rendering: -webkit-optimize-contrast !important;
+  -ms-interpolation-mode: nearest-neighbor !important;
+}
+
 /* Colors - Medieval Tavern Theme */
 $dark-wood: #2c1810;
 $tavern-gold: #d4af37;
@@ -38,14 +53,39 @@ button {
   --ui-touch-scale: 1;
   --mobile-compact: 0;
   
-  /* Apply responsive scaling to the entire UI */
-  transform: scale(var(--ui-scale-clamped));
+  /* Apply responsive scaling to the entire UI - synchronized with PIXI */
+  transform: none; /* Remove transform to prevent conflicts with viewport container scaling */
   transform-origin: center center;
+  
+  /* Ensure UI elements maintain relative positioning to the slot machine */
+  overflow: visible;
   
   /* Compact mobile layout */
   &[style*="--mobile-compact: 1"] {
     .top-info-bar {
       gap: 5px;
+    }
+  }
+  
+  /* Mobile UI class for responsive adjustments */
+  &.mobile-ui {
+    /* The viewport container scaling handles positioning automatically */
+    /* Just ensure text and elements remain readable */
+    .credits-display {
+      font-size: clamp(12px, 2.5vw, 16px);
+      letter-spacing: 1px;
+      
+      /* Ensure visibility on small screens */
+      z-index: 1001;
+      min-width: fit-content;
+      white-space: nowrap;
+    }
+    
+    .info-icon {
+      /* Ensure proper scaling and visibility */
+      z-index: 1001;
+      min-width: 28px;
+      min-height: 28px;
     }
   }
   
@@ -84,10 +124,10 @@ button {
   pointer-events: auto;
 }
 
-/* Top Info Bar - Structured positioning at top center */
+/* Top Info Bar - Positioned relative to viewport container */
 .top-info-bar {
   position: absolute;
-  top: 22px; /* Fixed distance from top (2% of 1080px) */
+  top: 22px; /* Fixed distance from top (2% of 1080px base height) */
   left: 50%;
   transform: translateX(-50%);
   width: 900px;
@@ -105,9 +145,10 @@ button {
   gap: 80px;
 }
 
+/* Credits display - responsive positioning relative to viewport */
 .credits-display {
   position: absolute;
-  left: 330px;
+  left: 335px;
   top: 25px;
   display: flex;
   flex-direction: column;
@@ -115,8 +156,44 @@ button {
   gap: 0px;
   transform: translateX(0) translateY(0);
   margin: 0 !important;
+  transition: all 0.3s ease; /* Smooth transitions for responsive changes */
 }
 
+/* Info Icon - responsive positioning */
+.info-icon {
+  width: 32px;
+  height: 32px;
+  filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.8));
+  margin-top: -300px;
+  margin-right: 400px;
+  transition: all 0.3s ease; /* Smooth transitions for responsive changes */
+}
+
+/* Mobile-specific responsive adjustments for 768px and below */
+/* Mobile-specific responsive adjustments for 768px and below */
+@media (max-width: 768px) {
+  /* Simple fix: just scale down all elements proportionally */
+  .slot-ui-overlay {
+    font-size: 0.9em; /* Slightly smaller text on mobile */
+  }
+  
+  /* Specific fix for mobile positioning issues */
+  .credits-display {
+    /* Use calc with viewport units for responsive positioning */
+    left: calc(17.4vw + 240px) !important;
+    top: calc(2.3vh + 20px) !important;
+  }
+  
+  .info-icon {
+    /* Use calc with viewport units for responsive positioning */
+    margin-top: calc(-47.8vh - 125px) !important;
+    margin-right: calc(40.8vw + 394px) !important;
+  }
+}
+
+/* Removed iPhone SE-specific positioning */
+
+/* Extra small screens (iPhone SE and similar) */
 .counter-label {
   font-size: 14px;
   color: $tavern-gold;
@@ -234,11 +311,11 @@ button {
   gap: 10px;
 }
 
-/* Engraved Medieval Win Display - Carved into wooden slot frame */
+/* Engraved Medieval Win Display - Positioned relative to viewport container */
 .win-display {
-  position: fixed;
-  top: 818px; /* Fixed distance from top */
-  left: 210%;
+  position: absolute; /* Changed from fixed to absolute */
+  top: 820px; /* Fixed distance from top (relative to 1080px base height) */
+  left: 200%; /* Center horizontally */
   transform: translateX(-50%);
   z-index: 9999;
 
@@ -419,8 +496,8 @@ button {
 
 .menu-btn {
   position: absolute;
-  top: 2%;
-  right: -70px;
+  top: 2%; /* Relative to viewport container */
+  right: -70px; /* Fixed offset from right edge */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -557,7 +634,7 @@ button {
   border-color: rgba(0, 0, 0, 0.4);
 }
 
-/* Side Panels - Position with fixed distances from edges */
+/* Side Panels - Position relative to viewport container */
 .left-panel,
 .right-panel {
   position: absolute;
@@ -567,14 +644,14 @@ button {
 }
 
 .left-panel {
-  left: 58px; /* Fixed distance from left edge (3% of 1920px) */
+  left: 58px; /* Fixed distance from left edge (3% of 1920px base width) */
   top: 50%;
   transform: translateY(-50%);
   width: 190px;
 }
 
 .right-panel {
-  right: 58px; /* Fixed distance from right edge (3% of 1920px) */
+  right: 58px; /* Fixed distance from right edge (3% of 1920px base width) */
   top: 50%;
   transform: translateY(-50%);
 }
@@ -717,7 +794,6 @@ button {
   border: 3px solid $tavern-gold;
   border-radius: 12px;
   padding: 16px;
-  position: relative;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -1203,18 +1279,18 @@ button {
   }
 }
 
-/* Action Buttons - Structured positioning at bottom */
+/* Action Buttons - Positioned relative to viewport container, not screen */
 .left-action-btn {
   position: absolute;
-  left: 480px; /* Fixed distance from left (25% of 1920px) */
-  bottom: 86px; /* Fixed distance from bottom (8% of 1080px) */
+  left: 480px; /* Fixed distance from left (25% of 1920px base width) */
+  bottom: 86px; /* Fixed distance from bottom (8% of 1080px base height) */
   transform: translateX(-50%);
 }
 
 .right-action-btn {
   position: absolute;
-  right: 480px; /* Fixed distance from right (25% of 1920px) */
-  bottom: 86px; /* Fixed distance from bottom (8% of 1080px) */
+  right: 480px; /* Fixed distance from right (25% of 1920px base width) */
+  bottom: 86px; /* Fixed distance from bottom (8% of 1080px base height) */
   transform: translateX(50%);
 }
 
@@ -2205,10 +2281,111 @@ button {
   }
 }
 
+/* Ultra-small mobile screens (480px and below) */
+@media (max-width: 480px) {
+  /* Further optimize credits display for very small screens */
+  .credits-display {
+    left: 15%; /* Adjust for smaller screens */
+    top: 2%;
+    transform: scale(0.9) translateX(0) translateY(0); /* Slightly smaller scale */
+  }
+  
+  .counter-display {
+    gap: 4px;
+    padding: 4px;
+  }
+  
+  .box {
+    width: 5px;
+    height: 5px;
+  }
+  
+  .counter-label {
+    font-size: 10px;
+  }
+
+  /* Optimize info icon for very small screens */
+  .info-icon {
+    width: 24px;
+    height: 24px;
+    margin-top: -25%;
+    margin-right: 18%;
+    transform: scale(0.9);
+  }
+
+  /* Compact top info bar */
+  .top-info-bar {
+    width: 95%;
+    padding: 6px 12px;
+  }
+
+  /* Adjust menu button for very small screens */
+  .menu-btn {
+    right: -2%;
+    font-size: 12px;
+    padding: 6px 10px;
+  }
+
+  .settings-icon {
+    width: 20px;
+    height: 20px;
+    margin-top: 120px;
+  }
+}
+
 /* Ultra-aggressive positioning for iPhone SE - handles viewport scaling */
 @media screen and (max-device-width: 375px), 
        screen and (max-width: 375px),
        (max-width: 375px) and (-webkit-device-pixel-ratio: 2) {
+  
+  /* Fix credits display for iPhone SE */
+  .credits-display {
+    left: 12% !important;
+    top: 1.5% !important;
+    transform: scale(0.8) translateX(0) translateY(0) !important;
+  }
+  
+  .counter-display {
+    gap: 3px !important;
+    padding: 3px !important;
+  }
+  
+  .box {
+    width: 4px !important;
+    height: 4px !important;
+  }
+  
+  .counter-label {
+    font-size: 9px !important;
+  }
+
+  /* Fix info icon for iPhone SE */
+  .info-icon {
+    width: 20px !important;
+    height: 20px !important;
+    margin-top: -22% !important;
+    margin-right: 15% !important;
+    transform: scale(0.8) !important;
+  }
+
+  /* Ultra-compact top info bar */
+  .top-info-bar {
+    width: 98% !important;
+    padding: 4px 8px !important;
+  }
+
+  /* Menu button optimization */
+  .menu-btn {
+    right: 0% !important;
+    font-size: 10px !important;
+    padding: 4px 8px !important;
+  }
+
+  .settings-icon {
+    width: 18px !important;
+    height: 18px !important;
+    margin-top: 100px !important;
+  }
   
   html .right-panel,
   body .right-panel,
@@ -2394,3 +2571,288 @@ button {
     opacity: 1;
   }
 }
+
+/* History Board - Medieval Theme - Matching Bet Panel Style */
+.history-board {
+  position: absolute;
+  left: 1350px; /* Same distance as left panel - 58px from edge */
+  top: 50%;
+  transform: translateY(-50%);
+  width: 190px; /* Same width as left panel */
+  height: 380px; /* Increased height for 6 values */
+  
+  /* Exact same background and styling as bet-frame but without shine */
+  background: linear-gradient(
+    135deg,
+    rgba(44, 24, 16, 1),
+    rgba(74, 44, 23, 1),
+    rgba(44, 24, 16, 0.95)
+  );
+  border: 3px solid $tavern-gold;
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow:
+    0 8px 25px rgba(0, 0, 0, 0.4),
+    inset 0 2px 0 rgba(212, 175, 55, 0.3),
+    inset 0 -2px 8px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+  overflow: hidden;
+
+  /* Remove the glossy shine effect */
+  &::after {
+    content: "";
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    border: 1px solid rgba(212, 175, 55, 0.2);
+    border-radius: 6px;
+    pointer-events: none;
+  }
+}
+
+.history-header {
+  background: transparent; /* Remove background to match bet panel style */
+  border-bottom: 2px solid rgba(212, 175, 55, 0.3);
+  padding: 0 0 8px 0; /* Reduce padding to match bet panel */
+  margin-bottom: 8px; /* Match bet panel gap */
+}
+
+.history-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px; /* Match bet panel label size exactly */
+  font-weight: bold;
+  color: $tavern-gold;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.history-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  height: 280px; /* Increased height for 6 values */
+  padding-top: 4px; /* Add top padding to prevent first item clipping */
+  
+  /* Custom scrollbar */
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: rgba(44, 24, 16, 0.5);
+    border-radius: 2px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, $tavern-gold, $warm-amber);
+    border-radius: 2px;
+    
+    &:hover {
+      background: linear-gradient(180deg, $fire-orange, $tavern-gold);
+    }
+  }
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px; /* Match bet panel button gaps */
+  overflow-y: auto;
+  padding: 4px; /* Add padding to prevent border clipping */
+}
+
+/* Empty state */
+.history-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 160px; /* Increased height for taller board */
+  text-align: center;
+  color: rgba(212, 175, 55, 0.6);
+  padding: 20px;
+}
+
+.empty-text {
+  font-size: 12px; /* Match bet panel text size */
+  font-weight: bold;
+  margin-bottom: 4px;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.empty-subtext {
+  font-size: 10px; /* Small subtext */
+  opacity: 0.8;
+  font-style: italic;
+}
+
+/* History items - Match bet button style exactly */
+.history-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 12px; /* Increased padding for taller boxes */
+  height: 40px; /* Increased height from 32px */
+  background: transparent; /* Like bet buttons */
+  border: 1px solid rgba(212, 175, 55, 0.6); /* Like bet buttons */
+  border-radius: 4px; /* Same as bet buttons */
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  color: #fff; /* Match bet button text color */
+  font-weight: bold;
+  font-size: 12px; /* Match bet button font size */
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  cursor: pointer;
+  margin: 0; /* Ensure no negative margins */
+  flex-shrink: 0; /* Prevent shrinking that could hide borders */
+  box-sizing: border-box; /* Include border in height calculation */
+  
+  &:hover:not(:disabled) {
+    color: #d4af37; /* Match bet button hover */
+    border-color: #d4af37;
+    text-shadow: 0 0 8px rgba(212, 175, 55, 0.8);
+    transform: scale(1.05); /* Match bet button hover scale */
+  }
+  
+  &.latest {
+    color: #d4af37; /* Match active bet button */
+    border-color: #d4af37;
+    text-shadow: 0 0 12px rgba(212, 175, 55, 1);
+    transform: scale(1.1); /* Like active bet button */
+  }
+  
+  &.animate-in {
+    animation: history-item-enter 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+}
+
+@keyframes history-item-enter {
+  0% {
+    opacity: 0;
+    transform: translateX(20px) scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+.win-character {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px; /* Very small character icon */
+  height: 20px;
+  background: transparent; /* No background like bet buttons */
+  border: none;
+  border-radius: 50%;
+  flex-shrink: 0;
+  color: inherit; /* Inherit color from parent */
+}
+
+.character-icon {
+  font-size: 10px; /* Very small icon */
+  filter: drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.8));
+}
+
+.win-details {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0; /* Allow text to truncate */
+}
+
+.win-amount {
+  font-size: 10px; /* Very small font to match bet buttons */
+  font-weight: bold;
+  color: inherit; /* Inherit from parent */
+  text-shadow: inherit;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.win-multiplier {
+  font-size: 8px; /* Very small font */
+  color: inherit;
+  text-shadow: inherit;
+  opacity: 0.8;
+  white-space: nowrap;
+}
+
+.win-tier {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 12px;
+}
+
+.tier-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 12px; /* Very small badge */
+  height: 12px;
+  border-radius: 50%;
+  font-size: 8px; /* Very small icon */
+  border: none;
+  position: relative;
+  color: inherit; /* Inherit color from parent */
+  background: transparent;
+  
+  &.tier-small {
+    opacity: 0.6;
+  }
+  
+  &.tier-big {
+    opacity: 0.8;
+    animation: tier-glow-small 2s ease-in-out infinite alternate;
+  }
+  
+  &.tier-mega {
+    opacity: 1;
+    animation: tier-glow-medium 1.5s ease-in-out infinite alternate;
+  }
+  
+  &.tier-epic {
+    opacity: 1;
+    animation: tier-glow-epic 1s ease-in-out infinite alternate;
+  }
+}
+
+@keyframes tier-glow-small {
+  0% { opacity: 0.8; }
+  100% { opacity: 1; }
+}
+
+@keyframes tier-glow-medium {
+  0% { opacity: 0.8; }
+  100% { opacity: 1; }
+}
+
+@keyframes tier-glow-epic {
+  0% { 
+    opacity: 0.8;
+    transform: scale(1);
+  }
+  100% { 
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+
+/* Removed mobile-specific history board positioning and sizing overrides */
+
+

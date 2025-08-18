@@ -12,17 +12,18 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Create unified game container that scales together
   gameContainer.innerHTML = `
-    <div id="background-container" style="
+    <canvas id="pixi-canvas" style="
       position: fixed;
       top: 0;
       left: 0;
       width: 100vw;
       height: 100vh;
-      background: #2c1810 url('/assets/images/background.png') center center / cover no-repeat;
+      display: block;
+      background: transparent;
       z-index: 1;
-    "></div>
+    "></canvas>
     <div id="viewport-container" style="
-      position: absolute;
+      position: fixed;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%) scale(var(--viewport-scale, 1));
@@ -31,19 +32,15 @@ document.addEventListener('DOMContentLoaded', () => {
       height: 1080px;
       --viewport-scale: 1;
       z-index: 2;
+      pointer-events: none;
     ">
       <div id="game-container" style="
         position: relative; 
         width: 100%; 
         height: 100%; 
         overflow: hidden;
+        pointer-events: auto;
       ">
-        <canvas id="pixi-canvas" style="
-          display: block;
-          width: 100%;
-          height: 100%;
-          background: transparent;
-        "></canvas>
         <div class="spin-particles-overlay" style="
           position: absolute;
           top: 0;
