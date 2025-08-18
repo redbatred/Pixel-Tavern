@@ -289,6 +289,8 @@ export class PixelTavernGame {
       case 'spinning':
         if (!this.isHandlingSpin) {
           this.isHandlingSpin = true
+          // Hide win animation if transitioning from win display
+          this.winAnimation.hide()
           this.audioManager.startAllColumnSpinSounds() // Start all column spinning sounds
           this.slotMachine.startSpinEffects() // Start lightning effects
           this.handleSpin()

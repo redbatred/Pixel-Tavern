@@ -314,12 +314,12 @@ export class SlotMachine {
   showWinHighlights(winningPositions: Array<{ payline: number; positions: [number, number][] }>): void {
     this.clearWinHighlights()
     
-    // Colors for different paylines
+    // Vibrant neon colors for different paylines
     const paylineColors = [
-      0xffd700, 0xff6b6b, 0x4ecdc4, 0x45b7d1, 0x96ceb4,
-      0xfeca57, 0xff9ff3, 0x54a0ff, 0x5f27cd, 0x00d2d3,
-      0xff9f43, 0x1dd1a1, 0xfd79a8, 0x6c5ce7, 0xa29bfe,
-      0xfd79a8, 0x00b894, 0xe17055, 0x74b9ff, 0xe84393
+      0x00ffff, 0xff0080, 0x00ff00, 0xff8000, 0x8000ff,
+      0xffff00, 0xff0040, 0x0080ff, 0x40ff00, 0xff4000,
+      0x80ff00, 0x0040ff, 0xff0000, 0x00ff80, 0x8040ff,
+      0xff8040, 0x4080ff, 0x80ff40, 0xff4080, 0x40ff80
     ]
 
     winningPositions.forEach(({ payline, positions }) => {
@@ -335,17 +335,45 @@ export class SlotMachine {
         
         const symbolWidth = symbol.texture.width * symbol.scale.x
         const symbolHeight = symbol.texture.height * symbol.scale.y
-        const padding = 10
         
-        highlight.beginFill(color, 0.3)
-        highlight.lineStyle(5, color, 0.9)
+        // Easy-to-modify highlight box dimensions
+        const boxWidth = symbolWidth + 18   // Change this number to make wider/narrower
+        const boxHeight = symbolHeight + 55 // Change this number to make taller/shorter
+        const boxX = -boxWidth / 2          // Center X position
+        const boxY = -boxHeight / 1.95      // Center Y position
+        
+        // Create inner edge glow effect
+        // Clear any previous drawing
+        highlight.clear()
+        
+        // Create the inner glow that follows the cell edges
+        // First, create a subtle inner shadow/glow
+        highlight.beginFill(0x000000, 0)  // Transparent fill
+        
+        // Inner glow effect - main colored line
+        highlight.lineStyle(3, color, 1.0)
+        
+        // Draw the main highlight box (easy to modify now!)
         highlight.drawRoundedRect(
-          -symbolWidth / 2 - padding,
-          -symbolHeight / 2 - padding,
-          symbolWidth + padding * 2,
-          symbolHeight + padding * 2,
-          15
+          boxX,
+          boxY,
+          boxWidth,
+          boxHeight,
+          12
         )
+        
+        // Add a second inner line for more pronounced glow (white core)
+        highlight.lineStyle(1, 0xffffff, 0.9)
+        
+        // Inner white glow (slightly smaller)
+        highlight.drawRoundedRect(
+          boxX + 1,
+          boxY + 1,
+          boxWidth - 2,
+          boxHeight - 2,
+          11
+        )
+        
         highlight.endFill()
         
         // Position relative to symbol
@@ -355,49 +383,29 @@ export class SlotMachine {
           highlight.y = symbolColumn.y + symbol.y
         }
         
-        // Advanced GSAP Timeline for win animations
+        // Smooth inner glow animation
         const tl = gsap.timeline({ repeat: -1 })
         
-        // Initial scale from 0
-        gsap.set(highlight, { scale: 0, alpha: 0 })
+        // Initial state - fixed scale, no size changes
+        gsap.set(highlight, { scale: 1, alpha: 0 })
         
-        // Staggered entrance animation
+        // Staggered entrance animation - fade in smoothly
         tl.to(highlight, {
-          scale: 1,
-          alpha: 0.8,
-          duration: 0.3,
-          ease: "back.out(1.7)",
-          delay: index * 0.1
-        })
-        // Pulsing effect
-        .to(highlight, {
-          scale: 1.1,
-          alpha: 0.6,
+          alpha: 1.0,
           duration: 0.5,
-          ease: "power2.inOut"
+          ease: "power2.out",
+          delay: index * 0.08
         })
-        .to(highlight, {
-          scale: 1,
-          alpha: 0.8,
-          duration: 0.5,
-          ease: "power2.inOut"
-        })
-        // Glow effect
+        // Gentle pulsing glow effect for the inner light
         .to(highlight, {
           pixi: { 
-            tint: 0xffffff,
-            brightness: 1.5
+            brightness: 1.6,
+            saturate: 1.4
           },
-          duration: 0.2,
-          ease: "power2.inOut"
-        })
-        .to(highlight, {
-          pixi: { 
-            tint: color,
-            brightness: 1
-          },
-          duration: 0.2,
-          ease: "power2.inOut"
+          duration: 0.8,
+          ease: "sine.inOut",
+          yoyo: true,
+          repeat: -1
         })
         
         this.container.addChild(highlight)
@@ -407,13 +415,12 @@ export class SlotMachine {
     
     // Auto-clear with fade out animation
     gsap.delayedCall(3, () => {
-      // Advanced fade out with stagger
+      // Advanced fade out with stagger - no scale changes
       gsap.to(this.winHighlights, {
         alpha: 0,
-        scale: 0,
         duration: 0.5,
         stagger: 0.05,
-        ease: "back.in(1.7)",
+        ease: "power2.in",
         onComplete: () => {
           this.clearWinHighlights()
         }
@@ -440,10 +447,10 @@ export class SlotMachine {
         this.clearWinHighlights()
         break
       case 'showingWin':
-        // Disabled slot win highlights - using only PIXI character animation
-        // if (context.winningPositions && context.winningPositions.length > 0) {
-        //   this.showWinHighlights(context.winningPositions)
-        // }
+        // Show slot win highlights along with PIXI character animation
+        if (_context.winningPositions && _context.winningPositions.length > 0) {
+          this.showWinHighlights(_context.winningPositions)
+        }
         break
     }
   }

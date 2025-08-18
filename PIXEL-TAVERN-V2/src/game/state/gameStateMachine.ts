@@ -321,6 +321,11 @@ export const gameStateMachine = setup({
         winDisplayDuration: "collectingWin",
       },
       on: {
+        SPIN: {
+          target: "spinning",
+          guard: "hasCredits",
+          actions: ["addWinToCredits", "deductBet", "clearWinState"],
+        },
         WIN_ANIMATION_COMPLETE: "collectingWin",
         REQUEST_AUTO_SPIN_STOP: {
           actions: ["requestAutoSpinStop"],
