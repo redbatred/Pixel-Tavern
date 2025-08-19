@@ -2,6 +2,15 @@
 :root {
   --viewport-scale: 1;
   --mobile-compact: 0;
+  /* Info icon offsets (desktop) */
+  --info-offset-x: -389px;
+  --info-offset-y: -300px;
+  /* Info icon offsets (mobile) */
+  --info-offset-x-mobile: -438px;
+  --info-offset-y-mobile: 195px; 
+  /* Info icon offsets (iPhone SE landscape only) - default to mobile */
+  --info-offset-x-se: -372px;
+  --info-offset-y-se: 190px;
 }
 
 /* Background Optimization for Pixel Art */
@@ -159,16 +168,6 @@ button {
   transition: all 0.3s ease; /* Smooth transitions for responsive changes */
 }
 
-/* Info Icon - responsive positioning */
-.info-icon {
-  width: 32px;
-  height: 32px;
-  filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.8));
-  margin-top: -300px;
-  margin-right: 400px;
-  transition: all 0.3s ease; /* Smooth transitions for responsive changes */
-}
-
 /* Mobile-specific responsive adjustments for 768px and below */
 /* Mobile-specific responsive adjustments for 768px and below */
 @media (max-width: 768px) {
@@ -182,12 +181,6 @@ button {
     /* Use calc with viewport units for responsive positioning */
     left: calc(17.4vw + 240px) !important;
     top: calc(2.3vh + 20px) !important;
-  }
-  
-  .info-icon {
-    /* Use calc with viewport units for responsive positioning */
-    margin-top: calc(-47.8vh - 125px) !important;
-    margin-right: calc(40.8vw + 394px) !important;
   }
 }
 
@@ -654,6 +647,8 @@ button {
   right: 58px; /* Fixed distance from right edge (3% of 1920px base width) */
   top: 50%;
   transform: translateY(-50%);
+  z-index: 100; /* Ensure right panel is above history board */
+  isolation: isolate; /* Create separate stacking context */
 }
 
 .side-btn {
@@ -688,6 +683,22 @@ button {
 }
 
 /* Removed right-panel .side-btn:hover transform to prevent position changes */
+
+/* Allow per-button fine positioning via CSS variables */
+.right-panel .info-btn {
+  transform: translate(var(--info-offset-x), var(--info-offset-y));
+}
+
+/* Info Icon - Default styling for right panel */
+.info-icon {
+  width: 32px !important;
+  height: 32px !important;
+  filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.8));
+  transition: all 0.3s ease;
+  /* Add positioning control - modify these values to adjust position */
+  margin: 0 !important; /* Reset any margin overrides */
+  /* Let the right-panel and side-btn control placement; avoid local positioning here */
+}
 
 /* Bet Panel */
 .bet-panel {
@@ -1793,15 +1804,6 @@ button {
     0 0 12px rgba(255, 107, 53, 0.8);
 }
 
-/* Info Icon */
-.info-icon {
-  width: 32px;
-  height: 32px;
-  filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.8));
-  margin-top: - 300px;
-  margin-right: 400px;
-}
-
 .info-svg {
   width: 100%;
   height: 100%;
@@ -2090,122 +2092,18 @@ button {
 
   /* Fix right panel positioning for small screens */
   .right-panel {
-    right: 20px; /* Reduced from 58px for better positioning on small screens */
+  right: 20px; /* Reduced from 58px for better positioning on small screens */
+  top: 2%; /* Anchor near top like settings on mobile */
+  transform: none; /* Stop vertical centering on mobile */
+  }
+
+  /* Use mobile offsets for the info button */
+  .right-panel .info-btn {
+    transform: translate(var(--info-offset-x-mobile), var(--info-offset-y-mobile));
   }
 
   .left-panel {
     left: 20px; /* Consistent spacing on both sides */
-  }
-}
-
-/* iPhone SE and ultra-small screens (375px and below) */
-@media screen and (max-width: 375px) {
-  :root {
-    --right-panel-position: 0px;
-    --left-panel-position: 0px;
-  }
-
-  .right-panel {
-    right: 0px !important;
-    /* Ensure the panel doesn't shift during interactions */
-    transform: translateY(-50%) !important;
-    position: absolute !important;
-    /* Prevent any flex or layout changes that could affect positioning */
-    display: flex !important;
-    flex-direction: column !important;
-    /* Add explicit z-index to prevent layering issues */
-    z-index: 100 !important;
-    /* Force tighter positioning with additional specificity */
-    margin-right: 0 !important;
-    padding-right: 0 !important;
-  }
-
-  .left-panel {
-    left: 0px !important;
-    z-index: 100 !important;
-    margin-left: 0 !important;
-    padding-left: 0 !important;
-  }
-
-  .side-btn {
-    font-size: 11px;
-    padding: 8px 10px;
-    min-width: 50px;
-    min-height: 44px;
-    /* Prevent any layout shifts */
-    box-sizing: border-box !important;
-    flex-shrink: 0 !important;
-    /* Ensure no transforms that could cause movement */
-    transform: none !important;
-    /* Prevent position changes from any inherited styles */
-    position: relative !important;
-    /* Lock down dimensions */
-    width: auto !important;
-    max-width: none !important;
-  }
-
-  .side-btn .icon {
-    font-size: 28px; /* Slightly smaller icons for tight spacing */
-  }
-
-  /* Ensure info button stays in place with maximum specificity */
-  .info-btn,
-  .right-panel .info-btn,
-  .side-btn.info-btn,
-  #info-btn {
-    position: relative !important;
-    /* Prevent any transform or position changes on interaction */
-    transition: color 0.3s ease, text-shadow 0.3s ease !important;
-    transform: none !important;
-    /* Lock positioning completely */
-    left: auto !important;
-    right: auto !important;
-    top: auto !important;
-    bottom: auto !important;
-    margin: 0 !important;
-  }
-
-  .info-btn:hover,
-  .info-btn:active,
-  .right-panel .info-btn:hover,
-  .right-panel .info-btn:active,
-  .side-btn.info-btn:hover,
-  .side-btn.info-btn:active,
-  #info-btn:hover,
-  #info-btn:active {
-    /* Override any transforms that might cause movement */
-    transform: none !important;
-    /* Only allow safe visual changes */
-    color: #d4af37 !important;
-    text-shadow: 0 0 15px rgba(212, 175, 55, 0.8) !important;
-    /* Prevent any position changes */
-    position: relative !important;
-    left: auto !important;
-    right: auto !important;
-    top: auto !important;
-    bottom: auto !important;
-  }
-
-  /* Override any mobile-ui class conflicts */
-  .mobile-ui .right-panel,
-  body .mobile-ui .right-panel,
-  html .mobile-ui .right-panel {
-    right: var(--right-panel-position) !important;
-  }
-
-  .mobile-ui .left-panel,
-  body .mobile-ui .left-panel,
-  html .mobile-ui .left-panel {
-    left: var(--left-panel-position) !important;
-  }
-
-  /* Override any viewport scaling effects */
-  [style*="--viewport-scale"] .right-panel {
-    right: var(--right-panel-position) !important;
-  }
-
-  [style*="--viewport-scale"] .left-panel {
-    left: var(--left-panel-position) !important;
   }
 }
 
@@ -2233,39 +2131,7 @@ button {
   }
 }
 
-/* Specific iPhone SE (375x667) media query */
-@media screen and (max-width: 375px) and (max-height: 667px) {
-  .right-panel {
-    right: 0px !important;
-    /* Additional specificity for iPhone SE */
-    margin-right: 0 !important;
-    padding-right: 0 !important;
-    max-width: 80px !important;
-    /* Force edge positioning */
-    border-right: none !important;
-  }
-
-  .left-panel {
-    left: 0px !important;
-    margin-left: 0 !important;
-    padding-left: 0 !important;
-    max-width: 80px !important;
-    border-left: none !important;
-  }
-
-  .side-btn {
-    min-width: 45px;
-    padding: 8px 6px;
-    font-size: 11px;
-    /* Ensure no extra spacing */
-    margin: 0 !important;
-    border: none !important;
-  }
-
-  .side-btn .icon {
-    font-size: 26px;
-  }
-}
+/* Removed device-specific iPhone SE overrides for cleaner, predictable mobile layout */
 
 /* Ultra-small mobile screens (480px and below) */
 @media (max-width: 480px) {
@@ -2294,8 +2160,7 @@ button {
   .info-icon {
     width: 24px;
     height: 24px;
-    margin-top: -25%;
-    margin-right: 18%;
+    /* Removed absolute positioning - let it stay in right panel */
     transform: scale(0.9);
   }
 
@@ -2319,88 +2184,7 @@ button {
   }
 }
 
-/* Ultra-aggressive positioning for iPhone SE - handles viewport scaling */
-@media screen and (max-device-width: 375px), 
-       screen and (max-width: 375px),
-       (max-width: 375px) and (-webkit-device-pixel-ratio: 2) {
-  
-  /* Fix credits display for iPhone SE */
-  .credits-display {
-    left: 12% !important;
-    top: 1.5% !important;
-    transform: scale(0.8) translateX(0) translateY(0) !important;
-  }
-  
-  .counter-display {
-    gap: 3px !important;
-    padding: 3px !important;
-  }
-  
-  .box {
-    width: 4px !important;
-    height: 4px !important;
-  }
-  
-  .counter-label {
-    font-size: 9px !important;
-  }
-
-  /* Fix info icon for iPhone SE */
-  .info-icon {
-    width: 20px !important;
-    height: 20px !important;
-    margin-top: -22% !important;
-    margin-right: 15% !important;
-    transform: scale(0.8) !important;
-  }
-
-  /* Ultra-compact top info bar */
-  .top-info-bar {
-    width: 98% !important;
-    padding: 4px 8px !important;
-  }
-
-  /* Menu button optimization */
-  .menu-btn {
-    right: 0% !important;
-    font-size: 10px !important;
-    padding: 4px 8px !important;
-  }
-
-  .settings-icon {
-    width: 18px !important;
-    height: 18px !important;
-    margin-top: 100px !important;
-  }
-  
-  html .right-panel,
-  body .right-panel,
-  * .right-panel {
-    right: 0px !important;
-    position: absolute !important;
-    transform: translateY(-50%) !important;
-    /* Remove any potential overflow */
-    overflow: visible !important;
-    /* Ensure no transforms are applied that could move it */
-    will-change: auto !important;
-    backface-visibility: visible !important;
-  }
-
-  html .left-panel,
-  body .left-panel,
-  * .left-panel {
-    left: 0px !important;
-    position: absolute !important;
-    transform: translateY(-50%) !important;
-  }
-
-  /* Override any container padding/margin that might affect positioning */
-  .slot-ui-overlay {
-    padding: 0 !important;
-    margin: 0 !important;
-    overflow: visible !important;
-  }
-}
+/* Removed ultra-specific iPhone SE overrides */
 
 /* Touch device optimizations */
 @media (pointer: coarse) {
@@ -2477,6 +2261,11 @@ button {
     gap: 16px;
   }
   
+  /* Ensure mobile offsets are used when running on mobile (class added by JS) */
+  .right-panel .info-btn {
+    transform: translate(var(--info-offset-x-mobile), var(--info-offset-y-mobile));
+  }
+  
   /* Mobile compact mode for very small screens */
   &[style*="--mobile-compact: 1"] {
     .top-info-bar {
@@ -2507,6 +2296,41 @@ button {
       height: 4px;
     }
   }
+}
+
+/* Landscape phones often have width > 480px; use height-based media to apply mobile positioning */
+@media (orientation: landscape) and (max-height: 480px) {
+  .right-panel {
+    right: 20px;
+    top: 2%;
+    transform: none;
+  }
+  .left-panel {
+    left: 20px;
+  }
+  .right-panel .info-btn {
+    transform: translate(var(--info-offset-x-mobile), var(--info-offset-y-mobile));
+  }
+}
+
+/* iPhone SE landscape (1st gen 568x320 logical points) */
+@media screen and (orientation: landscape) and (width: 568px) and (height: 320px) {
+  .right-panel .info-btn { transform: translate(var(--info-offset-x-se, var(--info-offset-x-mobile)), var(--info-offset-y-se, var(--info-offset-y-mobile))) !important; }
+}
+
+/* iPhone SE 2nd/3rd gen landscape (667x375 logical points) */
+@media screen and (orientation: landscape) and (width: 667px) and (height: 375px) {
+  .right-panel .info-btn { transform: translate(var(--info-offset-x-se, var(--info-offset-x-mobile)), var(--info-offset-y-se, var(--info-offset-y-mobile))) !important; }
+}
+
+/* iPhone SE 2/3 landscape - tolerant range for emulators */
+@media screen and (orientation: landscape) and (min-width: 660px) and (max-width: 670px) and (min-height: 370px) and (max-height: 380px) {
+  .right-panel .info-btn { transform: translate(var(--info-offset-x-se, var(--info-offset-x-mobile)), var(--info-offset-y-se, var(--info-offset-y-mobile))) !important; }
+}
+
+/* iPhone SE 1st gen landscape - tolerant range for emulators */
+@media screen and (orientation: landscape) and (min-width: 560px) and (max-width: 570px) and (min-height: 315px) and (max-height: 325px) {
+  .right-panel .info-btn { transform: translate(var(--info-offset-x-se, var(--info-offset-x-mobile)), var(--info-offset-y-se, var(--info-offset-y-mobile))) !important; }
 }
 
 /* Mobile orientation overlay styles */
@@ -2567,6 +2391,8 @@ button {
   width: 190px; /* Same width as left panel */
   height: 380px; /* Increased height for 6 values */
   pointer-events: auto; /* Ensure board catches clicks */
+  z-index: 30; /* Lower than right panel to avoid conflicts */
+  isolation: isolate; /* Create new stacking context */
   
   /* Exact same background and styling as bet-frame but without shine */
   background: linear-gradient(
@@ -2699,18 +2525,12 @@ button {
   font-weight: bold;
   font-size: 12px; /* Match bet button font size */
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
-  cursor: pointer;
+  cursor: default; /* Changed from pointer to default - history items should not be clickable */
   margin: 0; /* Ensure no negative margins */
   flex-shrink: 0; /* Prevent shrinking that could hide borders */
   box-sizing: border-box; /* Include border in height calculation */
-  pointer-events: auto; /* Ensure items catch clicks */
-  
-  &:hover:not(:disabled) {
-    color: #d4af37; /* Match bet button hover */
-    border-color: #d4af37;
-    text-shadow: 0 0 8px rgba(212, 175, 55, 0.8);
-    transform: scale(1.05); /* Match bet button hover scale */
-  }
+  pointer-events: none; /* Prevent any interaction - just display items */
+  isolation: isolate; /* Create stacking context to prevent event bubbling */
   
   &.latest {
     color: #d4af37; /* Match active bet button */

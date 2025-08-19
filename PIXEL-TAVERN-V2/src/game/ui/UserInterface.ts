@@ -95,7 +95,8 @@ export class UserInterface {
     // historyContainer.style.left = '0'
     historyContainer.style.width = '100%'
     historyContainer.style.height = '100%'
-  historyContainer.style.zIndex = '50' // Above side buttons, below modals
+    historyContainer.style.zIndex = '30' // Lower than right panel to avoid conflicts
+    historyContainer.style.isolation = 'isolate' // Prevent event bubbling
     this.container.appendChild(historyContainer)
     this.historyBoard = new HistoryBoard(historyContainer, this.audioManager)
   }

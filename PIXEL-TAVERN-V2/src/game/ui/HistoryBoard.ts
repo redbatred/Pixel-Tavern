@@ -25,13 +25,14 @@ export class HistoryBoard {
   private initializeBoard(): void {
     const historyHTML = this.createHistoryBoardHTML()
     this.container.innerHTML = historyHTML
-    // Prevent clicks on the history board from bubbling to underlying elements
-    const board = this.container.querySelector('.history-board') as HTMLElement | null
-    if (board) {
-      board.addEventListener('click', (e) => {
-        e.stopPropagation()
-      })
-    }
+    
+    // Since history items are now non-interactive (pointer-events: none), 
+    // we only need to prevent clicks on the board container itself
+    this.container.addEventListener('click', (e) => {
+      e.preventDefault()
+      e.stopPropagation()
+      e.stopImmediatePropagation()
+    })
   }
 
   private createHistoryBoardHTML(): string {
@@ -134,6 +135,8 @@ export class HistoryBoard {
           }
         }, 50)
       }
+      
+      // Since history items are now non-interactive, no need for additional event handlers
     }
   }
 
