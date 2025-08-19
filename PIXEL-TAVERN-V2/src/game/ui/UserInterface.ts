@@ -95,7 +95,7 @@ export class UserInterface {
     // historyContainer.style.left = '0'
     historyContainer.style.width = '100%'
     historyContainer.style.height = '100%'
-    historyContainer.style.zIndex = '5' // Ensure it's visible but below modals
+  historyContainer.style.zIndex = '50' // Above side buttons, below modals
     this.container.appendChild(historyContainer)
     this.historyBoard = new HistoryBoard(historyContainer, this.audioManager)
   }

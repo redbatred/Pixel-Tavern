@@ -738,9 +738,10 @@ button {
   background-repeat: no-repeat;
   background-position: -0.078px -0.078px; /* Show only beer1 frame by default */
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
-  z-index: 0;
+  z-index: -1; /* Push behind the bet panel */
   transition: all 0.3s ease;
   opacity: 1;
+  pointer-events: none; /* Avoid intercepting clicks */
 }
 
 /* Beer sprite animation when custom input is open */
@@ -802,26 +803,11 @@ button {
     inset 0 2px 0 rgba(212, 175, 55, 0.3),
     inset 0 -2px 8px rgba(0, 0, 0, 0.3);
   transition: all 0.3s ease;
+  position: relative; /* Create stacking context */
+  z-index: 1; /* Ensure bet frame sits above beer sprite */
 
-  &::before {
-    content: "";
-    position: absolute;
-    top: -2px;
-    left: -2px;
-    right: -2px;
-    bottom: -2px;
-    background: linear-gradient(
-      45deg,
-      $tavern-gold,
-      $warm-amber,
-      $tavern-gold,
-      $fire-orange,
-      $tavern-gold
-    );
-    border-radius: 12px;
-    z-index: -1;
-    animation: frame-glow 3s ease-in-out infinite;
-  }
+  /* Remove glossy shine overlay */
+  &::before { content: none; }
 
   &::after {
     content: "";
@@ -2580,6 +2566,7 @@ button {
   transform: translateY(-50%);
   width: 190px; /* Same width as left panel */
   height: 380px; /* Increased height for 6 values */
+  pointer-events: auto; /* Ensure board catches clicks */
   
   /* Exact same background and styling as bet-frame but without shine */
   background: linear-gradient(
@@ -2716,6 +2703,7 @@ button {
   margin: 0; /* Ensure no negative margins */
   flex-shrink: 0; /* Prevent shrinking that could hide borders */
   box-sizing: border-box; /* Include border in height calculation */
+  pointer-events: auto; /* Ensure items catch clicks */
   
   &:hover:not(:disabled) {
     color: #d4af37; /* Match bet button hover */
