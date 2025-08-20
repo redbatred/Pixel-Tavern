@@ -8,6 +8,9 @@ export class ResponsiveBackground {
   private resizeHandler: () => void
   private isResizing: boolean = false
   private onResizeCallback?: () => void
+  private currentScale: number = 1
+  private currentScaleX: number = 1
+  private currentScaleY: number = 1
 
   constructor(app: Application) {
     this.app = app
@@ -67,16 +70,16 @@ export class ResponsiveBackground {
       const textureWidth = this.texture.width
       const textureHeight = this.texture.height
       
-      // Calculate scale to cover the entire screen while maintaining aspect ratio
-      const scaleX = screenWidth / textureWidth
-      const scaleY = screenHeight / textureHeight
-      
-      // Use the larger scale to ensure full coverage (like CSS background-size: cover)
-      // Add extra buffer to ensure complete coverage
-      const scale = Math.max(scaleX, scaleY) * 1.05
-      
-      // Apply the scale
-      this.background.scale.set(scale)
+  // Calculate non-uniform scale so the background always fills the screen with no borders
+  const scaleX = screenWidth / textureWidth
+  const scaleY = screenHeight / textureHeight
+
+  // Apply stretch (like background-size: 100% 100%)
+  this.background.scale.set(scaleX, scaleY)
+  this.currentScaleX = scaleX
+  this.currentScaleY = scaleY
+  // Keep currentScale for backward compatibility (use average)
+  this.currentScale = (scaleX + scaleY) / 2
       
       // Update container position to center of screen
       this.container.x = screenWidth / 2
@@ -100,6 +103,24 @@ export class ResponsiveBackground {
 
   public getContainer(): Container {
     return this.container
+  }
+
+  public getScale(): number {
+    return this.currentScale
+  }
+
+  // New helpers for non-uniform scaling consumers
+  public getScaleX(): number {
+    return this.currentScaleX
+  }
+
+  public getScaleY(): number {
+    return this.currentScaleY
+  }
+
+  public getTextureSize(): { width: number; height: number } | null {
+    if (!this.texture) return null
+    return { width: this.texture.width, height: this.texture.height }
   }
 
   public destroy(): void {

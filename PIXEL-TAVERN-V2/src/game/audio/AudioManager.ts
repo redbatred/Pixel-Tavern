@@ -11,6 +11,8 @@ export interface AudioTrack {
 }
 
 export class AudioManager {
+  // Prevent multiple pixi-sound entries from reloading the same URL
+  private urlAliasMap: Map<string, string> = new Map()
   private backgroundMusicInstance: any = null
   private currentMusicTrack: string | null = null
   private isBackgroundMusicPlaying = false
@@ -24,6 +26,7 @@ export class AudioManager {
   private musicEnabled = true
   private sfxEnabled = true
   private lastPlayedTrack: string | null = null // Store the last track for resuming
+  private playingLoopIds: Set<string> = new Set()
 
   // Audio tracks configuration
   private readonly AUDIO_TRACKS: Record<string, AudioTrack> = {
@@ -140,13 +143,14 @@ export class AudioManager {
       const otherSounds = Object.values(this.AUDIO_TRACKS)
         .filter(track => !prioritySounds.includes(track.id.toUpperCase()))
 
-      // Load priority sounds first
+  // Load priority sounds first
       for (const soundId of prioritySounds) {
         const track = this.AUDIO_TRACKS[soundId]
         if (track) {
           try {
-            await sound.add(track.id, {
-              url: track.url,
+    const key = this.getOrRegisterUrlKey(track.url)
+    await sound.add(track.id, {
+      url: key,
               preload: true,
               loaded: () => {
                 console.log(`✅ Priority sound loaded: ${soundId}`)
@@ -161,8 +165,9 @@ export class AudioManager {
       // Load other sounds in parallel
       const loadPromises = otherSounds.map(async track => {
         try {
+          const key = this.getOrRegisterUrlKey(track.url)
           await sound.add(track.id, {
-            url: track.url,
+            url: key,
             preload: true
           })
         } catch (error) {
@@ -175,6 +180,15 @@ export class AudioManager {
     } catch (error) {
       console.error('Failed to initialize audio:', error)
     }
+  }
+
+  // Return a canonical key for a URL so multiple IDs share a single decode buffer
+  private getOrRegisterUrlKey(url: string): string {
+    // Normalize URL (encode spaces) to avoid duplicates
+    const normalized = encodeURI(url)
+    if (this.urlAliasMap.has(normalized)) return this.urlAliasMap.get(normalized) as string
+    this.urlAliasMap.set(normalized, normalized)
+    return normalized
   }
 
   // Background Music
@@ -334,13 +348,14 @@ export class AudioManager {
         : this.masterVolume * this.sfxVolume * track.volume
 
       if (sound.exists(track.id)) {
-        // Stop any existing instance before starting new one
-        sound.stop(track.id)
-        sound.play(track.id, { 
+        // Guard: if already flagged as playing, don't start again
+        if (this.playingLoopIds.has(track.id)) return
+        const instance = sound.play(track.id, { 
           volume,
           loop: true, // Loop the spinning sound
           speed: 1.0
         })
+        if (instance) this.playingLoopIds.add(track.id)
       }
     } catch (error) {
       console.warn(`Failed to start spin sound for column ${columnIndex}:`, error)
@@ -360,6 +375,7 @@ export class AudioManager {
     try {
       if (sound.exists(track.id)) {
         sound.stop(track.id)
+        this.playingLoopIds.delete(track.id)
         // Always play reel stop sound when each column stops
         this.playReelStopSound()
       }
@@ -388,6 +404,7 @@ export class AudioManager {
     try {
       if (sound.exists(track.id)) {
         sound.stop(track.id)
+        this.playingLoopIds.delete(track.id)
       }
     } catch (error) {
       // Ignore errors for bulk operations

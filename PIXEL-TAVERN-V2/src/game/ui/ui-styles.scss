@@ -475,7 +475,7 @@ button {
 }
 
 .win-amount {
-  font-size: 28px;
+  font-size: 30px;
   font-weight: 900;
   color: $tavern-gold;
   text-shadow: 
@@ -2581,7 +2581,7 @@ button {
   min-width: 0; /* Allow text to truncate */
 }
 
-.win-amount {
+.history-board .win-amount {
   font-size: 10px; /* Very small font to match bet buttons */
   font-weight: bold;
   color: inherit; /* Inherit from parent */
@@ -2591,7 +2591,7 @@ button {
   text-overflow: ellipsis;
 }
 
-.win-multiplier {
+.history-board .win-multiplier {
   font-size: 8px; /* Very small font */
   color: inherit;
   text-shadow: inherit;
@@ -2599,7 +2599,7 @@ button {
   white-space: nowrap;
 }
 
-.win-tier {
+.history-board .win-tier {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2607,7 +2607,7 @@ button {
   width: 12px;
 }
 
-.tier-badge {
+.history-board .tier-badge {
   display: flex;
   align-items: center;
   justify-content: center;

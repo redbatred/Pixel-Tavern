@@ -125,6 +125,46 @@ export const GameConfig = {
     TOUCH_SCALE_FACTOR: 1.1
   },
 
+  // Background Fire Animations Configuration
+  FIRE_BACKGROUND: {
+    ENABLED: true,
+  SCALE_WITH_VIEWPORT: true,
+  FOLLOW_BACKGROUND: true,
+  COORD_SPACE: 'design', // 'design' (1920x1080) or 'background'
+  CROP_WIDTH: 58, // tighten crop to the core flame
+  BASE_BAND_HEIGHT: 14, // focus closer to the base core
+  BASE_ALPHA_THRESHOLD: 110, // stricter opacity threshold
+  BASE_BAND_DENSITY_FRACTION: 0.65, // prefer denser center over side embers
+  LOCK_TO_FIRST_FRAME: true, // apply per-frame x shift relative to first frame
+  // Optional GIF mode (tries GIF first, falls back to PNG sheet if unavailable)
+  USE_GIF: true,
+  GIF_URL: '/assets/images/Particle FX 1.3 Free/GIFs/Fire+Sparks.gif',
+    // Default two instances; positions are relative to the screen center (in pixels)
+    // Positive x is right, positive y is down. Adjust scale to change size.
+  INSTANCES: [
+  // Original two instances (design-space coordinates 1920x1080)
+  { x: -637, y: 331, scale: 0.5, animationSpeed: 0.5, alpha: 0.95, widthScale: 0.5, heightScale: 0.5 },
+  { x: 409, y: -342, scale: 1.3, animationSpeed: 0.5, alpha: 0.5, widthScale: 1.3, heightScale: 1.3 },
+  // Seven additional instances
+  { x: -500, y: -305, scale: 1.3, animationSpeed: 0.55, alpha: 0.3, widthScale: 1.3, heightScale: 1.3 },
+  { x: -749, y: -36,  scale: 0.4, animationSpeed: 0.5,  alpha: 0.8 },
+  { x: 735,  y: -184,  scale: 1.1, animationSpeed: 0.45, alpha: 0.5 },
+  { x: -708,    y: -206, scale: 0.4, animationSpeed: 0.5,  alpha: 0.8 },
+  { x: 822, y: -36, scale: 0.4, animationSpeed: 0.55, alpha: 0.65 },
+  { x: -397,  y: -307, scale: 0.4, animationSpeed: 0.55, alpha: 0.65 },
+  { x: 853,    y: 416,  scale: 0.5, animationSpeed: 0.5,  alpha: 0.9 },
+  // Two additional instances (design-space coordinates). Adjust as desired.
+  { x: -295, y: -465, scale: 0.9, animationSpeed: 0.5,  alpha: 0.5 },
+  { x: 180,  y: -250, scale: 2.9, animationSpeed: 0.52, alpha: 0.5 },
+  // One more additional instance (design-space). Adjust if needed.
+  { x: 325, y: 260, scale: 0.5, animationSpeed: 0.5, alpha: 0.75 },
+  // Extra instance appended per request
+  { x: -579, y: 110, scale: 0.48, animationSpeed: 0.5, alpha: 0.8 },
+  // One more flame instance appended
+  { x: 432, y: -26, scale: 0.52, animationSpeed: 0.51, alpha: 0.82 }
+  ] as Array<{ x: number; y: number; scale: number; animationSpeed?: number; alpha?: number; rotation?: number; widthScale?: number; heightScale?: number }>
+  },
+
   // Slot Machine Visual Configuration
   SLOT_MACHINE: {
     SYMBOL_SCALE: 0.19,

@@ -3,6 +3,7 @@ import { createActor } from 'xstate'
 import { gameStateMachine } from './state/gameStateMachine'
 import { SlotMachine } from './components/SlotMachine'
 import { ResponsiveBackground } from './components/ResponsiveBackground'
+import { FireBackground } from './components/FireBackground'
 import { WinAnimation } from './components/WinAnimation'
 import { AudioManager } from './audio/AudioManager'
 import { UserInterface } from './ui/UserInterface'
@@ -21,6 +22,7 @@ export class PixelTavernGame {
   private slotMachine: SlotMachine
   private responsiveBackground: ResponsiveBackground
   private winAnimation: WinAnimation
+  private fireBackground: FireBackground
   private audioManager: AudioManager
   private userInterface!: UserInterface
   private orientationOverlay: OrientationOverlay
@@ -36,6 +38,7 @@ export class PixelTavernGame {
     this.audioManager = new AudioManager()
     this.slotMachine = new SlotMachine(this.app)
     this.responsiveBackground = new ResponsiveBackground(this.app)
+  this.fireBackground = new FireBackground()
     this.winAnimation = new WinAnimation(this.app)
     this.orientationOverlay = new OrientationOverlay()
     
@@ -75,6 +78,8 @@ export class PixelTavernGame {
       // Initialize responsive background
       const textures = this.assetLoader.getTextures()
       await this.responsiveBackground.init(textures.background)
+  // Initialize fire background animations
+  await this.fireBackground.init()
       
       // Set up resize callback for background
       this.responsiveBackground.setOnResizeCallback(() => {
@@ -474,6 +479,9 @@ export class PixelTavernGame {
     // Add responsive background to stage (first, so it's behind everything)
     this.app.stage.addChild(this.responsiveBackground.getContainer())
 
+  // Add fire background animations (still behind slot machine)
+  this.app.stage.addChild(this.fireBackground.getContainer())
+
     // Add slot machine to stage
     this.app.stage.addChild(this.slotMachine.container)
 
@@ -501,6 +509,34 @@ export class PixelTavernGame {
     this.winAnimation.container.x = screenWidth / 2
     this.winAnimation.container.y = screenHeight / 2
     this.winAnimation.container.scale.set(scale)
+    
+    // Position fire background container at center and optionally scale with viewport or background
+    if (this.fireBackground) {
+      const fbContainer = this.fireBackground.getContainer()
+      fbContainer.x = screenWidth / 2
+      fbContainer.y = screenHeight / 2
+      if (GameConfig.FIRE_BACKGROUND.FOLLOW_BACKGROUND) {
+        // Match the background's scale so fire appears glued to it (supports non-uniform stretch)
+        const bgScaleX = (this.responsiveBackground as any).getScaleX?.() ?? this.responsiveBackground.getScale?.() ?? scale
+        const bgScaleY = (this.responsiveBackground as any).getScaleY?.() ?? this.responsiveBackground.getScale?.() ?? scale
+        fbContainer.scale.set(bgScaleX, bgScaleY)
+        // Recompute wrapper positions every resize from authored values
+        const texSize = this.responsiveBackground.getTextureSize?.()
+        if (texSize) {
+          this.fireBackground.updatePlacementForBackground(
+            texSize.width,
+            texSize.height,
+            GameConfig.RESPONSIVE.BASE_WIDTH,
+            GameConfig.RESPONSIVE.BASE_HEIGHT,
+            GameConfig.FIRE_BACKGROUND.COORD_SPACE as 'design' | 'background'
+          )
+        }
+      } else if (GameConfig.FIRE_BACKGROUND.SCALE_WITH_VIEWPORT) {
+        fbContainer.scale.set(scale)
+      } else {
+        fbContainer.scale.set(1)
+      }
+    }
     
     // Synchronize UI viewport container to match PIXI positioning exactly
     this.synchronizeUIWithPixi(scale, screenWidth, screenHeight)
@@ -699,6 +735,7 @@ export class PixelTavernGame {
     this.gameActor?.stop()
     this.slotMachine?.destroy()
     this.responsiveBackground?.destroy()
+  this.fireBackground?.destroy()
     this.audioManager?.cleanup()
     this.userInterface?.destroy()
     this.orientationOverlay?.destroy()
