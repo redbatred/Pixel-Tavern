@@ -1,0 +1,265 @@
+import { AnimatedSprite, Container, Texture } from 'pixi.js'
+
+// Electric effect config - uses existing Particle FX assets
+const ElectricEffectConfig = {
+  ENABLED: true,
+  USE_GIF: true,
+  GIF_URL: '/assets/images/Particle FX 1.3 Free/GIFs/Eletric Aura.gif',
+  // Base effect configuration
+  SCALE: 0.5,
+  ANIMATION_SPEED: 0.6,
+  ALPHA: 0.9
+}
+
+export class ElectricEffectBackground {
+  private container: Container
+  private sprites: AnimatedSprite[] = []
+  private isInitialized = false
+
+  constructor() {
+    this.container = new Container()
+    this.container.zIndex = 3100 // Character effects layer - Electric
+    this.container.sortableChildren = true
+    
+    // Start hidden - only show for mage wins
+    this.container.visible = false
+  }
+
+  public getContainer(): Container {
+    return this.container
+  }
+
+  // Show electric effects for mage wins positioned over winning mage symbols
+  public showForMageWin(
+    winningPositions: Array<{ payline: number; positions: [number, number][] }>,
+    slotResults: number[][],
+    slotMachine: any // Reference to SlotMachine to get symbol positions
+  ): void {
+    if (!this.isInitialized || this.sprites.length === 0) {
+      console.log('ElectricEffectBackground: Not initialized, cannot show effects')
+      return
+    }
+
+    // Clear any existing effects
+    this.clearEffects()
+
+    // Find all mage positions in winning combinations
+    const magePositions: Array<{ row: number; col: number; symbolIndex: number }> = []
+    
+    winningPositions.forEach(({ positions }) => {
+      positions.forEach(([row, col]) => {
+        const symbolIndex = slotResults[row][col]
+        // Check if this symbol is a mage (only character 1 - Wizard)
+        if (symbolIndex === 1) {
+          // Avoid duplicates
+          const exists = magePositions.some(pos => pos.row === row && pos.col === col)
+          if (!exists) {
+            magePositions.push({ row, col, symbolIndex })
+          }
+        }
+      })
+    })
+
+    console.log(`ElectricEffectBackground: Found ${magePositions.length} mage positions in winning combinations`)
+
+    // Create electric effects positioned over each winning mage
+    magePositions.forEach((magePos, index) => {
+      this.createElectricEffectAtPosition(magePos.row, magePos.col, slotMachine, index)
+    })
+
+    this.container.visible = true
+  }
+
+  // Create an electric effect positioned over a specific slot symbol
+  private createElectricEffectAtPosition(row: number, col: number, slotMachine: any, index: number): void {
+    if (this.sprites.length === 0) return
+
+    // Get the original sprite frames (use first sprite as template)
+    const templateSprite = this.sprites[0]
+    const frames = templateSprite.textures || [templateSprite.texture]
+
+    // Create new animated sprite
+    const electricSprite = new AnimatedSprite(frames)
+    electricSprite.anchor.set(0.5)
+    electricSprite.scale.set(ElectricEffectConfig.SCALE)
+    electricSprite.alpha = ElectricEffectConfig.ALPHA
+    electricSprite.animationSpeed = ElectricEffectConfig.ANIMATION_SPEED
+    electricSprite.loop = true
+    electricSprite.roundPixels = true
+    electricSprite.zIndex = 3100 + index
+    electricSprite.blendMode = 'add' // Eliminate black backgrounds
+    
+    // Position over the specific symbol using SlotMachine's positioning logic
+    const symbol = slotMachine.slotGrid[row][col]
+    const symbolColumn = slotMachine.slotColumns[col]
+    
+    if (symbol && symbolColumn) {
+      // Use the same positioning logic as win highlights
+      electricSprite.x = symbolColumn.x + symbol.x -20
+      electricSprite.y = symbolColumn.y + symbol.y - 5
+      
+      console.log(`ElectricEffectBackground: Created effect at slot [${row}, ${col}] - world pos (${electricSprite.x}, ${electricSprite.y})`)
+    } else {
+      console.warn(`ElectricEffectBackground: Could not find symbol/column for position [${row}, ${col}]`)
+      // Fallback to center position
+      electricSprite.x = 0
+      electricSprite.y = 0
+    }
+
+    electricSprite.play()
+    this.container.addChild(electricSprite)
+    this.sprites.push(electricSprite)
+  }
+
+  // Clear all positioned electric effects
+  private clearEffects(): void {
+    // Remove all sprites except the first one (keep as template)
+    const template = this.sprites[0]
+    this.sprites.slice(1).forEach(sprite => {
+      if (sprite.parent) {
+        sprite.parent.removeChild(sprite)
+      }
+      sprite.destroy()
+    })
+    
+    // Keep only the template sprite (hidden)
+    this.sprites = template ? [template] : []
+    if (template) {
+      template.visible = false
+    }
+  }
+
+  // Hide electric effects
+  public hide(): void {
+    this.container.visible = false
+    this.clearEffects()
+    console.log('ElectricEffectBackground: Hiding effects')
+  }
+
+  // Check if the winning character is a mage (only character index 1 - Wizard)
+  public shouldShowForCharacter(characterIndex: number | null): boolean {
+    return characterIndex === 1 // Only Wizard character
+  }
+
+  public async init(): Promise<void> {
+    if (this.isInitialized || !ElectricEffectConfig.ENABLED) return
+    
+    console.log('ElectricEffectBackground: Starting initialization...')
+    
+    // Try GIF path first if enabled
+    if (ElectricEffectConfig.USE_GIF && ElectricEffectConfig.GIF_URL) {
+      console.log('ElectricEffectBackground: Attempting to load GIF:', ElectricEffectConfig.GIF_URL)
+      const gifTextures = await this.buildFromGif(ElectricEffectConfig.GIF_URL)
+      if (gifTextures && gifTextures.length) {
+        console.log('ElectricEffectBackground: Successfully loaded', gifTextures.length, 'frames from GIF')
+        this.createInstances(gifTextures)
+        this.isInitialized = true
+        return
+      } else {
+        console.warn('ElectricEffectBackground: Failed to load GIF or no frames found')
+      }
+    }
+
+    console.log('ElectricEffectBackground: Initialization completed')
+    this.isInitialized = true
+  }
+
+  // Build textures from a GIF file if available - uses proper frame composition like FireBackground
+  private async buildFromGif(url: string): Promise<Texture[] | null> {
+    try {
+      // Dynamic import so app works without the package if not used
+      const mod: any = await import('gifuct-js')
+      const parseGIF = mod.parseGIF as (buf: ArrayBuffer) => any
+      const decompressFrames = mod.decompressFrames as (gif: any, build: boolean) => any[]
+      
+      const resp = await fetch(encodeURI(url))
+      if (!resp.ok) return null
+      
+      const buf = await resp.arrayBuffer()
+      const gif = parseGIF(buf)
+      const frames = decompressFrames(gif, true)
+      
+      if (!frames || !frames.length) return null
+      
+      // Logical canvas size
+      const logicalW = (gif.lsd && gif.lsd.width) || frames[0].dims.width
+      const logicalH = (gif.lsd && gif.lsd.height) || frames[0].dims.height
+      const composedCanvases: HTMLCanvasElement[] = []
+      const base = document.createElement('canvas')
+      base.width = logicalW
+      base.height = logicalH
+      const bctx = base.getContext('2d')!
+      bctx.clearRect(0, 0, logicalW, logicalH)
+      let prevImageData = bctx.getImageData(0, 0, logicalW, logicalH)
+      
+      for (const f of frames) {
+        // Apply disposal
+        const disposal = f.disposalType || 0
+        if (disposal === 2) {
+          // Restore to background color (clear rect of previous frame area)
+          bctx.putImageData(prevImageData, 0, 0)
+          bctx.clearRect(0, 0, logicalW, logicalH)
+        }
+        // Draw patch
+        const imgData = new ImageData(new Uint8ClampedArray(f.patch), f.dims.width, f.dims.height)
+        const tmp = document.createElement('canvas')
+        tmp.width = f.dims.width
+        tmp.height = f.dims.height
+        const tctx = tmp.getContext('2d')!
+        tctx.putImageData(imgData, 0, 0)
+        bctx.drawImage(tmp, f.dims.left, f.dims.top)
+        
+        // Snapshot composed frame
+        const snap = document.createElement('canvas')
+        snap.width = logicalW
+        snap.height = logicalH
+        const sctx = snap.getContext('2d')!
+        sctx.drawImage(base, 0, 0)
+        composedCanvases.push(snap)
+        
+        // Save current for potential disposal restore
+        prevImageData = bctx.getImageData(0, 0, logicalW, logicalH)
+      }
+
+      // Convert composed canvases to textures
+      const textures: Texture[] = []
+      for (const canvas of composedCanvases) {
+        textures.push(Texture.from(canvas))
+      }
+      
+      return textures
+    } catch (e) {
+      return null
+    }
+  }
+
+  private createInstances(frames: Texture[]): void {
+    console.log('ElectricEffectBackground: Creating template sprite for electric effects')
+    
+    // Create one template sprite (hidden by default)
+    const sprite = new AnimatedSprite(frames)
+    sprite.anchor.set(0.5)
+    sprite.scale.set(ElectricEffectConfig.SCALE)
+    sprite.alpha = ElectricEffectConfig.ALPHA
+    sprite.animationSpeed = ElectricEffectConfig.ANIMATION_SPEED
+    sprite.loop = true
+    sprite.roundPixels = true
+    sprite.zIndex = 3100
+    sprite.visible = false // Hidden template
+    
+    // Add blend mode to help with transparency
+    sprite.blendMode = 'add' // This will help eliminate black backgrounds
+    
+    console.log('ElectricEffectBackground: Template sprite created')
+    
+    this.container.addChild(sprite)
+    this.sprites.push(sprite)
+    
+    console.log('ElectricEffectBackground: Template sprite added to container')
+  }
+
+  public destroy(): void {
+    this.container.destroy({ children: true })
+    this.sprites = []
+  }
+}

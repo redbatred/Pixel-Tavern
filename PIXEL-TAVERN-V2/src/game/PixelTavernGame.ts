@@ -4,6 +4,12 @@ import { gameStateMachine } from './state/gameStateMachine'
 import { SlotMachine } from './components/SlotMachine'
 import { ResponsiveBackground } from './components/ResponsiveBackground'
 import { FireBackground } from './components/FireBackground'
+import { ElectricEffectBackground } from './components/ElectricEffectBackground'
+import { RegenEffectBackground } from './components/RegenEffectBackground'
+import { RocketFireEffectBackground } from './components/RocketFireEffectBackground'
+import { HolyLightEffectBackground } from './components/HolyLightEffectBackground'
+import { SplatterEffectBackground } from './components/SplatterEffectBackground'
+import { Smoke2EffectBackground } from './components/Smoke2EffectBackground'
 import { WinAnimation } from './components/WinAnimation'
 import { AudioManager } from './audio/AudioManager'
 import { UserInterface } from './ui/UserInterface'
@@ -23,6 +29,12 @@ export class PixelTavernGame {
   private responsiveBackground: ResponsiveBackground
   private winAnimation: WinAnimation
   private fireBackground: FireBackground
+  private electricEffectBackground: ElectricEffectBackground
+  private regenEffectBackground: RegenEffectBackground
+  private rocketFireEffectBackground: RocketFireEffectBackground
+  private holyLightEffectBackground: HolyLightEffectBackground
+  private splatterEffectBackground: SplatterEffectBackground
+  private smoke2EffectBackground: Smoke2EffectBackground
   private audioManager: AudioManager
   private userInterface!: UserInterface
   private orientationOverlay: OrientationOverlay
@@ -39,6 +51,12 @@ export class PixelTavernGame {
     this.slotMachine = new SlotMachine(this.app)
     this.responsiveBackground = new ResponsiveBackground(this.app)
   this.fireBackground = new FireBackground()
+    this.electricEffectBackground = new ElectricEffectBackground()
+    this.regenEffectBackground = new RegenEffectBackground()
+    this.rocketFireEffectBackground = new RocketFireEffectBackground()
+    this.holyLightEffectBackground = new HolyLightEffectBackground()
+    this.splatterEffectBackground = new SplatterEffectBackground()
+    this.smoke2EffectBackground = new Smoke2EffectBackground()
     this.winAnimation = new WinAnimation(this.app)
     this.orientationOverlay = new OrientationOverlay()
     
@@ -80,6 +98,24 @@ export class PixelTavernGame {
       await this.responsiveBackground.init(textures.background)
   // Initialize fire background animations
   await this.fireBackground.init()
+
+      // Initialize electric effect background animations
+      await this.electricEffectBackground.init()
+      
+      // Initialize regen effect background animations
+      await this.regenEffectBackground.init()
+      
+      // Initialize rocket fire effect background animations
+      await this.rocketFireEffectBackground.init()
+      
+      // Initialize holy light effect background animations
+      await this.holyLightEffectBackground.init()
+      
+      // Initialize splatter effect background animations
+      await this.splatterEffectBackground.init()
+      
+      // Initialize smoke2 effect background animations
+      await this.smoke2EffectBackground.init()
       
       // Set up resize callback for background
       this.responsiveBackground.setOnResizeCallback(() => {
@@ -358,6 +394,72 @@ export class PixelTavernGame {
             this.winAnimation.showWin(context.winningCharacter, context.winAmount)
           }
           
+          // Show electric effects only for mage wins
+          if (this.electricEffectBackground.shouldShowForCharacter(context.winningCharacter)) {
+            this.electricEffectBackground.showForMageWin(
+              context.winningPositions || [],
+              context.slotResults || [],
+              this.slotMachine
+            )
+          } else {
+            this.electricEffectBackground.hide()
+          }
+          
+          // Show regen effects only for barmaid wins
+          if (this.regenEffectBackground.shouldShowForCharacter(context.winningCharacter)) {
+            this.regenEffectBackground.showForBarmaidWin(
+              context.winningPositions || [],
+              context.slotResults || [],
+              this.slotMachine
+            )
+          } else {
+            this.regenEffectBackground.hide()
+          }
+          
+          // Show rocket fire effects only for archer wins
+          if (this.rocketFireEffectBackground.shouldShowForCharacter(context.winningCharacter)) {
+            this.rocketFireEffectBackground.showForArcherWin(
+              context.winningPositions || [],
+              context.slotResults || [],
+              this.slotMachine
+            )
+          } else {
+            this.rocketFireEffectBackground.hide()
+          }
+          
+          // Show holy light effects only for king wins
+          if (this.holyLightEffectBackground.shouldShowForCharacter(context.winningCharacter)) {
+            this.holyLightEffectBackground.showForKingWin(
+              context.winningPositions || [],
+              context.slotResults || [],
+              this.slotMachine
+            )
+          } else {
+            this.holyLightEffectBackground.hide()
+          }
+          
+          // Show splatter effects only for knight wins
+          if (this.splatterEffectBackground.shouldShowForCharacter(context.winningCharacter)) {
+            this.splatterEffectBackground.showForKnightWin(
+              context.winningPositions || [],
+              context.slotResults || [],
+              this.slotMachine
+            )
+          } else {
+            this.splatterEffectBackground.hide()
+          }
+          
+          // Show smoke2 effects only for barbarian wins
+          if (this.smoke2EffectBackground.shouldShowForCharacter(context.winningCharacter)) {
+            this.smoke2EffectBackground.showForBarbarianWin(
+              context.winningPositions || [],
+              context.slotResults || [],
+              this.slotMachine
+            )
+          } else {
+            this.smoke2EffectBackground.hide()
+          }
+          
           // Play appropriate win sound based on tier
           const tier = getWinTier(context.winAmount, context.betAmount)
           if (tier === 'epic') {
@@ -378,6 +480,14 @@ export class PixelTavernGame {
           //     context.winAmount / context.betAmount
           //   )
           // }
+        } else {
+          // No win - make sure electric effects are hidden
+          this.electricEffectBackground.hide()
+          this.regenEffectBackground.hide()
+          this.rocketFireEffectBackground.hide()
+          this.holyLightEffectBackground.hide()
+          this.splatterEffectBackground.hide()
+          this.smoke2EffectBackground.hide()
         }
         break
       case 'paused':
@@ -405,6 +515,13 @@ export class PixelTavernGame {
         if (state.history?.value === 'paused') {
           this.audioManager.resumeFromVisibility()
         }
+        // Hide electric effects when returning to idle state
+        this.electricEffectBackground.hide()
+        this.regenEffectBackground.hide()
+        this.rocketFireEffectBackground.hide()
+        this.holyLightEffectBackground.hide()
+        this.splatterEffectBackground.hide()
+        this.smoke2EffectBackground.hide()
         break
     }
 
@@ -414,6 +531,12 @@ export class PixelTavernGame {
     // Clear win animation when starting a new spin
     if (stateValue === 'spinning') {
       this.winAnimation.hide()
+      this.electricEffectBackground.hide() // Hide electric effects when spinning starts
+      this.regenEffectBackground.hide() // Hide regen effects when spinning starts
+      this.rocketFireEffectBackground.hide() // Hide rocket fire effects when spinning starts
+      this.holyLightEffectBackground.hide() // Hide holy light effects when spinning starts
+      this.splatterEffectBackground.hide() // Hide splatter effects when spinning starts
+      this.smoke2EffectBackground.hide() // Hide smoke2 effects when spinning starts
     }
   }
 
@@ -476,17 +599,50 @@ export class PixelTavernGame {
   }
 
   private setupScene(): void {
+    // Enable sortable children for proper z-index ordering
+    this.app.stage.sortableChildren = true
+    
+    /**
+     * Z-Index Hierarchy:
+     * 0-999: Background elements
+     * 1000-1999: Fire background effects
+     * 2000-2999: Slot machine and symbols
+     * 3000-3999: Character effects (3100=Electric, 3200=Regen, 3300=RocketFire, 3400=HolyLight, 3500=Splatter, 3600=Smoke2)
+     * 20000: Win animation (always on top)
+     */
+    
     // Add responsive background to stage (first, so it's behind everything)
     this.app.stage.addChild(this.responsiveBackground.getContainer())
 
   // Add fire background animations (still behind slot machine)
   this.app.stage.addChild(this.fireBackground.getContainer())
 
+    // Add electric effect background animations
+    this.app.stage.addChild(this.electricEffectBackground.getContainer())
+    
+    // Add regen effect background animations
+    this.app.stage.addChild(this.regenEffectBackground.getContainer())
+    
+    // Add rocket fire effect background animations
+    this.app.stage.addChild(this.rocketFireEffectBackground.getContainer())
+    
+    // Add holy light effect background animations
+    this.app.stage.addChild(this.holyLightEffectBackground.getContainer())
+    
+    // Add splatter effect background animations
+    this.app.stage.addChild(this.splatterEffectBackground.getContainer())
+    
+    // Add smoke2 effect background animations
+    this.app.stage.addChild(this.smoke2EffectBackground.getContainer())
+
     // Add slot machine to stage
     this.app.stage.addChild(this.slotMachine.container)
 
-    // Add win animation to stage (on top)
+    // Add win animation to stage (absolute top layer)
     this.app.stage.addChild(this.winAnimation.container)
+    
+    // Ensure win animation renders above all effects
+    this.winAnimation.container.zIndex = 20000
 
     // Position elements at center of screen (not base dimensions anymore)
     this.updateGameElementsPosition()
@@ -536,6 +692,54 @@ export class PixelTavernGame {
       } else {
         fbContainer.scale.set(1)
       }
+    }
+
+    // Position electric effect background container at center and scale with viewport
+    if (this.electricEffectBackground) {
+      const eeContainer = this.electricEffectBackground.getContainer()
+      eeContainer.x = screenWidth / 2
+      eeContainer.y = screenHeight / 2
+      eeContainer.scale.set(scale)
+    }
+    
+    // Position regen effect background container at center and scale with viewport
+    if (this.regenEffectBackground) {
+      const reContainer = this.regenEffectBackground.getContainer()
+      reContainer.x = screenWidth / 2
+      reContainer.y = screenHeight / 2
+      reContainer.scale.set(scale)
+    }
+    
+    // Position rocket fire effect background container at center and scale with viewport
+    if (this.rocketFireEffectBackground) {
+      const rfContainer = this.rocketFireEffectBackground.getContainer()
+      rfContainer.x = screenWidth / 2
+      rfContainer.y = screenHeight / 2
+      rfContainer.scale.set(scale)
+    }
+    
+    // Position holy light effect background container at center and scale with viewport
+    if (this.holyLightEffectBackground) {
+      const hlContainer = this.holyLightEffectBackground.getContainer()
+      hlContainer.x = screenWidth / 2
+      hlContainer.y = screenHeight / 2
+      hlContainer.scale.set(scale)
+    }
+    
+    // Position splatter effect background container at center and scale with viewport
+    if (this.splatterEffectBackground) {
+      const spContainer = this.splatterEffectBackground.getContainer()
+      spContainer.x = screenWidth / 2
+      spContainer.y = screenHeight / 2
+      spContainer.scale.set(scale)
+    }
+    
+    // Position smoke2 effect background container at center and scale with viewport
+    if (this.smoke2EffectBackground) {
+      const s2Container = this.smoke2EffectBackground.getContainer()
+      s2Container.x = screenWidth / 2
+      s2Container.y = screenHeight / 2
+      s2Container.scale.set(scale)
     }
     
     // Synchronize UI viewport container to match PIXI positioning exactly
@@ -736,6 +940,12 @@ export class PixelTavernGame {
     this.slotMachine?.destroy()
     this.responsiveBackground?.destroy()
   this.fireBackground?.destroy()
+    this.electricEffectBackground?.destroy()
+    this.regenEffectBackground?.destroy()
+    this.rocketFireEffectBackground?.destroy()
+    this.holyLightEffectBackground?.destroy()
+    this.splatterEffectBackground?.destroy()
+    this.smoke2EffectBackground?.destroy()
     this.audioManager?.cleanup()
     this.userInterface?.destroy()
     this.orientationOverlay?.destroy()

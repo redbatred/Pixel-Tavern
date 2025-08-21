@@ -1,33 +1,397 @@
-import { Application, Container, Sprite, Assets, Graphics, Text, Texture, Rectangle } from 'pixi.js'
+import { Application, Container, Sprite, Assets, Graphics, Text, Texture, Rectangle, AnimatedSprite } from 'pixi.js'
 import { gsap } from 'gsap'
+
+// Leaf effect configuration - easily adjustable
+const LeafEffectConfig = {
+  ENABLED: true,
+  USE_GIF: true,
+  GIF_URL: '/assets/images/Particle FX 1.3 Free/GIFs/Leaves.gif',
+  // Multiple leaf instances with configurable positions and scales - slower speeds
+  INSTANCES: [
+    { x: -80, y: -60, scale: 0.8, animationSpeed: 0.15, alpha: 0.7, rotation: 15 },
+    { x: 70, y: -40, scale: 0.6, animationSpeed: 0.2, alpha: 0.8, rotation: -20 },
+    { x: -40, y: 50, scale: 0.5, animationSpeed: 0.18, alpha: 0.6, rotation: 30 },
+    { x: 90, y: 30, scale: 0.7, animationSpeed: 0.12, alpha: 0.9, rotation: -10 },
+    { x: 0, y: -90, scale: 0.4, animationSpeed: 0.22, alpha: 0.5, rotation: 45 }
+  ]
+}
+
+// Background glow effect configuration
+const BackgroundGlowConfig = {
+  ENABLED: true,
+  USE_GIF: true,
+  GIF_URL: '/assets/images/Particle FX 1.3 Free/GIFs/Holy Light Aura.gif', // Can be changed to: 'Sakuras.gif', 'Sparks.gif', 'Water Vortex Splash.gif'
+  SCALE: 1.2,
+  ANIMATION_SPEED: 0.4, // Slower background glow
+  ALPHA: 0.6,
+  BLEND_MODE: 'add' // Creates beautiful glow effect
+}
 
 export class WinAnimation {
   public container: Container
   private app: Application
   private characterSprite: Sprite | null = null
-  private backgroundGlow: Graphics | null = null
+  private backgroundGlow: AnimatedSprite | null = null
   private winText: Text | null = null
   private animationFrameId: number | null = null
   private frames: Texture[] = []
   private isAnimating: boolean = false
+  private leafSprites: AnimatedSprite[] = []
+  private leafContainer: Container
+  private backgroundGlowSprites: AnimatedSprite[] = []
+  private backgroundGlowTextures: Texture[] = []
 
   constructor(app: Application) {
     this.app = app
     this.container = new Container()
     this.container.visible = false
+    
+    // Create leaf container behind everything else
+    this.leafContainer = new Container()
+    this.leafContainer.zIndex = 50 // Behind character sprite but above background glow
+    this.container.addChild(this.leafContainer)
+    this.container.sortableChildren = true
   }
 
   async init(): Promise<void> {
+    console.log('WinAnimation: Starting initialization...')
+    
     // Create background glow effect
-    this.createBackgroundGlow()
+    await this.createBackgroundGlow()
+    
+    // Initialize leaf effects if enabled
+    if (LeafEffectConfig.ENABLED) {
+      await this.initLeafEffects()
+    }
+    
+    console.log('WinAnimation: Initialization complete')
   }
 
-  private createBackgroundGlow(): void {
-    this.backgroundGlow = new Graphics()
-    this.backgroundGlow.circle(0, 0, 150)
-    this.backgroundGlow.fill({ color: 0xffd700, alpha: 0.3 })
-    this.backgroundGlow.pivot.set(0, 0) // Center the graphics
-    this.container.addChild(this.backgroundGlow)
+  private async createBackgroundGlow(): Promise<void> {
+    console.log('WinAnimation: createBackgroundGlow called - creating template only')
+    
+    if (!BackgroundGlowConfig.ENABLED || !BackgroundGlowConfig.USE_GIF) {
+      console.log('WinAnimation: Background glow GIF disabled, will use fallback during show')
+      return
+    }
+
+    try {
+      console.log('WinAnimation: Loading background glow from:', BackgroundGlowConfig.GIF_URL)
+      const glowTextures = await this.buildBackgroundGlowTexturesFromGif(BackgroundGlowConfig.GIF_URL)
+      
+      if (glowTextures && glowTextures.length > 0) {
+        console.log('WinAnimation: Successfully loaded', glowTextures.length, 'glow frames')
+        this.createBackgroundGlowTemplate(glowTextures)
+      } else {
+        console.warn('WinAnimation: Failed to load glow GIF')
+      }
+    } catch (error) {
+      console.error('WinAnimation: Error loading background glow:', error)
+    }
+  }
+
+  // Create a template background glow sprite like other effects do
+  private createBackgroundGlowTemplate(glowTextures: Texture[]): void {
+    console.log('WinAnimation: Creating background glow template sprite')
+    
+    // Store the original textures for creating instances
+    this.backgroundGlowTextures = glowTextures
+    
+    const sprite = new AnimatedSprite(glowTextures)
+    sprite.anchor.set(0.5)
+    sprite.scale.set(BackgroundGlowConfig.SCALE)
+    sprite.alpha = BackgroundGlowConfig.ALPHA
+    sprite.animationSpeed = BackgroundGlowConfig.ANIMATION_SPEED
+    sprite.loop = true
+    sprite.roundPixels = true
+    sprite.zIndex = 10
+    sprite.visible = false // Hidden template
+    sprite.blendMode = BackgroundGlowConfig.BLEND_MODE as any
+    
+    console.log('WinAnimation: Background glow template sprite created')
+    
+    this.container.addChild(sprite)
+    this.backgroundGlowSprites.push(sprite)
+    
+    console.log('WinAnimation: Background glow template sprite added to container')
+  }
+
+  private showBackgroundGlow(): void {
+    console.log('WinAnimation: showBackgroundGlow called, backgroundGlowSprites count:', this.backgroundGlowSprites.length)
+    console.log('WinAnimation: backgroundGlowTextures count:', this.backgroundGlowTextures.length)
+    
+    // If we have GIF textures, use them; otherwise use fallback
+    if (this.backgroundGlowTextures.length === 0) {
+      console.warn('WinAnimation: No background glow textures available, using fallback')
+      
+      // Create a simple fallback glow directly
+      const fallbackGlow = new Graphics()
+      fallbackGlow.circle(0, 0, 200) // Bigger circle
+      fallbackGlow.fill({ color: 0xffd700, alpha: 1.0 }) // Full opacity
+      fallbackGlow.x = 0
+      fallbackGlow.y = 0
+      fallbackGlow.zIndex = 1 // Behind leaves
+      fallbackGlow.visible = true
+      
+      // Add to container at the beginning
+      this.container.addChildAt(fallbackGlow, 0)
+      
+      // Store reference for rotation animation
+      this.backgroundGlow = fallbackGlow as any
+      
+      console.log('WinAnimation: Fallback background glow created and visible at position:', fallbackGlow.x, fallbackGlow.y)
+      return
+    }
+
+    console.log('WinAnimation: Creating background glow instance from stored textures')
+    
+    // Create instance from stored textures (same pattern as leaves)
+    const glowSprite = new AnimatedSprite(this.backgroundGlowTextures)
+    glowSprite.anchor.set(0.5)
+    glowSprite.x = 0
+    glowSprite.y = 0
+    glowSprite.scale.set(BackgroundGlowConfig.SCALE * 2) // Make it bigger to ensure visibility
+    glowSprite.alpha = 1.0 // Full opacity for testing
+    glowSprite.animationSpeed = BackgroundGlowConfig.ANIMATION_SPEED
+    glowSprite.loop = true
+    glowSprite.roundPixels = true
+    glowSprite.zIndex = 1 // Behind leaves but visible
+    glowSprite.blendMode = 'screen' // Use screen blend mode to brighten and handle transparency better
+    glowSprite.visible = true
+    
+    glowSprite.play()
+    
+    // Add to container FIRST to ensure it's behind everything
+    this.container.addChildAt(glowSprite, 0)
+    this.backgroundGlowSprites.push(glowSprite)
+    
+    // Store reference for rotation animation
+    this.backgroundGlow = glowSprite
+    
+    console.log('WinAnimation: Background glow instance created and playing at position:', glowSprite.x, glowSprite.y, 'scale:', glowSprite.scale.x, 'alpha:', glowSprite.alpha)
+  }
+
+  private clearBackgroundGlow(): void {
+    // Remove all sprites except the first one (keep as template)
+    const template = this.backgroundGlowSprites[0]
+    this.backgroundGlowSprites.slice(1).forEach(sprite => {
+      if (sprite.parent) {
+        sprite.parent.removeChild(sprite)
+      }
+      sprite.destroy()
+    })
+    
+    // Keep only the template sprite (hidden)
+    this.backgroundGlowSprites = template ? [template] : []
+    if (template) {
+      template.visible = false
+    }
+    
+    // Clear the reference
+    this.backgroundGlow = null
+  }
+
+  private async initLeafEffects(): Promise<void> {
+    if (!LeafEffectConfig.USE_GIF || !LeafEffectConfig.GIF_URL) return
+    
+    try {
+      console.log('WinAnimation: Loading leaf effects from:', LeafEffectConfig.GIF_URL)
+      const leafTextures = await this.buildLeafTexturesFromGif(LeafEffectConfig.GIF_URL)
+      
+      if (leafTextures && leafTextures.length > 0) {
+        console.log('WinAnimation: Successfully loaded', leafTextures.length, 'leaf frames')
+        this.createLeafTemplate(leafTextures)
+      } else {
+        console.warn('WinAnimation: Failed to load leaf GIF or no frames found')
+      }
+    } catch (error) {
+      console.error('WinAnimation: Error loading leaf effects:', error)
+    }
+  }
+
+  // Build textures from background glow GIF file - uses proper frame composition
+  private async buildBackgroundGlowTexturesFromGif(url: string): Promise<Texture[] | null> {
+    try {
+      // Dynamic import so app works without the package if not used
+      const mod: any = await import('gifuct-js')
+      const parseGIF = mod.parseGIF as (buf: ArrayBuffer) => any
+      const decompressFrames = mod.decompressFrames as (gif: any, build: boolean) => any[]
+      
+      const resp = await fetch(encodeURI(url))
+      if (!resp.ok) return null
+      
+      const buf = await resp.arrayBuffer()
+      const gif = parseGIF(buf)
+      const frames = decompressFrames(gif, true)
+      
+      if (!frames || !frames.length) return null
+      
+      // Logical canvas size
+      const logicalW = (gif.lsd && gif.lsd.width) || frames[0].dims.width
+      const logicalH = (gif.lsd && gif.lsd.height) || frames[0].dims.height
+      const composedCanvases: HTMLCanvasElement[] = []
+      const base = document.createElement('canvas')
+      base.width = logicalW
+      base.height = logicalH
+      const bctx = base.getContext('2d')!
+      
+      // Ensure transparent background
+      bctx.globalCompositeOperation = 'source-over'
+      bctx.clearRect(0, 0, logicalW, logicalH)
+      
+      let prevImageData = bctx.getImageData(0, 0, logicalW, logicalH)
+      
+      for (const f of frames) {
+        // Apply disposal
+        const disposal = f.disposalType || 0
+        if (disposal === 2) {
+          // Restore to background color (clear rect of previous frame area)
+          bctx.putImageData(prevImageData, 0, 0)
+          bctx.clearRect(0, 0, logicalW, logicalH)
+        }
+        // Draw patch with transparency handling
+        const imgData = new ImageData(new Uint8ClampedArray(f.patch), f.dims.width, f.dims.height)
+        
+        // Process the image data to ensure proper transparency
+        const data = imgData.data
+        for (let i = 0; i < data.length; i += 4) {
+          // If the pixel is black (0,0,0) and not explicitly set as opaque, make it transparent
+          if (data[i] === 0 && data[i + 1] === 0 && data[i + 2] === 0) {
+            data[i + 3] = 0 // Set alpha to 0 (transparent)
+          }
+        }
+        
+        const tmp = document.createElement('canvas')
+        tmp.width = f.dims.width
+        tmp.height = f.dims.height
+        const tctx = tmp.getContext('2d')!
+        
+        // Ensure transparency for patch canvas
+        tctx.clearRect(0, 0, f.dims.width, f.dims.height)
+        tctx.putImageData(imgData, 0, 0)
+        bctx.drawImage(tmp, f.dims.left, f.dims.top)
+        
+        // Snapshot composed frame
+        const snap = document.createElement('canvas')
+        snap.width = logicalW
+        snap.height = logicalH
+        const sctx = snap.getContext('2d')!
+        
+        // Ensure transparent background for snapshot
+        sctx.clearRect(0, 0, logicalW, logicalH)
+        sctx.drawImage(base, 0, 0)
+        composedCanvases.push(snap)
+        
+        // Save current for potential disposal restore
+        prevImageData = bctx.getImageData(0, 0, logicalW, logicalH)
+      }
+
+      // Convert composed canvases to textures
+      const textures: Texture[] = []
+      for (const canvas of composedCanvases) {
+        textures.push(Texture.from(canvas))
+      }
+      
+      return textures
+    } catch (e) {
+      console.error('WinAnimation: Error processing background glow GIF:', e)
+      return null
+    }
+  }
+
+  // Build textures from leaf GIF file - uses proper frame composition
+  private async buildLeafTexturesFromGif(url: string): Promise<Texture[] | null> {
+    try {
+      // Dynamic import so app works without the package if not used
+      const mod: any = await import('gifuct-js')
+      const parseGIF = mod.parseGIF as (buf: ArrayBuffer) => any
+      const decompressFrames = mod.decompressFrames as (gif: any, build: boolean) => any[]
+      
+      const resp = await fetch(encodeURI(url))
+      if (!resp.ok) return null
+      
+      const buf = await resp.arrayBuffer()
+      const gif = parseGIF(buf)
+      const frames = decompressFrames(gif, true)
+      
+      if (!frames || !frames.length) return null
+      
+      // Logical canvas size
+      const logicalW = (gif.lsd && gif.lsd.width) || frames[0].dims.width
+      const logicalH = (gif.lsd && gif.lsd.height) || frames[0].dims.height
+      const composedCanvases: HTMLCanvasElement[] = []
+      const base = document.createElement('canvas')
+      base.width = logicalW
+      base.height = logicalH
+      const bctx = base.getContext('2d')!
+      bctx.clearRect(0, 0, logicalW, logicalH)
+      let prevImageData = bctx.getImageData(0, 0, logicalW, logicalH)
+      
+      for (const f of frames) {
+        // Apply disposal
+        const disposal = f.disposalType || 0
+        if (disposal === 2) {
+          // Restore to background color (clear rect of previous frame area)
+          bctx.putImageData(prevImageData, 0, 0)
+          bctx.clearRect(0, 0, logicalW, logicalH)
+        }
+        // Draw patch
+        const imgData = new ImageData(new Uint8ClampedArray(f.patch), f.dims.width, f.dims.height)
+        const tmp = document.createElement('canvas')
+        tmp.width = f.dims.width
+        tmp.height = f.dims.height
+        const tctx = tmp.getContext('2d')!
+        tctx.putImageData(imgData, 0, 0)
+        bctx.drawImage(tmp, f.dims.left, f.dims.top)
+        
+        // Snapshot composed frame
+        const snap = document.createElement('canvas')
+        snap.width = logicalW
+        snap.height = logicalH
+        const sctx = snap.getContext('2d')!
+        sctx.drawImage(base, 0, 0)
+        composedCanvases.push(snap)
+        
+        // Save current for potential disposal restore
+        prevImageData = bctx.getImageData(0, 0, logicalW, logicalH)
+      }
+
+      // Convert composed canvases to textures
+      const textures: Texture[] = []
+      for (const canvas of composedCanvases) {
+        textures.push(Texture.from(canvas))
+      }
+      
+      return textures
+    } catch (e) {
+      console.error('WinAnimation: Error processing leaf GIF:', e)
+      return null
+    }
+  }
+
+  // Create a template leaf sprite like other effects do
+  private createLeafTemplate(leafTextures: Texture[]): void {
+    console.log('WinAnimation: Creating leaf template sprite')
+    
+    const sprite = new AnimatedSprite(leafTextures)
+    sprite.anchor.set(0.5)
+    sprite.scale.set(0.8) // Default scale
+    sprite.alpha = 0.7 // Default alpha
+    sprite.animationSpeed = 0.15 // Slower default animation speed
+    sprite.loop = true
+    sprite.roundPixels = true
+    sprite.zIndex = 0
+    sprite.visible = false // Hidden template
+    
+    // Add blend mode to help with transparency
+    sprite.blendMode = 'normal'
+    
+    console.log('WinAnimation: Leaf template sprite created')
+    
+    this.leafContainer.addChild(sprite)
+    this.leafSprites.push(sprite)
+    
+    console.log('WinAnimation: Leaf template sprite added to container')
   }
 
   async showWin(characterIndex: number, _winAmount: number): Promise<void> {
@@ -42,7 +406,11 @@ export class WinAnimation {
     // Clear previous animation
     this.clear()
     
-    // Load and show character sprite
+    // Show background glow first
+    this.showBackgroundGlow()
+
+    // Show leaf effects first (behind character)
+    this.showLeafEffects()    // Load and show character sprite
     await this.loadCharacterSprite(characterIndex)
     
     // Position in center of screen
@@ -52,6 +420,69 @@ export class WinAnimation {
     // Show and animate
     this.container.visible = true
     this.playAnimation()
+  }
+
+  private showLeafEffects(): void {
+    console.log('WinAnimation: showLeafEffects called, leafSprites count:', this.leafSprites.length)
+    
+    if (this.leafSprites.length === 0) {
+      console.warn('WinAnimation: No leaf template available to show')
+      return
+    }
+
+    // Clear any existing leaf instances (keep template)
+    this.clearLeafEffects()
+    
+    // Get the template sprite
+    const template = this.leafSprites[0]
+    if (!template) {
+      console.warn('WinAnimation: No leaf template sprite found')
+      return
+    }
+    
+    console.log('WinAnimation: Creating leaf instances from template')
+    
+    // Create instances based on configuration, like other effects do
+    LeafEffectConfig.INSTANCES.forEach((config, index) => {
+      const leafSprite = new AnimatedSprite(template.textures)
+      leafSprite.anchor.set(0.5)
+      leafSprite.x = config.x
+      leafSprite.y = config.y
+      leafSprite.scale.set(config.scale)
+      leafSprite.alpha = config.alpha
+      leafSprite.rotation = (config.rotation || 0) * (Math.PI / 180)
+      leafSprite.animationSpeed = config.animationSpeed
+      leafSprite.loop = true
+      leafSprite.roundPixels = true
+      leafSprite.zIndex = index
+      leafSprite.blendMode = 'normal'
+      leafSprite.visible = true
+      
+      leafSprite.play()
+      this.leafContainer.addChild(leafSprite)
+      this.leafSprites.push(leafSprite)
+      
+      console.log(`WinAnimation: Created leaf instance ${index} at (${config.x}, ${config.y})`)
+    })
+    
+    console.log('WinAnimation: Showing', this.leafSprites.length - 1, 'leaf effect instances')
+  }
+
+  private clearLeafEffects(): void {
+    // Remove all sprites except the first one (keep as template)
+    const template = this.leafSprites[0]
+    this.leafSprites.slice(1).forEach(sprite => {
+      if (sprite.parent) {
+        sprite.parent.removeChild(sprite)
+      }
+      sprite.destroy()
+    })
+    
+    // Keep only the template sprite (hidden)
+    this.leafSprites = template ? [template] : []
+    if (template) {
+      template.visible = false
+    }
   }
 
   private async loadCharacterSprite(characterIndex: number): Promise<void> {
@@ -106,6 +537,7 @@ export class WinAnimation {
       
       this.characterSprite = new Sprite(firstFrameTexture)
       this.characterSprite.anchor.set(0.5)
+      this.characterSprite.zIndex = 100 // Above leaves and glow
       
       // Scale appropriately
       const targetSize = isMage ? 250 : 300
@@ -164,8 +596,19 @@ export class WinAnimation {
       gsap.killTweensOf(this.backgroundGlow)
     }
     
+    // Hide leaf effects
+    this.hideLeafEffects()
+    
+    // Hide background glow
+    this.clearBackgroundGlow()
+    
     this.container.visible = false
     this.clear()
+  }
+
+  private hideLeafEffects(): void {
+    console.log('WinAnimation: Hiding leaf effects')
+    this.clearLeafEffects()
   }
 
   private startFrameAnimation(spriteTexture: Texture, isKnight: boolean, isMage: boolean): void {
@@ -282,6 +725,18 @@ export class WinAnimation {
       this.characterSprite = null
     }
     
+    // Clear leaf effects (keep template)
+    this.clearLeafEffects()
+    
+    // Clear background glow effects but don't call clearBackgroundGlow as it removes templates
+    if (this.backgroundGlow && this.backgroundGlow.parent) {
+      this.backgroundGlow.parent.removeChild(this.backgroundGlow)
+      if (this.backgroundGlow.destroy) {
+        this.backgroundGlow.destroy()
+      }
+      this.backgroundGlow = null
+    }
+    
     // Remove win text (if it exists)
     if (this.winText) {
       if (this.winText.parent) {
@@ -291,11 +746,18 @@ export class WinAnimation {
       this.winText = null
     }
     
-    // AGGRESSIVE CLEANUP: Remove ALL children except background glow
+    // Clear leaf container children
+    this.leafContainer.removeChildren()
+    
+    // Clean up any remaining children except persistent containers and templates
     const childrenToRemove = []
     for (let i = 0; i < this.container.children.length; i++) {
       const child = this.container.children[i]
-      if (child !== this.backgroundGlow) {
+      // Keep leaf container and any template sprites (first sprite in arrays)
+      const isLeafTemplate = this.leafSprites.length > 0 && child === this.leafSprites[0]
+      const isGlowTemplate = this.backgroundGlowSprites.length > 0 && child === this.backgroundGlowSprites[0]
+      
+      if (child !== this.leafContainer && !isLeafTemplate && !isGlowTemplate) {
         childrenToRemove.push(child)
       }
     }

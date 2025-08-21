@@ -282,11 +282,14 @@ export class SlotMachine {
   private generateFinalResults(): number[][] {
     const results: number[][] = []
     
-    // Normal random generation
+    // Equal probability for all characters (6 character types: 0-5)
+    const totalCharacters = 6
+    
     for (let row = 0; row < GameConfig.SLOT_ROWS; row++) {
       results[row] = []
       for (let col = 0; col < GameConfig.SLOT_COLUMNS; col++) {
-        results[row][col] = Math.floor(Math.random() * (this.textures?.symbols.length || 6))
+        // Generate random character index with equal probability for all
+        results[row][col] = Math.floor(Math.random() * totalCharacters)
       }
     }
     
