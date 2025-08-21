@@ -37,7 +37,6 @@ export class RocketFireEffectBackground {
     slotMachine: any // Reference to SlotMachine to get symbol positions
   ): void {
     if (!this.isInitialized || this.sprites.length === 0) {
-      console.log('RocketFireEffectBackground: Not initialized, cannot show effects')
       return
     }
 
@@ -61,7 +60,6 @@ export class RocketFireEffectBackground {
       })
     })
 
-    console.log(`RocketFireEffectBackground: Found ${archerPositions.length} archer positions in winning combinations`)
 
     // Create rocket fire effects positioned over each winning archer
     archerPositions.forEach((archerPos, index) => {
@@ -100,9 +98,7 @@ export class RocketFireEffectBackground {
       rocketFireSprite.x = symbolColumn.x + symbol.x + 40
       rocketFireSprite.y = symbolColumn.y + symbol.y + 30
       
-      console.log(`RocketFireEffectBackground: Created effect at slot [${row}, ${col}] - world pos (${rocketFireSprite.x}, ${rocketFireSprite.y}) - rotation: ${RocketFireEffectConfig.ROTATION}`)
     } else {
-      console.warn(`RocketFireEffectBackground: Could not find symbol/column for position [${row}, ${col}]`)
       // Fallback to center position
       rocketFireSprite.x = 0
       rocketFireSprite.y = 0
@@ -135,7 +131,6 @@ export class RocketFireEffectBackground {
   public hide(): void {
     this.container.visible = false
     this.clearEffects()
-    console.log('RocketFireEffectBackground: Hiding rocket fire effects')
   }
 
   // Check if the winning character is an archer (character index 2 - Archer)
@@ -146,23 +141,18 @@ export class RocketFireEffectBackground {
   public async init(): Promise<void> {
     if (this.isInitialized || !RocketFireEffectConfig.ENABLED) return
     
-    console.log('RocketFireEffectBackground: Starting initialization...')
     
     // Try GIF path first if enabled
     if (RocketFireEffectConfig.USE_GIF && RocketFireEffectConfig.GIF_URL) {
-      console.log('RocketFireEffectBackground: Attempting to load Rocket Fire GIF:', RocketFireEffectConfig.GIF_URL)
       const gifTextures = await this.buildFromGif(RocketFireEffectConfig.GIF_URL)
       if (gifTextures && gifTextures.length) {
-        console.log('RocketFireEffectBackground: Successfully loaded', gifTextures.length, 'frames from Rocket Fire GIF')
         this.createInstances(gifTextures)
         this.isInitialized = true
         return
       } else {
-        console.warn('RocketFireEffectBackground: Failed to load Rocket Fire GIF or no frames found')
       }
     }
 
-    console.log('RocketFireEffectBackground: Initialization completed')
     this.isInitialized = true
   }
 
@@ -236,7 +226,6 @@ export class RocketFireEffectBackground {
   }
 
   private createInstances(frames: Texture[]): void {
-    console.log('RocketFireEffectBackground: Creating template sprite for rocket fire effects')
     
     // Create one template sprite (hidden by default)
     const sprite = new AnimatedSprite(frames)
@@ -253,12 +242,10 @@ export class RocketFireEffectBackground {
     // Add blend mode to help with transparency
     sprite.blendMode = 'add' // This will help eliminate black backgrounds
     
-    console.log('RocketFireEffectBackground: Template sprite created with rotation:', RocketFireEffectConfig.ROTATION)
     
     this.container.addChild(sprite)
     this.sprites.push(sprite)
     
-    console.log('RocketFireEffectBackground: Template sprite added to container')
   }
 
   public destroy(): void {

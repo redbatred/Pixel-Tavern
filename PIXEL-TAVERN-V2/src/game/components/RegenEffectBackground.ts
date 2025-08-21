@@ -36,7 +36,6 @@ export class RegenEffectBackground {
     slotMachine: any // Reference to SlotMachine to get symbol positions
   ): void {
     if (!this.isInitialized || this.sprites.length === 0) {
-      console.log('RegenEffectBackground: Not initialized, cannot show effects')
       return
     }
 
@@ -60,7 +59,6 @@ export class RegenEffectBackground {
       })
     })
 
-    console.log(`RegenEffectBackground: Found ${barmaidPositions.length} barmaid positions in winning combinations`)
 
     // Create poison cloud effects positioned over each winning barmaid
     barmaidPositions.forEach((barmaidPos, index) => {
@@ -98,9 +96,7 @@ export class RegenEffectBackground {
       regenSprite.x = symbolColumn.x + symbol.x - 15
       regenSprite.y = symbolColumn.y + symbol.y - 32
       
-      console.log(`RegenEffectBackground: Created effect at slot [${row}, ${col}] - world pos (${regenSprite.x}, ${regenSprite.y})`)
     } else {
-      console.warn(`RegenEffectBackground: Could not find symbol/column for position [${row}, ${col}]`)
       // Fallback to center position
       regenSprite.x = 0
       regenSprite.y = 0
@@ -133,7 +129,6 @@ export class RegenEffectBackground {
   public hide(): void {
     this.container.visible = false
     this.clearEffects()
-    console.log('RegenEffectBackground: Hiding poison cloud effects')
   }
 
   // Check if the winning character is a barmaid (character index 4 - Barmaid)
@@ -144,23 +139,18 @@ export class RegenEffectBackground {
   public async init(): Promise<void> {
     if (this.isInitialized || !RegenEffectConfig.ENABLED) return
     
-    console.log('RegenEffectBackground: Starting initialization...')
     
     // Try GIF path first if enabled
     if (RegenEffectConfig.USE_GIF && RegenEffectConfig.GIF_URL) {
-      console.log('RegenEffectBackground: Attempting to load Poison Cloud GIF:', RegenEffectConfig.GIF_URL)
       const gifTextures = await this.buildFromGif(RegenEffectConfig.GIF_URL)
       if (gifTextures && gifTextures.length) {
-        console.log('RegenEffectBackground: Successfully loaded', gifTextures.length, 'frames from Poison Cloud GIF')
         this.createInstances(gifTextures)
         this.isInitialized = true
         return
       } else {
-        console.warn('RegenEffectBackground: Failed to load Poison Cloud GIF or no frames found')
       }
     }
 
-    console.log('RegenEffectBackground: Initialization completed')
     this.isInitialized = true
   }
 
@@ -234,7 +224,6 @@ export class RegenEffectBackground {
   }
 
   private createInstances(frames: Texture[]): void {
-    console.log('RegenEffectBackground: Creating template sprite for poison cloud effects')
     
     // Create one template sprite (hidden by default)
     const sprite = new AnimatedSprite(frames)
@@ -250,12 +239,10 @@ export class RegenEffectBackground {
     // Add blend mode to help with transparency
     sprite.blendMode = 'add' // This will help eliminate black backgrounds
     
-    console.log('RegenEffectBackground: Template sprite created')
     
     this.container.addChild(sprite)
     this.sprites.push(sprite)
     
-    console.log('RegenEffectBackground: Template sprite added to container')
   }
 
   public destroy(): void {

@@ -35,8 +35,7 @@ export class BloodSplatEffectBackground {
     slotResults: number[][],
     slotMachine: any // Reference to SlotMachine to get symbol positions
   ): void {
-    if (!this.isInitialized || this.sprites.length === 0) {
-      console.log('BloodSplatEffectBackground: Not initialized, cannot show effects')
+    if (!this.isInitialized) {
       return
     }
 
@@ -59,8 +58,6 @@ export class BloodSplatEffectBackground {
         }
       })
     })
-
-    console.log(`BloodSplatEffectBackground: Found ${knightPositions.length} knight positions in winning combinations`)
 
     // Create blood splat effects positioned over each winning knight
     knightPositions.forEach((knightPos, index) => {
@@ -98,9 +95,7 @@ export class BloodSplatEffectBackground {
       bloodSplatSprite.x = symbolColumn.x + symbol.x + 8 // +3 offset from splatter (+5)
       bloodSplatSprite.y = symbolColumn.y + symbol.y - 17 // +3 offset from splatter (-20)
       
-      console.log(`BloodSplatEffectBackground: Created effect at slot [${row}, ${col}] - world pos (${bloodSplatSprite.x}, ${bloodSplatSprite.y})`)
     } else {
-      console.warn(`BloodSplatEffectBackground: Could not find symbol/column for position [${row}, ${col}]`)
       // Fallback to center position
       bloodSplatSprite.x = 0
       bloodSplatSprite.y = 0
@@ -142,58 +137,42 @@ export class BloodSplatEffectBackground {
 
   public async init(): Promise<void> {
     if (this.isInitialized || !BloodSplatEffectConfig.ENABLED) {
-      console.log('BloodSplatEffectBackground: Init skipped - already initialized or disabled')
       return
     }
     
-    console.log('BloodSplatEffectBackground: Starting initialization...')
-    
     // Try GIF path first if enabled
     if (BloodSplatEffectConfig.USE_GIF && BloodSplatEffectConfig.GIF_URL) {
-      console.log('BloodSplatEffectBackground: Attempting to load Blood Splat GIF:', BloodSplatEffectConfig.GIF_URL)
       const gifTextures = await this.buildFromGif(BloodSplatEffectConfig.GIF_URL)
       if (gifTextures && gifTextures.length) {
-        console.log('BloodSplatEffectBackground: Successfully loaded', gifTextures.length, 'frames from Blood Splat GIF')
         this.createInstances(gifTextures)
         this.isInitialized = true
-        console.log('BloodSplatEffectBackground: Initialization completed successfully')
         return
-      } else {
-        console.warn('BloodSplatEffectBackground: Failed to load Blood Splat GIF or no frames found')
       }
     }
 
-    console.log('BloodSplatEffectBackground: Initialization completed (no textures loaded)')
     this.isInitialized = true
   }
 
   // Build textures from a GIF file if available - uses proper frame composition like FireBackground
   private async buildFromGif(url: string): Promise<Texture[] | null> {
     try {
-      console.log('BloodSplatEffectBackground: Starting GIF loading from', url)
       // Dynamic import so app works without the package if not used
       const mod: any = await import('gifuct-js')
       const parseGIF = mod.parseGIF as (buf: ArrayBuffer) => any
       const decompressFrames = mod.decompressFrames as (gif: any, build: boolean) => any[]
       
-      console.log('BloodSplatEffectBackground: Fetching GIF file...')
       const resp = await fetch(encodeURI(url))
       if (!resp.ok) {
-        console.error('BloodSplatEffectBackground: Failed to fetch GIF - HTTP', resp.status)
         return null
       }
       
-      console.log('BloodSplatEffectBackground: Parsing GIF data...')
       const buf = await resp.arrayBuffer()
       const gif = parseGIF(buf)
       const frames = decompressFrames(gif, true)
       
       if (!frames || !frames.length) {
-        console.error('BloodSplatEffectBackground: No frames found in GIF')
         return null
       }
-      
-      console.log('BloodSplatEffectBackground: Processing', frames.length, 'frames...')
       
       // Logical canvas size
       const logicalW = (gif.lsd && gif.lsd.width) || frames[0].dims.width
@@ -241,17 +220,13 @@ export class BloodSplatEffectBackground {
         textures.push(Texture.from(canvas))
       }
       
-      console.log('BloodSplatEffectBackground: Successfully created', textures.length, 'textures from GIF')
       return textures
     } catch (e) {
-      console.error('BloodSplatEffectBackground: Error loading GIF:', e)
       return null
     }
   }
 
   private createInstances(frames: Texture[]): void {
-    console.log('BloodSplatEffectBackground: Creating template sprite for blood splat effects')
-    
     // Create one template sprite (hidden by default)
     const sprite = new AnimatedSprite(frames)
     sprite.anchor.set(0.5)
@@ -266,12 +241,8 @@ export class BloodSplatEffectBackground {
     // Add blend mode to help with transparency
     sprite.blendMode = 'add' // This will help eliminate black backgrounds
     
-    console.log('BloodSplatEffectBackground: Template sprite created')
-    
     this.container.addChild(sprite)
     this.sprites.push(sprite)
-    
-    console.log('BloodSplatEffectBackground: Template sprite added to container')
   }
 
   public destroy(): void {

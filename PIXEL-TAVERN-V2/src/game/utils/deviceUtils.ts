@@ -114,7 +114,6 @@ export class DeviceUtils {
       try {
         await (screen.orientation as any).lock('landscape');
       } catch (error) {
-        console.warn('Could not lock orientation:', error);
       }
     }
   }

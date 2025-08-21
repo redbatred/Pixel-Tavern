@@ -36,7 +36,6 @@ export class HolyLightEffectBackground {
     slotMachine: any // Reference to SlotMachine to get symbol positions
   ): void {
     if (!this.isInitialized || this.sprites.length === 0) {
-      console.log('HolyLightEffectBackground: Not initialized, cannot show effects')
       return
     }
 
@@ -60,7 +59,6 @@ export class HolyLightEffectBackground {
       })
     })
 
-    console.log(`HolyLightEffectBackground: Found ${kingPositions.length} king positions in winning combinations`)
 
     // Create holy light effects positioned over each winning king
     kingPositions.forEach((kingPos, index) => {
@@ -98,9 +96,7 @@ export class HolyLightEffectBackground {
       holyLightSprite.x = symbolColumn.x + symbol.x + 5 
       holyLightSprite.y = symbolColumn.y + symbol.y -  50 
       
-      console.log(`HolyLightEffectBackground: Created effect at slot [${row}, ${col}] - world pos (${holyLightSprite.x}, ${holyLightSprite.y})`)
     } else {
-      console.warn(`HolyLightEffectBackground: Could not find symbol/column for position [${row}, ${col}]`)
       // Fallback to center position
       holyLightSprite.x = 0
       holyLightSprite.y = 0
@@ -133,7 +129,6 @@ export class HolyLightEffectBackground {
   public hide(): void {
     this.container.visible = false
     this.clearEffects()
-    console.log('HolyLightEffectBackground: Hiding holy light effects')
   }
 
   // Check if the winning character is a king (character index 5 - King)
@@ -144,23 +139,18 @@ export class HolyLightEffectBackground {
   public async init(): Promise<void> {
     if (this.isInitialized || !HolyLightEffectConfig.ENABLED) return
     
-    console.log('HolyLightEffectBackground: Starting initialization...')
     
     // Try GIF path first if enabled
     if (HolyLightEffectConfig.USE_GIF && HolyLightEffectConfig.GIF_URL) {
-      console.log('HolyLightEffectBackground: Attempting to load Holy Light Aura GIF:', HolyLightEffectConfig.GIF_URL)
       const gifTextures = await this.buildFromGif(HolyLightEffectConfig.GIF_URL)
       if (gifTextures && gifTextures.length) {
-        console.log('HolyLightEffectBackground: Successfully loaded', gifTextures.length, 'frames from Holy Light Aura GIF')
         this.createInstances(gifTextures)
         this.isInitialized = true
         return
       } else {
-        console.warn('HolyLightEffectBackground: Failed to load Holy Light Aura GIF or no frames found')
       }
     }
 
-    console.log('HolyLightEffectBackground: Initialization completed')
     this.isInitialized = true
   }
 
@@ -234,7 +224,6 @@ export class HolyLightEffectBackground {
   }
 
   private createInstances(frames: Texture[]): void {
-    console.log('HolyLightEffectBackground: Creating template sprite for holy light effects')
     
     // Create one template sprite (hidden by default)
     const sprite = new AnimatedSprite(frames)
@@ -250,12 +239,10 @@ export class HolyLightEffectBackground {
     // Add blend mode to help with transparency
     sprite.blendMode = 'add' // This will help eliminate black backgrounds
     
-    console.log('HolyLightEffectBackground: Template sprite created')
     
     this.container.addChild(sprite)
     this.sprites.push(sprite)
     
-    console.log('HolyLightEffectBackground: Template sprite added to container')
   }
 
   public destroy(): void {

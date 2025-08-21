@@ -51,7 +51,6 @@ export const checkWins = (slotResults: number[][]): WinResult => {
   const winningPaylines: number[] = []
   const winningPositions: Array<{ payline: number; positions: [number, number][] }> = []
 
-  console.log('🎰 Checking wins for slot results:', slotResults)
 
   // Check each payline
   PAYLINES.forEach((payline, paylineIndex) => {
@@ -72,10 +71,7 @@ export const checkWins = (slotResults: number[][]): WinResult => {
 
     // Debug: Log each payline check
     if (consecutiveCount >= 3) {
-      console.log(`🏆 Payline ${paylineIndex + 1} WIN: ${consecutiveCount} consecutive ${firstSymbol}s`)
-      console.log(`   Positions:`, payline.slice(0, consecutiveCount))
     } else if (consecutiveCount === 2) {
-      console.log(`💸 Payline ${paylineIndex + 1}: Only ${consecutiveCount} consecutive ${firstSymbol}s (need 3+)`)
     }
 
     // Award win if 3 or more consecutive symbols (matching original game)
@@ -96,7 +92,6 @@ export const checkWins = (slotResults: number[][]): WinResult => {
           winAmount = 10
       }
       
-      console.log(`💰 Win detected! Payline ${paylineIndex + 1}: ${consecutiveCount} consecutive ${firstSymbol}s = ${winAmount} credits`)
       
       totalWin += winAmount
       winningPaylines.push(paylineIndex + 1)
@@ -123,7 +118,6 @@ export const checkWins = (slotResults: number[][]): WinResult => {
     }
   })
 
-  console.log(`🎯 Total wins: ${winningPaylines.length} paylines, ${totalWin} credits`)
   const result = { winAmount: totalWin, winningCharacter, winningColumns, winningPaylines, winningPositions }
   return result
 }

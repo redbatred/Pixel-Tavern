@@ -36,7 +36,6 @@ export class SplatterEffectBackground {
     slotMachine: any // Reference to SlotMachine to get symbol positions
   ): void {
     if (!this.isInitialized || this.sprites.length === 0) {
-      console.log('SplatterEffectBackground: Not initialized, cannot show effects')
       return
     }
 
@@ -60,7 +59,6 @@ export class SplatterEffectBackground {
       })
     })
 
-    console.log(`SplatterEffectBackground: Found ${knightPositions.length} knight positions in winning combinations`)
 
     // Create splatter effects positioned over each winning knight
     knightPositions.forEach((knightPos, index) => {
@@ -98,9 +96,7 @@ export class SplatterEffectBackground {
       splatterSprite.x = symbolColumn.x + symbol.x + 5
       splatterSprite.y = symbolColumn.y + symbol.y - 20
       
-      console.log(`SplatterEffectBackground: Created effect at slot [${row}, ${col}] - world pos (${splatterSprite.x}, ${splatterSprite.y})`)
     } else {
-      console.warn(`SplatterEffectBackground: Could not find symbol/column for position [${row}, ${col}]`)
       // Fallback to center position
       splatterSprite.x = 0
       splatterSprite.y = 0
@@ -133,7 +129,6 @@ export class SplatterEffectBackground {
   public hide(): void {
     this.container.visible = false
     this.clearEffects()
-    console.log('SplatterEffectBackground: Hiding splatter effects')
   }
 
   // Check if the winning character is a knight (character index 0 - Knight)
@@ -144,23 +139,18 @@ export class SplatterEffectBackground {
   public async init(): Promise<void> {
     if (this.isInitialized || !SplatterEffectConfig.ENABLED) return
     
-    console.log('SplatterEffectBackground: Starting initialization...')
     
     // Try GIF path first if enabled
     if (SplatterEffectConfig.USE_GIF && SplatterEffectConfig.GIF_URL) {
-      console.log('SplatterEffectBackground: Attempting to load Splatter GIF:', SplatterEffectConfig.GIF_URL)
       const gifTextures = await this.buildFromGif(SplatterEffectConfig.GIF_URL)
       if (gifTextures && gifTextures.length) {
-        console.log('SplatterEffectBackground: Successfully loaded', gifTextures.length, 'frames from Splatter GIF')
         this.createInstances(gifTextures)
         this.isInitialized = true
         return
       } else {
-        console.warn('SplatterEffectBackground: Failed to load Splatter GIF or no frames found')
       }
     }
 
-    console.log('SplatterEffectBackground: Initialization completed')
     this.isInitialized = true
   }
 
@@ -234,7 +224,6 @@ export class SplatterEffectBackground {
   }
 
   private createInstances(frames: Texture[]): void {
-    console.log('SplatterEffectBackground: Creating template sprite for splatter effects')
     
     // Create one template sprite (hidden by default)
     const sprite = new AnimatedSprite(frames)
@@ -250,12 +239,10 @@ export class SplatterEffectBackground {
     // Add blend mode to help with transparency
     sprite.blendMode = 'add' // This will help eliminate black backgrounds
     
-    console.log('SplatterEffectBackground: Template sprite created')
     
     this.container.addChild(sprite)
     this.sprites.push(sprite)
     
-    console.log('SplatterEffectBackground: Template sprite added to container')
   }
 
   public destroy(): void {

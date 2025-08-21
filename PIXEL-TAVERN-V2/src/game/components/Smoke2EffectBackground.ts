@@ -36,7 +36,6 @@ export class Smoke2EffectBackground {
     slotMachine: any // Reference to SlotMachine to get symbol positions
   ): void {
     if (!this.isInitialized || this.sprites.length === 0) {
-      console.log('Smoke2EffectBackground: Not initialized, cannot show effects')
       return
     }
 
@@ -60,7 +59,6 @@ export class Smoke2EffectBackground {
       })
     })
 
-    console.log(`Smoke2EffectBackground: Found ${barbarianPositions.length} barbarian positions in winning combinations`)
 
     // Create smoke2 effects positioned over each winning barbarian
     barbarianPositions.forEach((barbarianPos, index) => {
@@ -98,9 +96,7 @@ export class Smoke2EffectBackground {
       smoke2Sprite.x = symbolColumn.x + symbol.x - 10
       smoke2Sprite.y = symbolColumn.y + symbol.y - 60
       
-      console.log(`Smoke2EffectBackground: Created effect at slot [${row}, ${col}] - world pos (${smoke2Sprite.x}, ${smoke2Sprite.y})`)
     } else {
-      console.warn(`Smoke2EffectBackground: Could not find symbol/column for position [${row}, ${col}]`)
       // Fallback to center position
       smoke2Sprite.x = 0
       smoke2Sprite.y = 0
@@ -133,7 +129,6 @@ export class Smoke2EffectBackground {
   public hide(): void {
     this.container.visible = false
     this.clearEffects()
-    console.log('Smoke2EffectBackground: Hiding effects')
   }
 
   // Check if the winning character is a barbarian (only character index 3 - Warrior)
@@ -144,23 +139,18 @@ export class Smoke2EffectBackground {
   public async init(): Promise<void> {
     if (this.isInitialized || !Smoke2EffectConfig.ENABLED) return
     
-    console.log('Smoke2EffectBackground: Starting initialization...')
     
     // Try GIF path first if enabled
     if (Smoke2EffectConfig.USE_GIF && Smoke2EffectConfig.GIF_URL) {
-      console.log('Smoke2EffectBackground: Attempting to load GIF:', Smoke2EffectConfig.GIF_URL)
       const gifTextures = await this.buildFromGif(Smoke2EffectConfig.GIF_URL)
       if (gifTextures && gifTextures.length) {
-        console.log('Smoke2EffectBackground: Successfully loaded', gifTextures.length, 'frames from GIF')
         this.createInstances(gifTextures)
         this.isInitialized = true
         return
       } else {
-        console.warn('Smoke2EffectBackground: Failed to load GIF or no frames found')
       }
     }
 
-    console.log('Smoke2EffectBackground: Initialization completed')
     this.isInitialized = true
   }
 
@@ -234,7 +224,6 @@ export class Smoke2EffectBackground {
   }
 
   private createInstances(frames: Texture[]): void {
-    console.log('Smoke2EffectBackground: Creating template sprite for smoke2 effects')
     
     // Create one template sprite (hidden by default)
     const sprite = new AnimatedSprite(frames)
@@ -250,12 +239,10 @@ export class Smoke2EffectBackground {
     // Add blend mode to help with transparency
     sprite.blendMode = 'add' // This will help eliminate black backgrounds
     
-    console.log('Smoke2EffectBackground: Template sprite created')
     
     this.container.addChild(sprite)
     this.sprites.push(sprite)
     
-    console.log('Smoke2EffectBackground: Template sprite added to container')
   }
 
   public destroy(): void {

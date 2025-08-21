@@ -36,7 +36,6 @@ export class ElectricEffectBackground {
     slotMachine: any // Reference to SlotMachine to get symbol positions
   ): void {
     if (!this.isInitialized || this.sprites.length === 0) {
-      console.log('ElectricEffectBackground: Not initialized, cannot show effects')
       return
     }
 
@@ -59,8 +58,6 @@ export class ElectricEffectBackground {
         }
       })
     })
-
-    console.log(`ElectricEffectBackground: Found ${magePositions.length} mage positions in winning combinations`)
 
     // Create electric effects positioned over each winning mage
     magePositions.forEach((magePos, index) => {
@@ -98,9 +95,7 @@ export class ElectricEffectBackground {
       electricSprite.x = symbolColumn.x + symbol.x -20
       electricSprite.y = symbolColumn.y + symbol.y - 5
       
-      console.log(`ElectricEffectBackground: Created effect at slot [${row}, ${col}] - world pos (${electricSprite.x}, ${electricSprite.y})`)
     } else {
-      console.warn(`ElectricEffectBackground: Could not find symbol/column for position [${row}, ${col}]`)
       // Fallback to center position
       electricSprite.x = 0
       electricSprite.y = 0
@@ -133,7 +128,6 @@ export class ElectricEffectBackground {
   public hide(): void {
     this.container.visible = false
     this.clearEffects()
-    console.log('ElectricEffectBackground: Hiding effects')
   }
 
   // Check if the winning character is a mage (only character index 1 - Wizard)
@@ -144,23 +138,16 @@ export class ElectricEffectBackground {
   public async init(): Promise<void> {
     if (this.isInitialized || !ElectricEffectConfig.ENABLED) return
     
-    console.log('ElectricEffectBackground: Starting initialization...')
-    
     // Try GIF path first if enabled
     if (ElectricEffectConfig.USE_GIF && ElectricEffectConfig.GIF_URL) {
-      console.log('ElectricEffectBackground: Attempting to load GIF:', ElectricEffectConfig.GIF_URL)
       const gifTextures = await this.buildFromGif(ElectricEffectConfig.GIF_URL)
       if (gifTextures && gifTextures.length) {
-        console.log('ElectricEffectBackground: Successfully loaded', gifTextures.length, 'frames from GIF')
         this.createInstances(gifTextures)
         this.isInitialized = true
         return
-      } else {
-        console.warn('ElectricEffectBackground: Failed to load GIF or no frames found')
       }
     }
 
-    console.log('ElectricEffectBackground: Initialization completed')
     this.isInitialized = true
   }
 
@@ -234,8 +221,6 @@ export class ElectricEffectBackground {
   }
 
   private createInstances(frames: Texture[]): void {
-    console.log('ElectricEffectBackground: Creating template sprite for electric effects')
-    
     // Create one template sprite (hidden by default)
     const sprite = new AnimatedSprite(frames)
     sprite.anchor.set(0.5)
@@ -250,12 +235,8 @@ export class ElectricEffectBackground {
     // Add blend mode to help with transparency
     sprite.blendMode = 'add' // This will help eliminate black backgrounds
     
-    console.log('ElectricEffectBackground: Template sprite created')
-    
     this.container.addChild(sprite)
     this.sprites.push(sprite)
-    
-    console.log('ElectricEffectBackground: Template sprite added to container')
   }
 
   public destroy(): void {

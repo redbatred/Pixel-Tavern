@@ -153,11 +153,11 @@ export class AudioManager {
       url: key,
               preload: true,
               loaded: () => {
-                console.log(`✅ Priority sound loaded: ${soundId}`)
+
               }
             })
           } catch (error) {
-            console.warn(`Failed to load priority sound ${soundId}:`, error)
+
           }
         }
       }
@@ -171,14 +171,14 @@ export class AudioManager {
             preload: true
           })
         } catch (error) {
-          console.warn(`Failed to load sound ${track.id}:`, error)
+
         }
       })
 
       await Promise.allSettled(loadPromises)
-      console.log('🎵 Audio system initialized')
+
     } catch (error) {
-      console.error('Failed to initialize audio:', error)
+
     }
   }
 
@@ -311,11 +311,11 @@ export class AudioManager {
         })
       } else {
         // Fallback: try to load and play immediately (not recommended for click sounds)
-        console.warn(`Sound ${soundId} not preloaded, attempting immediate load`)
+
       }
     } catch (error) {
       // Failed to play sound effect, ignore silently
-      console.warn(`Failed to play sound effect ${soundId}:`, error)
+
     }
   }
 
@@ -338,7 +338,7 @@ export class AudioManager {
     const track = this.AUDIO_TRACKS[soundId]
     
     if (!track) {
-      console.warn(`Spin sound for column ${columnIndex} not found`)
+
       return
     }
 
@@ -358,7 +358,7 @@ export class AudioManager {
         if (instance) this.playingLoopIds.add(track.id)
       }
     } catch (error) {
-      console.warn(`Failed to start spin sound for column ${columnIndex}:`, error)
+
     }
   }
 
@@ -368,7 +368,7 @@ export class AudioManager {
     const track = this.AUDIO_TRACKS[soundId]
     
     if (!track) {
-      console.warn(`Spin sound for column ${columnIndex} not found`)
+
       return
     }
 
@@ -380,7 +380,7 @@ export class AudioManager {
         this.playReelStopSound()
       }
     } catch (error) {
-      console.warn(`Failed to stop spin sound for column ${columnIndex}:`, error)
+
     }
   }
 
@@ -463,16 +463,16 @@ export class AudioManager {
 
   // Volume Controls
   setMasterVolume(volume: number): void {
-    console.log('🎵 AudioManager.setMasterVolume called with:', volume)
+
     this.masterVolume = Math.max(0, Math.min(1, volume))
-    console.log('🎵 AudioManager.masterVolume set to:', this.masterVolume)
+
     this.updateBackgroundMusicVolume()
   }
 
   setMusicVolume(volume: number): void {
-    console.log('🎵 AudioManager.setMusicVolume called with:', volume)
+
     this.musicVolume = Math.max(0, Math.min(1, volume))
-    console.log('🎵 AudioManager.musicVolume set to:', this.musicVolume)
+
     this.updateBackgroundMusicVolume()
   }
 
@@ -481,14 +481,7 @@ export class AudioManager {
   }
 
   private updateBackgroundMusicVolume(): void {
-    console.log('🎵 updateBackgroundMusicVolume called')
-    console.log('🎵 Current state:', {
-      hasInstance: !!this.backgroundMusicInstance,
-      masterVolume: this.masterVolume,
-      musicVolume: this.musicVolume,
-      currentTrack: this.currentMusicTrack
-    })
-    
+
     if (this.backgroundMusicInstance) {
       const track = this.currentMusicTrack ? this.AUDIO_TRACKS[this.currentMusicTrack] : null
       if (track) {
@@ -496,51 +489,45 @@ export class AudioManager {
           // Calculate if music should be silent
           const calculatedVolume = this.masterVolume * this.musicVolume * track.volume
           const shouldBeSilent = calculatedVolume === 0
-          
-          console.log('🎵 Calculated volume:', calculatedVolume, 'Should be silent:', shouldBeSilent)
-          
+
           if (shouldBeSilent) {
-            console.log('🎵 === MUTING MUSIC ===')
+
             // Store the current track before clearing it
             if (this.currentMusicTrack) {
               this.lastPlayedTrack = this.currentMusicTrack
-              console.log('🎵 Stored last played track:', this.lastPlayedTrack)
+
             }
             
             // Stop all instances of this sound using pixi-sound
             try {
               sound.stop(track.id)
-              console.log('🎵 Called sound.stop() for track:', track.id)
             } catch (e) {
-              console.log('🎵 Error calling sound.stop:', e)
+
             }
             
             // IMMEDIATELY clear the instance reference
-            console.log('🎵 Clearing instance reference')
+
             this.backgroundMusicInstance = null
             this.isBackgroundMusicPlaying = false
             this.currentMusicTrack = null
-            console.log('🎵 Instance cleared - music should be fully stopped')
-            
+
           } else {
-            console.log('🎵 === UNMUTING MUSIC ===')
+
             // Music should play - recreate instance if needed
             const trackToPlay = this.currentMusicTrack || this.lastPlayedTrack
-            console.log('🎵 Track to play:', trackToPlay, '(current:', this.currentMusicTrack, ', last:', this.lastPlayedTrack, ')')
             
             if (!this.backgroundMusicInstance && trackToPlay) {
-              console.log('🎵 No instance exists, recreating for track:', trackToPlay)
-              
+
               // Get the track config
               const trackConfig = this.AUDIO_TRACKS[trackToPlay]
               if (trackConfig) {
                 try {
-                  console.log('🎵 Playing track with ID:', trackConfig.id)
+
                   this.backgroundMusicInstance = sound.play(trackConfig.id, {
                     loop: trackConfig.loop,
                     volume: calculatedVolume,
                     complete: () => {
-                      console.log('🎵 Background music completed')
+
                       this.isBackgroundMusicPlaying = false
                       this.backgroundMusicInstance = null
                       this.currentMusicTrack = null
@@ -548,42 +535,41 @@ export class AudioManager {
                   })
                   this.isBackgroundMusicPlaying = true
                   this.currentMusicTrack = trackToPlay
-                  console.log('🎵 Music instance recreated and playing')
+
                 } catch (error) {
-                  console.error('🎵 Error recreating music instance:', error)
+
                 }
               } else {
-                console.log('🎵 No track config found for:', trackToPlay)
+
               }
             } else if (this.backgroundMusicInstance) {
               // Instance exists, just update volume and resume
-              console.log('🎵 Instance exists, resuming and setting volume')
+
               if (this.backgroundMusicInstance.paused) {
                 this.backgroundMusicInstance.paused = false
-                console.log('🎵 Music resumed')
+
               }
               this.backgroundMusicInstance.volume = calculatedVolume
-              console.log('🎵 Music volume set to:', calculatedVolume)
+
             } else {
-              console.log('🎵 No track to recreate')
+
             }
           }
           
         } catch (error) {
-          console.error('🎵 Error updating background music:', error)
+
         }
       } else {
-        console.log('🎵 No track found for volume update')
+
       }
     } else {
-      console.log('🎵 No background music instance to update')
-      
+
       // If no instance but we should have music, create it (only if volumes > 0 and enabled)
       const trackToPlay = this.currentMusicTrack || this.lastPlayedTrack
       const shouldHaveMusic = this.masterVolume > 0 && this.musicVolume > 0 && this.musicEnabled
       
       if (trackToPlay && shouldHaveMusic) {
-        console.log('🎵 No instance but should have music, creating new one for track:', trackToPlay)
+
         const track = this.AUDIO_TRACKS[trackToPlay]
         if (track) {
           const calculatedVolume = this.masterVolume * this.musicVolume * track.volume
@@ -599,25 +585,18 @@ export class AudioManager {
             })
             this.isBackgroundMusicPlaying = true
             this.currentMusicTrack = trackToPlay
-            console.log('🎵 New music instance created for:', trackToPlay)
+
           } catch (error) {
-            console.error('🎵 Error creating new music instance:', error)
+
           }
         } else {
-          console.log('🎵 No track config found for:', trackToPlay)
+
         }
       } else {
-        console.log('🎵 Not creating music - Track:', trackToPlay, 'ShouldHaveMusic:', shouldHaveMusic, 'Master:', this.masterVolume, 'Music:', this.musicVolume, 'Enabled:', this.musicEnabled)
+
       }
     }
-    
-    console.log('🎵 Final music state:', {
-      hasInstance: !!this.backgroundMusicInstance,
-      paused: this.backgroundMusicInstance?.paused,
-      volume: this.backgroundMusicInstance?.volume,
-      playing: this.backgroundMusicInstance?.playing,
-      currentTrack: this.currentMusicTrack
-    })
+
   }
 
   // Toggle Controls

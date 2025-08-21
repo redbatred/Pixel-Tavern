@@ -54,7 +54,6 @@ export class WinAnimation {
   }
 
   async init(): Promise<void> {
-    console.log('WinAnimation: Starting initialization...')
     
     // Create background glow effect
     await this.createBackgroundGlow()
@@ -64,35 +63,27 @@ export class WinAnimation {
       await this.initLeafEffects()
     }
     
-    console.log('WinAnimation: Initialization complete')
   }
 
   private async createBackgroundGlow(): Promise<void> {
-    console.log('WinAnimation: createBackgroundGlow called - creating template only')
     
     if (!BackgroundGlowConfig.ENABLED || !BackgroundGlowConfig.USE_GIF) {
-      console.log('WinAnimation: Background glow GIF disabled, will use fallback during show')
       return
     }
 
     try {
-      console.log('WinAnimation: Loading background glow from:', BackgroundGlowConfig.GIF_URL)
       const glowTextures = await this.buildBackgroundGlowTexturesFromGif(BackgroundGlowConfig.GIF_URL)
       
       if (glowTextures && glowTextures.length > 0) {
-        console.log('WinAnimation: Successfully loaded', glowTextures.length, 'glow frames')
         this.createBackgroundGlowTemplate(glowTextures)
       } else {
-        console.warn('WinAnimation: Failed to load glow GIF')
       }
     } catch (error) {
-      console.error('WinAnimation: Error loading background glow:', error)
     }
   }
 
   // Create a template background glow sprite like other effects do
   private createBackgroundGlowTemplate(glowTextures: Texture[]): void {
-    console.log('WinAnimation: Creating background glow template sprite')
     
     // Store the original textures for creating instances
     this.backgroundGlowTextures = glowTextures
@@ -108,21 +99,16 @@ export class WinAnimation {
     sprite.visible = false // Hidden template
     sprite.blendMode = BackgroundGlowConfig.BLEND_MODE as any
     
-    console.log('WinAnimation: Background glow template sprite created')
     
     this.container.addChild(sprite)
     this.backgroundGlowSprites.push(sprite)
     
-    console.log('WinAnimation: Background glow template sprite added to container')
   }
 
   private showBackgroundGlow(): void {
-    console.log('WinAnimation: showBackgroundGlow called, backgroundGlowSprites count:', this.backgroundGlowSprites.length)
-    console.log('WinAnimation: backgroundGlowTextures count:', this.backgroundGlowTextures.length)
     
     // If we have GIF textures, use them; otherwise use fallback
     if (this.backgroundGlowTextures.length === 0) {
-      console.warn('WinAnimation: No background glow textures available, using fallback')
       
       // Create a simple fallback glow directly
       const fallbackGlow = new Graphics()
@@ -139,11 +125,9 @@ export class WinAnimation {
       // Store reference for rotation animation
       this.backgroundGlow = fallbackGlow as any
       
-      console.log('WinAnimation: Fallback background glow created and visible at position:', fallbackGlow.x, fallbackGlow.y)
       return
     }
 
-    console.log('WinAnimation: Creating background glow instance from stored textures')
     
     // Create instance from stored textures (same pattern as leaves)
     const glowSprite = new AnimatedSprite(this.backgroundGlowTextures)
@@ -168,7 +152,6 @@ export class WinAnimation {
     // Store reference for rotation animation
     this.backgroundGlow = glowSprite
     
-    console.log('WinAnimation: Background glow instance created and playing at position:', glowSprite.x, glowSprite.y, 'scale:', glowSprite.scale.x, 'alpha:', glowSprite.alpha)
   }
 
   private clearBackgroundGlow(): void {
@@ -195,17 +178,13 @@ export class WinAnimation {
     if (!LeafEffectConfig.USE_GIF || !LeafEffectConfig.GIF_URL) return
     
     try {
-      console.log('WinAnimation: Loading leaf effects from:', LeafEffectConfig.GIF_URL)
       const leafTextures = await this.buildLeafTexturesFromGif(LeafEffectConfig.GIF_URL)
       
       if (leafTextures && leafTextures.length > 0) {
-        console.log('WinAnimation: Successfully loaded', leafTextures.length, 'leaf frames')
         this.createLeafTemplate(leafTextures)
       } else {
-        console.warn('WinAnimation: Failed to load leaf GIF or no frames found')
       }
     } catch (error) {
-      console.error('WinAnimation: Error loading leaf effects:', error)
     }
   }
 
@@ -294,7 +273,6 @@ export class WinAnimation {
       
       return textures
     } catch (e) {
-      console.error('WinAnimation: Error processing background glow GIF:', e)
       return null
     }
   }
@@ -364,14 +342,12 @@ export class WinAnimation {
       
       return textures
     } catch (e) {
-      console.error('WinAnimation: Error processing leaf GIF:', e)
       return null
     }
   }
 
   // Create a template leaf sprite like other effects do
   private createLeafTemplate(leafTextures: Texture[]): void {
-    console.log('WinAnimation: Creating leaf template sprite')
     
     const sprite = new AnimatedSprite(leafTextures)
     sprite.anchor.set(0.5)
@@ -386,12 +362,10 @@ export class WinAnimation {
     // Add blend mode to help with transparency
     sprite.blendMode = 'normal'
     
-    console.log('WinAnimation: Leaf template sprite created')
     
     this.leafContainer.addChild(sprite)
     this.leafSprites.push(sprite)
     
-    console.log('WinAnimation: Leaf template sprite added to container')
   }
 
   async showWin(characterIndex: number, _winAmount: number): Promise<void> {
@@ -423,10 +397,8 @@ export class WinAnimation {
   }
 
   private showLeafEffects(): void {
-    console.log('WinAnimation: showLeafEffects called, leafSprites count:', this.leafSprites.length)
     
     if (this.leafSprites.length === 0) {
-      console.warn('WinAnimation: No leaf template available to show')
       return
     }
 
@@ -436,11 +408,9 @@ export class WinAnimation {
     // Get the template sprite
     const template = this.leafSprites[0]
     if (!template) {
-      console.warn('WinAnimation: No leaf template sprite found')
       return
     }
     
-    console.log('WinAnimation: Creating leaf instances from template')
     
     // Create instances based on configuration, like other effects do
     LeafEffectConfig.INSTANCES.forEach((config, index) => {
@@ -462,10 +432,8 @@ export class WinAnimation {
       this.leafContainer.addChild(leafSprite)
       this.leafSprites.push(leafSprite)
       
-      console.log(`WinAnimation: Created leaf instance ${index} at (${config.x}, ${config.y})`)
     })
     
-    console.log('WinAnimation: Showing', this.leafSprites.length - 1, 'leaf effect instances')
   }
 
   private clearLeafEffects(): void {
@@ -607,7 +575,6 @@ export class WinAnimation {
   }
 
   private hideLeafEffects(): void {
-    console.log('WinAnimation: Hiding leaf effects')
     this.clearLeafEffects()
   }
 

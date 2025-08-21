@@ -262,9 +262,7 @@ export class SettingsModal {
 
     // Mute toggle
     muteBtn.addEventListener('click', () => {
-      console.log('⚙️ Settings mute button clicked, currently muted:', this.settings.muted)
       this.settings.muted = !this.settings.muted
-      console.log('⚙️ Setting master volume to:', this.settings.muted ? 0 : this.settings.masterVolume)
       this.audioManager.setMasterVolume(this.settings.muted ? 0 : this.settings.masterVolume)
       this.updateUI()
       // Play click sound after updating mute state
@@ -275,10 +273,8 @@ export class SettingsModal {
 
     // Music toggle
     musicToggle.addEventListener('click', () => {
-      console.log('⚙️ Settings music toggle clicked, currently enabled:', this.settings.musicEnabled)
       this.settings.musicEnabled = !this.settings.musicEnabled
       const volumeToSet = this.settings.musicEnabled ? this.settings.musicVolume : 0
-      console.log('⚙️ Setting music volume to:', volumeToSet)
       this.audioManager.setMusicVolume(volumeToSet)
       this.updateUI()
       this.audioManager.playImmediateSound('UI_CLICK')
