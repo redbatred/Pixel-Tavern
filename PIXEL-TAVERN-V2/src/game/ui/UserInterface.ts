@@ -20,6 +20,7 @@ interface UIState {
   spinsCompleted: number
   showCustomBetInput: boolean
   customBetInput: string
+  isInstantMode: boolean
 }
 
 export class UserInterface {
@@ -49,7 +50,8 @@ export class UserInterface {
       isInfiniteAutoSpin: false,
       spinsCompleted: 0,
       showCustomBetInput: false,
-      customBetInput: ''
+      customBetInput: '',
+      isInstantMode: false
     }
     
     // Initialize modals
@@ -348,6 +350,10 @@ export class UserInterface {
           </button>
         </div>
 
+        <!-- Simple Turbo Switch -->
+        <div class="turbo-contraption-switch ${this.state.isInstantMode ? 'unlocked' : ''}" id="turbo-contraption-switch">
+        </div>
+
         <!-- Status Messages -->
         <div class="status-message insufficient-funds" id="insufficient-funds" style="display: ${this.state.credits < this.state.betAmount && !this.state.isSpinning && !this.state.isAutoSpinning ? 'block' : 'none'};">
           <span>⚠️ Insufficient Credits!</span>
@@ -469,6 +475,38 @@ export class UserInterface {
       this.audioManager.playImmediateSound('UI_CLICK')
       this.showSettingsModal()
     })
+
+    // Turbo contraption switch
+    const turboSwitch = document.getElementById('turbo-contraption-switch')
+    turboSwitch?.addEventListener('click', (e) => {
+      console.log('Turbo switch clicked!')
+      e.preventDefault()
+      e.stopPropagation()
+      this.audioManager.playImmediateSound('UI_CLICK')
+      this.animateContraptionSwitch()
+      
+      // Provide immediate visual and state feedback
+      const currentState = this.state.isInstantMode
+      const newState = !currentState
+      console.log('Immediate visual update from', currentState, 'to', newState)
+      
+      // Update internal state immediately
+      this.state.isInstantMode = newState
+      
+      // Update visual state immediately
+      if (newState) {
+        turboSwitch.classList.add('unlocked')
+      } else {
+        turboSwitch.classList.remove('unlocked')
+      }
+      
+      // Trigger immediate padlock animation
+      this.onGameAction?.('updatePadlockImmediate', newState)
+      
+      // Send the toggle action and let the game state machine handle the update
+      console.log('Sending toggleTurbo action')
+      this.onGameAction?.('toggleTurbo')
+    })
   }
 
   private showCustomBetInput(): void {
@@ -572,7 +610,8 @@ export class UserInterface {
       autoSpinCount: context.autoSpinCount || 0,
       autoSpinRemaining: context.autoSpinRemaining || 0,
       isInfiniteAutoSpin: context.isInfiniteAutoSpin || false,
-      spinsCompleted: context.spinsCompleted || 0
+      spinsCompleted: context.spinsCompleted || 0,
+      isInstantMode: context.isInstantMode || false
     })
   }
 
@@ -712,6 +751,51 @@ export class UserInterface {
       )
     } else {
       this.autoSpinModal.hideSpinCounter()
+    }
+
+    // Update turbo lever state
+    const leverArm = document.getElementById('lever-arm')
+    const turboLabel = document.querySelector('.turbo-label')
+    const statusIndicator = document.querySelector('.status-indicator')
+    
+    if (leverArm) {
+      if (this.state.isInstantMode) {
+        leverArm.classList.add('active')
+      } else {
+        leverArm.classList.remove('active')
+      }
+    }
+    
+    if (turboLabel) {
+      if (this.state.isInstantMode) {
+        turboLabel.classList.add('active')
+      } else {
+        turboLabel.classList.remove('active')
+      }
+    }
+    
+    if (statusIndicator) {
+      statusIndicator.textContent = this.state.isInstantMode ? 'ON' : 'OFF'
+      if (this.state.isInstantMode) {
+        statusIndicator.classList.add('on')
+        statusIndicator.classList.remove('off')
+      } else {
+        statusIndicator.classList.add('off')
+        statusIndicator.classList.remove('on')
+      }
+    }
+
+    // Update turbo switch visual state
+    const turboSwitch = document.getElementById('turbo-contraption-switch')
+    if (turboSwitch) {
+      console.log('Updating turbo switch visual state, isInstantMode:', this.state.isInstantMode)
+      if (this.state.isInstantMode) {
+        turboSwitch.classList.add('unlocked')
+        console.log('Added unlocked class')
+      } else {
+        turboSwitch.classList.remove('unlocked')
+        console.log('Removed unlocked class')
+      }
     }
 
     // Update button states based on spinning/auto-spinning
@@ -867,4 +951,19 @@ export class UserInterface {
       </div>
     `
   }
+
+  private animateContraptionSwitch(): void {
+    const switchElement = document.getElementById('turbo-contraption-switch')
+    
+    if (!switchElement) return
+
+    // Add activation animation
+    switchElement.classList.add('activating')
+    
+    // Remove animation class after it's complete
+    setTimeout(() => {
+      switchElement.classList.remove('activating')
+    }, 300)
+  }
+
 }

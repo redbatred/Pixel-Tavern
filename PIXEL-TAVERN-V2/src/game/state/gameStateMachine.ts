@@ -13,6 +13,7 @@ export interface GameContext {
   spinsCompleted: number;
   animationSpeed: "very-slow" | "slow" | "normal" | "fast" | "very-fast";
   autoSpinDelay: number;
+  isInstantMode: boolean;
   slotResults?: number[][];
   winAmount?: number;
   winningPositions?: Array<{ payline: number; positions: [number, number][] }>;
@@ -21,6 +22,9 @@ export interface GameContext {
 
 export type GameEvent =
   | { type: "SPIN" }
+  | { type: "INSTANT_SPIN" }
+  | { type: "ENABLE_TURBO" }
+  | { type: "DISABLE_TURBO" }
   | { type: "SPIN_COMPLETE"; results: number[][] }
   | {
       type: "WIN_CHECK_COMPLETE";
@@ -193,6 +197,12 @@ export const gameStateMachine = setup({
       winningPositions: [],
       winningCharacter: null,
     }),
+    enableInstantMode: assign({
+      isInstantMode: true,
+    }),
+    disableInstantMode: assign({
+      isInstantMode: false,
+    }),
   },
   delays: {
     spinDuration: ({ context }) => {
@@ -249,6 +259,7 @@ export const gameStateMachine = setup({
     spinsCompleted: 0,
     animationSpeed: "normal" as const,
     autoSpinDelay: 2000,
+    isInstantMode: false,
     slotResults: undefined,
     winAmount: 0,
     winningPositions: [],
@@ -261,6 +272,17 @@ export const gameStateMachine = setup({
           target: "spinning",
           guard: "hasCredits",
           actions: ["deductBet", "clearWinState"],
+        },
+        INSTANT_SPIN: {
+          target: "spinning", 
+          guard: "hasCredits",
+          actions: ["deductBet", "clearWinState"],
+        },
+        ENABLE_TURBO: {
+          actions: "enableInstantMode",
+        },
+        DISABLE_TURBO: {
+          actions: "disableInstantMode",
         },
         SET_BET: {
           guard: "canAffordBet",

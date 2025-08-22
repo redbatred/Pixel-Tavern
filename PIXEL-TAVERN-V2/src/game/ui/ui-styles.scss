@@ -1469,6 +1469,58 @@ button {
   }
 }
 
+.instant-spin-btn {
+  background: linear-gradient(135deg, #4a00e0, #8e2de2);
+  border-color: #ffb347;
+  
+  &:hover:not(:disabled) {
+    border-color: #d4af37;
+    box-shadow:
+      0 12px 35px rgba(255, 179, 71, 0.5),
+      inset 0 2px 0 rgba(255, 179, 71, 0.4),
+      inset 0 -2px 8px rgba(0, 0, 0, 0.4);
+    background: linear-gradient(135deg, #5200ff, #a64cff);
+  }
+
+  &.active {
+    background: linear-gradient(135deg, #ff6b35, rgba(255, 107, 53, 0.9));
+    border-color: #ff6b35;
+    box-shadow:
+      0 0 40px rgba(255, 107, 53, 0.9),
+      inset 0 2px 0 rgba(255, 107, 53, 0.3);
+
+    .instant-text {
+      color: #fff;
+      text-shadow: 0 0 12px rgba(255, 107, 53, 0.8);
+    }
+
+    .lightning-icon {
+      filter: drop-shadow(0 0 12px rgba(255, 179, 71, 0.8));
+    }
+  }
+
+  &:disabled {
+    background: linear-gradient(
+      135deg,
+      rgba(74, 0, 224, 0.3),
+      rgba(142, 45, 226, 0.3)
+    ) !important;
+    border-color: rgba(255, 179, 71, 0.3) !important;
+    cursor: not-allowed;
+    opacity: 0.6;
+    transform: none !important;
+
+    .instant-text {
+      color: rgba(255, 179, 71, 0.4) !important;
+      text-shadow: none;
+    }
+
+    .lightning-icon {
+      filter: grayscale(100%) opacity(0.6);
+    }
+  }
+}
+
 @keyframes rotate-shine {
   0% {
     transform: rotate(0deg);
@@ -1796,6 +1848,294 @@ button {
   }
 }
 
+/* Turbo Label Styles */
+.turbo-padlock-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+  z-index: 1000;
+  pointer-events: all;
+}
+
+.lever-mount {
+  position: relative;
+  width: 60px;
+  height: 80px;
+  background: linear-gradient(135deg, rgba(74, 44, 23, 0.9), rgba(44, 24, 16, 0.9));
+  border: 3px solid #8B4513;
+  border-radius: 8px 8px 0 0;
+  box-shadow: 
+    inset 0 2px 4px rgba(139, 69, 19, 0.3),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.4),
+    0 4px 8px rgba(0, 0, 0, 0.3);
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    right: 8px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(139, 69, 19, 0.6), transparent);
+    border-radius: 1px;
+  }
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: 15px;
+    left: 8px;
+    right: 8px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.3), transparent);
+  }
+}
+
+.lever-base {
+  position: absolute;
+  bottom: -3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 12px;
+  background: linear-gradient(135deg, #8B4513, #654321);
+  border-radius: 50%;
+  border: 2px solid #5D4037;
+  box-shadow: 
+    inset 0 1px 2px rgba(255, 255, 255, 0.1),
+    0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Turbo Label Styles (reused from before) */
+
+.turbo-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 8px;
+  background: rgba(44, 24, 16, 0.4);
+  border: 2px solid rgba(212, 175, 55, 0.3);
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  
+  &.active {
+    background: linear-gradient(135deg, rgba(138, 43, 226, 0.4), rgba(75, 0, 130, 0.4));
+    border-color: #8a2be2;
+    box-shadow: 0 0 15px rgba(138, 43, 226, 0.4);
+    
+    .turbo-text {
+      color: #ff6b6b;
+      text-shadow: 0 0 8px rgba(255, 107, 107, 0.8);
+      animation: turboTextGlow 2s ease-in-out infinite;
+    }
+    
+    .status-indicator.on {
+      background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+      color: white;
+      box-shadow: 0 0 10px rgba(255, 107, 107, 0.6);
+    }
+  }
+}
+
+.turbo-text {
+  font-size: 12px;
+  font-weight: bold;
+  color: $tavern-gold;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  transition: all 0.3s ease;
+  margin: 0;
+}
+
+.status-indicator {
+  font-size: 10px;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  
+  &.off {
+    background: linear-gradient(135deg, rgba(74, 44, 23, 0.8), rgba(44, 24, 16, 0.8));
+    color: rgba(212, 175, 55, 0.7);
+    border: 1px solid rgba(212, 175, 55, 0.3);
+  }
+  
+  &.on {
+    background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+    color: white;
+    border: 1px solid #ff6b6b;
+    box-shadow: 0 0 8px rgba(255, 107, 107, 0.4);
+  }
+}
+
+/* Beautiful and Intuitive Turbo Switch - Enhanced Medieval Design */
+.turbo-contraption-switch {
+  position: absolute;
+  /* Use viewport container coordinates (1920x1080 base) for responsive positioning */
+  right: 410px;  /* Distance from right edge of viewport (modify this value to adjust position) */
+  top: 760px;    /* Distance from top of viewport (modify this value to adjust position) */
+  width: 140px;
+  height: 70px;
+  background: linear-gradient(145deg, rgba(44, 24, 16, 0.95), rgba(74, 44, 23, 0.95));
+  border: 3px solid #d4af37;
+  border-radius: 35px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 150;
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  padding: 5px;
+  box-shadow: 
+    0 10px 25px rgba(0, 0, 0, 0.4),
+    inset 0 2px 5px rgba(255, 255, 255, 0.1),
+    inset 0 -2px 5px rgba(0, 0, 0, 0.2);
+  
+  /* Ensure consistent transform origin for scaling */
+  transform-origin: center center;
+  
+  /* Prevent layout shifts */
+  will-change: transform, box-shadow;
+  
+  &:hover {
+    transform: scale(1.03);
+    box-shadow: 
+      0 15px 30px rgba(0, 0, 0, 0.5),
+      inset 0 3px 8px rgba(255, 255, 255, 0.15),
+      0 0 25px rgba(212, 175, 55, 0.4);
+    border-color: #ffd700;
+  }
+  
+  // Enhanced toggle button with better visual feedback
+  &::before {
+    content: 'TURBO';
+    position: absolute;
+    left: 8px;
+    width: 54px;
+    height: 54px;
+    background: linear-gradient(145deg, #8B4513, #5D2F0A);
+    border: 2px solid #4A1F07;
+    border-radius: 50%;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 
+      0 6px 15px rgba(0, 0, 0, 0.4),
+      inset 0 3px 6px rgba(139, 69, 19, 0.3),
+      inset 0 -3px 6px rgba(0, 0, 0, 0.4);
+    
+    // Text styling for the toggle button - engraved effect
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Cinzel', serif;
+    font-size: 9px;
+    font-weight: bold;
+    color: #2F1B0C;
+    text-shadow: 
+      0 1px 0 rgba(139, 69, 19, 0.3),
+      0 -1px 1px rgba(0, 0, 0, 0.8);
+    letter-spacing: 0.3px;
+  }
+
+  // State indicator text on the side (in empty space)
+  &::after {
+    content: 'OFF';
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #d4af37;
+    font-family: 'Cinzel', serif;
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    text-shadow: 
+      0 1px 3px rgba(0, 0, 0, 0.8),
+      0 0 8px rgba(212, 175, 55, 0.3);
+    transition: all 0.3s ease;
+    opacity: 0.8;
+  }
+  
+  // Enhanced active state (turbo ON)
+  &.unlocked {
+    background: linear-gradient(145deg, rgba(139, 69, 19, 0.95), rgba(210, 105, 30, 0.95));
+    border-color: #ff6b35;
+    box-shadow: 
+      0 10px 25px rgba(255, 107, 53, 0.3),
+      inset 0 2px 5px rgba(255, 255, 255, 0.1),
+      inset 0 -2px 5px rgba(0, 0, 0, 0.2),
+      0 0 20px rgba(255, 107, 53, 0.2);
+    
+    &::before {
+      content: 'TURBO';
+      left: 74px;
+      background: linear-gradient(145deg, #CD853F, #8B4513);
+      border-color: #5D2F0A;
+      box-shadow: 
+        0 8px 20px rgba(205, 133, 63, 0.4),
+        inset 0 3px 6px rgba(205, 133, 63, 0.4),
+        inset 0 -3px 6px rgba(0, 0, 0, 0.5);
+      color: #2F1B0C;
+      text-shadow: 
+        0 1px 0 rgba(205, 133, 63, 0.4),
+        0 -1px 1px rgba(0, 0, 0, 0.9);
+    }
+
+    &::after {
+      content: 'ON';
+      left: 15px;
+      right: auto;
+      color: #ff6b35;
+      text-shadow: 
+        0 1px 3px rgba(0, 0, 0, 0.8),
+        0 0 10px rgba(255, 107, 53, 0.5);
+      opacity: 1;
+    }
+    
+    &:hover {
+      border-color: #ff8c42;
+      box-shadow: 
+        0 15px 30px rgba(255, 107, 53, 0.4),
+        inset 0 3px 8px rgba(255, 255, 255, 0.15),
+        0 0 30px rgba(255, 107, 53, 0.4);
+      
+      &::after {
+        color: #ff8c42;
+        text-shadow: 
+          0 1px 3px rgba(0, 0, 0, 0.8),
+          0 0 12px rgba(255, 140, 66, 0.6);
+      }
+    }
+  }
+  
+  // Add subtle animation on toggle
+  &.activating {
+    animation: switchToggle 0.3s ease-out;
+  }
+}
+
+@keyframes switchToggle {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+@keyframes turboTextGlow {
+  0%, 100% { 
+    text-shadow: 0 0 8px rgba(255, 107, 107, 0.8);
+  }
+  50% { 
+    text-shadow: 
+      0 0 16px rgba(255, 107, 107, 1), 
+      0 0 24px rgba(255, 107, 107, 0.5),
+      0 0 32px rgba(255, 107, 107, 0.3);
+  }
+}
+
 .spin-btn.spinning .spin-text,
 .spin-btn.spinning .spin-cost {
   color: #fff;
@@ -1987,6 +2327,8 @@ button {
     width: 120px;
     height: 120px;
   }
+  
+  /* Removed turbo switch responsive rules - let viewport container handle scaling */
 }
 
 @media (max-width: 768px) {
@@ -1994,6 +2336,8 @@ button {
     gap: 6px;
     padding: 6px;
   }
+  
+  /* Removed turbo switch responsive rules - let viewport container handle scaling */
   
   .box {
     width: 6px;
@@ -2037,7 +2381,7 @@ button {
     width: 100px;
     height: 100px;
   }
-
+  
   .spin-icon,
   .auto-icon {
     width: 32px;
@@ -2061,6 +2405,8 @@ button {
     gap: 4px;
     padding: 4px;
   }
+  
+  /* Removed turbo switch responsive rules - let viewport container handle scaling */
   
   .box {
     width: 5px;
@@ -2089,7 +2435,7 @@ button {
     min-height: 44px;
     touch-action: manipulation;
   }
-
+  
   /* Fix right panel positioning for small screens */
   .right-panel {
   right: 20px; /* Reduced from 58px for better positioning on small screens */

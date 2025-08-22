@@ -2,6 +2,7 @@ import { Application } from 'pixi.js'
 import { createActor } from 'xstate'
 import { gameStateMachine } from './state/gameStateMachine'
 import { SlotMachine } from './components/SlotMachine'
+import { TurboPadlock } from './components/TurboPadlock'
 import { ResponsiveBackground } from './components/ResponsiveBackground'
 import { FireBackground } from './components/FireBackground'
 import { ElectricEffectBackground } from './components/ElectricEffectBackground'
@@ -26,6 +27,7 @@ export class PixelTavernGame {
   private app: Application
   private gameActor: any
   private slotMachine: SlotMachine
+  private turboPadlock: TurboPadlock
   private responsiveBackground: ResponsiveBackground
   private winAnimation: WinAnimation
   private fireBackground: FireBackground
@@ -49,6 +51,7 @@ export class PixelTavernGame {
     this.assetLoader = new AssetLoader()
     this.audioManager = new AudioManager()
     this.slotMachine = new SlotMachine(this.app)
+    this.turboPadlock = new TurboPadlock()
     this.responsiveBackground = new ResponsiveBackground(this.app)
   this.fireBackground = new FireBackground()
     this.electricEffectBackground = new ElectricEffectBackground()
@@ -92,6 +95,11 @@ export class PixelTavernGame {
 
       // Initialize game components
       await this.slotMachine.init(this.assetLoader.getTextures())
+
+      // Initialize turbo padlock
+      await this.turboPadlock.loadTextures()
+      
+      // Padlock is now controlled by the contraption switch, not directly clickable
 
       // Initialize responsive background
       const textures = this.assetLoader.getTextures()
@@ -221,6 +229,14 @@ export class PixelTavernGame {
       switch (action) {
         case 'spin':
           this.spin()
+          break
+        case 'toggleTurbo':
+          this.toggleTurbo()
+          break
+        case 'updatePadlockImmediate':
+          // Immediately update padlock animation without waiting for state machine
+          console.log('Immediate padlock update:', payload)
+          this.turboPadlock.setUnlocked(payload, false)
           break
         case 'setBet':
           this.setBet(payload)
@@ -366,8 +382,15 @@ export class PixelTavernGame {
       autoSpinCount: context.autoSpinCount,
       autoSpinRemaining: context.autoSpinRemaining,
       isInfiniteAutoSpin: context.isInfiniteAutoSpin,
-      spinsCompleted: context.spinsCompleted
+      spinsCompleted: context.spinsCompleted,
+      isInstantMode: context.isInstantMode
     })
+
+    // Update turbo padlock state only if it actually changed
+    if (this.turboPadlock.getIsUnlocked() !== context.isInstantMode) {
+      console.log('Padlock state changed, updating from', this.turboPadlock.getIsUnlocked(), 'to', context.isInstantMode)
+      this.turboPadlock.setUnlocked(context.isInstantMode, false)
+    }
 
     // Handle audio based on state
     switch (stateValue) {
@@ -545,12 +568,13 @@ export class PixelTavernGame {
       const context = this.gameActor.getSnapshot().context
       const duration = getSpinDuration(context.animationSpeed)
       const scrollSpeed = getScrollSpeed(context.animationSpeed)
+      const isInstant = context.isInstantMode
       
       // Start spinning animation with column stop callback
       const results = await this.slotMachine.spinReels(duration, scrollSpeed, (columnIndex) => {
         // Stop spinning sound for this specific column and play stop sound
         this.audioManager.stopColumnSpinSound(columnIndex)
-      })
+      }, isInstant)
       
       // Send results to state machine - let it handle win checking
       this.gameActor.send({ type: 'SPIN_COMPLETE', results })
@@ -638,6 +662,9 @@ export class PixelTavernGame {
     // Add slot machine to stage
     this.app.stage.addChild(this.slotMachine.container)
 
+    // Add turbo padlock to stage (on top of slot machine)
+    this.app.stage.addChild(this.turboPadlock)
+
     // Add win animation to stage (absolute top layer)
     this.app.stage.addChild(this.winAnimation.container)
     
@@ -660,6 +687,47 @@ export class PixelTavernGame {
     this.slotMachine.container.x = screenWidth / 2
     this.slotMachine.container.y = screenHeight / 2
     this.slotMachine.container.scale.set(scale)
+    
+    // Position turbo padlock relative to the slot machine in PIXI stage coordinates
+    // The slot machine is positioned at screen center and scaled by the unified scale
+    const slotMachineX = screenWidth / 2
+    const slotMachineY = screenHeight / 2
+    
+    // Position padlock relative to the slot machine center, accounting for scaling
+    // These offsets are in the base design units and will be scaled by the same factor as the slot machine
+    // MODIFY THESE VALUES TO ADJUST PADLOCK POSITION:
+    let basePadlockOffsetX = 270  // Horizontal distance from slot center (+ = right, - = left)
+    let basePadlockOffsetY = +240  // Vertical distance from slot center (+ = down, - = up)
+    let padlockScale = 3     // Scale relative to the slot machine (larger = bigger padlock)
+    
+    // Apply responsive adjustments for smaller viewports
+    if (DeviceUtils.isIPhoneSE()) {
+      // Special handling for iPhone SE to match CSS positioning
+      basePadlockOffsetX = 262    // Specific position for iPhone SE
+      basePadlockOffsetY = +240    // Specific position for iPhone SE
+      padlockScale = 2.2          // Specific scale for iPhone SE
+    } else if (screenWidth < 768) {
+      basePadlockOffsetX = 200    // Closer to slot machine on mobile
+      basePadlockOffsetY = -60    // Higher position on mobile
+      padlockScale = 3.5          // Proportionally scaled for mobile
+    }
+    
+    if (screenWidth < 480) {
+      basePadlockOffsetX = 150    // Even closer on small screens
+      basePadlockOffsetY = -80    // Higher position
+      padlockScale = 2.25         // Proportionally scaled for small screens
+    }
+    
+    // Apply the same scale factor as the slot machine to the offsets
+    const scaledOffsetX = basePadlockOffsetX * scale
+    const scaledOffsetY = basePadlockOffsetY * scale
+    
+    // Set absolute position in screen coordinates (same as slot machine positioning)
+    this.turboPadlock.setPosition(
+      slotMachineX + scaledOffsetX,
+      slotMachineY + scaledOffsetY
+    )
+    this.turboPadlock.setScale(scale * padlockScale) // Scale proportionally with slot machine
     
     // Position win animation at center of screen
     this.winAnimation.container.x = screenWidth / 2
@@ -888,7 +956,25 @@ export class PixelTavernGame {
 
   // Public methods for UI interaction
   public spin(): void {
-    this.gameActor.send({ type: 'SPIN' })
+    // Check if turbo mode is active and send appropriate event
+    const context = this.gameActor.getSnapshot().context
+    if (context.isInstantMode) {
+      this.gameActor.send({ type: 'INSTANT_SPIN' })
+    } else {
+      this.gameActor.send({ type: 'SPIN' })
+    }
+  }
+
+  public toggleTurbo(): void {
+    const context = this.gameActor.getSnapshot().context
+    console.log('toggleTurbo called, current isInstantMode:', context.isInstantMode)
+    if (context.isInstantMode) {
+      console.log('Disabling turbo')
+      this.gameActor.send({ type: 'DISABLE_TURBO' })
+    } else {
+      console.log('Enabling turbo')
+      this.gameActor.send({ type: 'ENABLE_TURBO' })
+    }
   }
 
   public setBet(amount: number): void {

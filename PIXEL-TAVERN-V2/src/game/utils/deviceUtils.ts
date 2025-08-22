@@ -35,6 +35,26 @@ export class DeviceUtils {
   }
 
   /**
+   * Check if device is iPhone SE (1st, 2nd, or 3rd gen)
+   */
+  static isIPhoneSE(): boolean {
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    
+    // iPhone SE 1st gen: 320x568 (portrait) or 568x320 (landscape)
+    // iPhone SE 2nd/3rd gen: 375x667 (portrait) or 667x375 (landscape)
+    return (
+      (width === 320 && height === 568) || (width === 568 && height === 320) ||
+      (width === 375 && height === 667) || (width === 667 && height === 375) ||
+      // Tolerant ranges for emulators/browsers
+      (width >= 315 && width <= 325 && height >= 560 && height <= 575) ||
+      (width >= 560 && width <= 575 && height >= 315 && height <= 325) ||
+      (width >= 370 && width <= 380 && height >= 660 && height <= 675) ||
+      (width >= 660 && width <= 675 && height >= 370 && height <= 380)
+    );
+  }
+
+  /**
    * Check if mobile device is in correct orientation for the game
    */
   static isMobileInCorrectOrientation(): boolean {

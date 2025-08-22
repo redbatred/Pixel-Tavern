@@ -203,10 +203,25 @@ export class SlotMachine {
   }
 
   // Spin animation
-  async spinReels(duration: number, scrollSpeed: number, onColumnStop?: (columnIndex: number) => void): Promise<number[][]> {
+  async spinReels(duration: number, scrollSpeed: number, onColumnStop?: (columnIndex: number) => void, isInstant: boolean = false): Promise<number[][]> {
     
     // FIRST: Generate final results before animation starts (like original game)
     const finalResults = this.generateFinalResults()
+    
+    // If instant mode, skip all animation and return results immediately
+    if (isInstant) {
+      // Just update the display with final results
+      this.updateDisplayWithResults(finalResults)
+      
+      // Call column stop callbacks immediately if provided
+      if (onColumnStop) {
+        for (let i = 0; i < 5; i++) {
+          onColumnStop(i)
+        }
+      }
+      
+      return finalResults
+    }
     
     // Show spin effects (but reduce in low performance mode)
     this.spinEffects.forEach(effect => {
@@ -332,6 +347,23 @@ export class SlotMachine {
       // Apply the character-specific Y position (base position + character offset)
       sprite.y = baseY + yOffset
     })
+  }
+
+  private updateDisplayWithResults(finalResults: number[][]): void {
+    // Update all columns immediately with final results
+    for (let col = 0; col < GameConfig.SLOT_COLUMNS; col++) {
+      this.setFinalSymbolsForColumn(col, finalResults)
+    }
+    
+    // Hide all spin effects
+    this.spinEffects.forEach(effect => {
+      effect.visible = false
+    })
+    
+    // Stop all lightning effects
+    for (let col = 0; col < GameConfig.SLOT_COLUMNS; col++) {
+      this.stopLightningForColumn(col)
+    }
   }
 
   // Win highlighting with advanced GSAP animations
