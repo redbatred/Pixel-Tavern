@@ -4,7 +4,7 @@ import { SettingsModal } from './SettingsModal'
 import { AutoSpinModal } from './AutoSpinModal'
 import { HistoryBoard } from './HistoryBoard'
 import { GameConfig } from '../config/GameConfig'
-import { DeviceUtils } from '../utils/deviceUtils'
+import { DeviceUtils } from '../utils/DeviceUtils'
 import './modals.css'
 
 interface UIState {
@@ -482,6 +482,13 @@ export class UserInterface {
       console.log('Turbo switch clicked!')
       e.preventDefault()
       e.stopPropagation()
+      
+      // Prevent turbo toggle during spin
+      if (this.state.isSpinning || this.state.isAutoSpinning) {
+        console.log('Cannot toggle turbo while spinning')
+        return
+      }
+      
       this.audioManager.playImmediateSound('UI_CLICK')
       this.animateContraptionSwitch()
       

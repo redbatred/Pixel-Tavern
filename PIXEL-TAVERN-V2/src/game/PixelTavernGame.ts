@@ -3,6 +3,7 @@ import { createActor } from 'xstate'
 import { gameStateMachine } from './state/gameStateMachine'
 import { SlotMachine } from './components/SlotMachine'
 import { TurboPadlock } from './components/TurboPadlock'
+import { SparksEffect } from './components/SparksEffect'
 import { ResponsiveBackground } from './components/ResponsiveBackground'
 import { FireBackground } from './components/FireBackground'
 import { ElectricEffectBackground } from './components/ElectricEffectBackground'
@@ -17,7 +18,7 @@ import { UserInterface } from './ui/UserInterface'
 import { OrientationOverlay } from './ui/OrientationOverlay'
 import { AssetLoader } from './assets/AssetLoader'
 import { GameConfig } from './config/GameConfig'
-import { DeviceUtils } from './utils/deviceUtils'
+import { DeviceUtils } from './utils/DeviceUtils'
 import { PerformanceOptimizer } from './utils/performanceOptimizer'
 import { OptimizedAnimations } from './utils/optimizedAnimations'
 import { checkWins, getSpinDuration, getScrollSpeed, getWinTier } from './utils/winChecker'
@@ -28,6 +29,7 @@ export class PixelTavernGame {
   private gameActor: any
   private slotMachine: SlotMachine
   private turboPadlock: TurboPadlock
+  private sparksEffect: SparksEffect
   private responsiveBackground: ResponsiveBackground
   private winAnimation: WinAnimation
   private fireBackground: FireBackground
@@ -52,6 +54,7 @@ export class PixelTavernGame {
     this.audioManager = new AudioManager()
     this.slotMachine = new SlotMachine(this.app)
     this.turboPadlock = new TurboPadlock()
+    this.sparksEffect = new SparksEffect()
     this.responsiveBackground = new ResponsiveBackground(this.app)
   this.fireBackground = new FireBackground()
     this.electricEffectBackground = new ElectricEffectBackground()
@@ -98,6 +101,9 @@ export class PixelTavernGame {
 
       // Initialize turbo padlock
       await this.turboPadlock.loadTextures()
+      
+      // Initialize sparks effect
+      await this.sparksEffect.init()
       
       // Padlock is now controlled by the contraption switch, not directly clickable
 
@@ -570,6 +576,29 @@ export class PixelTavernGame {
       const scrollSpeed = getScrollSpeed(context.animationSpeed)
       const isInstant = context.isInstantMode
       
+      // Start sparks effect if turbo mode is off (not instant)
+      if (!isInstant) {
+        // Calculate when to start sparks (e.g., 75% through the spin duration)
+        const sparksStartDelay = duration * 0.75 // Start sparks at 75% of spin duration
+        
+        console.log('Turbo mode off, will start sparks effect at', sparksStartDelay, 'ms (75% of', duration, 'ms)')
+        
+        // Start sparks effect when spin is nearing the end
+        setTimeout(() => {
+          console.log('Spin nearing end, starting sparks effect')
+          this.sparksEffect.startEffect()
+        }, sparksStartDelay)
+        
+        // Stop sparks effect after the spin fully completes
+        setTimeout(() => {
+          console.log('Spin fully stopped, stopping sparks effect')
+          this.sparksEffect.stopEffect()
+        }, duration + 1000) // Give extra 1500ms after spin stops for sparks to finish
+      } else {
+        // Make sure sparks are off if turbo mode is on
+        this.sparksEffect.stopEffect()
+      }
+      
       // Start spinning animation with column stop callback
       const results = await this.slotMachine.spinReels(duration, scrollSpeed, (columnIndex) => {
         // Stop spinning sound for this specific column and play stop sound
@@ -662,8 +691,17 @@ export class PixelTavernGame {
     // Add slot machine to stage
     this.app.stage.addChild(this.slotMachine.container)
 
-    // Add turbo padlock to stage (on top of slot machine)
+    // Add sparks effect to stage (beneath the padlock)
+    this.app.stage.addChild(this.sparksEffect)
+    
+    // Set sparks effect zIndex to render beneath the padlock
+    this.sparksEffect.zIndex = 5000
+
+    // Add turbo padlock to stage (on top of slot machine and sparks)
     this.app.stage.addChild(this.turboPadlock)
+    
+    // Set padlock zIndex to render above sparks
+    this.turboPadlock.zIndex = 6000
 
     // Add win animation to stage (absolute top layer)
     this.app.stage.addChild(this.winAnimation.container)
@@ -728,6 +766,23 @@ export class PixelTavernGame {
       slotMachineY + scaledOffsetY
     )
     this.turboPadlock.setScale(scale * padlockScale) // Scale proportionally with slot machine
+
+    // Position sparks effect underneath the padlock (to the left of padlock)
+    const sparksOffsetX = scaledOffsetX - 30 * scale  // Closer to padlock
+    const sparksOffsetY = scaledOffsetY + 10 * scale  // Slightly below padlock
+    this.sparksEffect.x = slotMachineX + sparksOffsetX
+    this.sparksEffect.y = slotMachineY + sparksOffsetY
+    this.sparksEffect.scale.set(scale * 1.0) // Same scale as game for better visibility
+    
+    console.log('Sparks effect positioned at:', {
+      x: this.sparksEffect.x,
+      y: this.sparksEffect.y,
+      scale: this.sparksEffect.scale.x,
+      padlockX: slotMachineX + scaledOffsetX,
+      padlockY: slotMachineY + scaledOffsetY,
+      screenWidth,
+      screenHeight
+    })
     
     // Position win animation at center of screen
     this.winAnimation.container.x = screenWidth / 2
@@ -966,7 +1021,16 @@ export class PixelTavernGame {
   }
 
   public toggleTurbo(): void {
-    const context = this.gameActor.getSnapshot().context
+    const snapshot = this.gameActor.getSnapshot()
+    const context = snapshot.context
+    const stateValue = snapshot.value
+    
+    // Prevent turbo toggle during spin
+    if (stateValue === 'spinning') {
+      console.log('Cannot toggle turbo while spinning')
+      return
+    }
+    
     console.log('toggleTurbo called, current isInstantMode:', context.isInstantMode)
     if (context.isInstantMode) {
       console.log('Disabling turbo')
