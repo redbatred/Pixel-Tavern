@@ -102,6 +102,16 @@ export class PixelTavernGame {
       // Initialize turbo padlock
       await this.turboPadlock.loadTextures()
       
+      // Set AudioManager for padlock sound effects
+      this.turboPadlock.setAudioManager(this.audioManager)
+      
+      // Set animation callback to update UI state immediately
+      this.turboPadlock.setAnimationCallback((isAnimating: boolean) => {
+        if (this.userInterface) {
+          this.userInterface.setPadlockAnimating(isAnimating)
+        }
+      })
+      
       // Initialize sparks effect
       await this.sparksEffect.init()
       
@@ -388,7 +398,8 @@ export class PixelTavernGame {
       autoSpinRemaining: context.autoSpinRemaining,
       isInfiniteAutoSpin: context.isInfiniteAutoSpin,
       spinsCompleted: context.spinsCompleted,
-      isInstantMode: context.isInstantMode
+      isInstantMode: context.isInstantMode,
+      isPadlockAnimating: this.turboPadlock.getIsAnimating()
     })
 
     // Update turbo padlock state only if it actually changed

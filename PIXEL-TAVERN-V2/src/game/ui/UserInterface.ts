@@ -21,6 +21,7 @@ interface UIState {
   showCustomBetInput: boolean
   customBetInput: string
   isInstantMode: boolean
+  isPadlockAnimating: boolean
 }
 
 export class UserInterface {
@@ -51,7 +52,8 @@ export class UserInterface {
       spinsCompleted: 0,
       showCustomBetInput: false,
       customBetInput: '',
-      isInstantMode: false
+      isInstantMode: false,
+      isPadlockAnimating: false
     }
     
     // Initialize modals
@@ -482,8 +484,8 @@ export class UserInterface {
       e.preventDefault()
       e.stopPropagation()
       
-      // Prevent turbo toggle during spin
-      if (this.state.isSpinning || this.state.isAutoSpinning) {
+      // Prevent turbo toggle during spin or padlock animation
+      if (this.state.isSpinning || this.state.isAutoSpinning || this.state.isPadlockAnimating) {
         return
       }
       
@@ -594,6 +596,11 @@ export class UserInterface {
   updateState(newState: Partial<UIState>): void {
     Object.assign(this.state, newState)
     this.updateDisplay()
+  }
+
+  setPadlockAnimating(isAnimating: boolean): void {
+    this.state.isPadlockAnimating = isAnimating
+    // No need to call updateDisplay() since this only affects click handling
   }
 
   // For compatibility with PixelTavernGame

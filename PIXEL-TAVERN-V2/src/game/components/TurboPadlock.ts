@@ -1,4 +1,5 @@
 import { Container, Sprite, Texture, Assets } from 'pixi.js'
+import { AudioManager } from '../audio/AudioManager'
 
 export class TurboPadlock extends Container {
   private padlockSprite: Sprite
@@ -6,6 +7,8 @@ export class TurboPadlock extends Container {
   private isAnimating = false
   private isUnlocked = false
   private animationSpeed = 60 // milliseconds per frame
+  private audioManager: AudioManager | null = null
+  private animationCallback: ((isAnimating: boolean) => void) | null = null
 
   constructor() {
     super()
@@ -17,6 +20,14 @@ export class TurboPadlock extends Container {
     // Make it non-interactive since it's controlled by the contraption switch
     this.interactive = false
     this.cursor = 'default'
+  }
+
+  public setAudioManager(audioManager: AudioManager): void {
+    this.audioManager = audioManager
+  }
+
+  public setAnimationCallback(callback: (isAnimating: boolean) => void): void {
+    this.animationCallback = callback
   }
 
   async loadTextures(): Promise<void> {
@@ -49,6 +60,16 @@ export class TurboPadlock extends Container {
     
     this.isAnimating = true
     
+    // Notify callback that animation started
+    if (this.animationCallback) {
+      this.animationCallback(true)
+    }
+    
+    // Play lock sound when animation starts
+    if (this.audioManager) {
+      this.audioManager.playImmediateSound('LOCK_SOUND')
+    }
+    
     if (this.isUnlocked) {
       // When turbo is enabled (unlocked=true), padlock should lock (frame 0 to 13)
       await this.playFrameSequence(0, 13)
@@ -58,6 +79,11 @@ export class TurboPadlock extends Container {
     }
     
     this.isAnimating = false
+    
+    // Notify callback that animation ended
+    if (this.animationCallback) {
+      this.animationCallback(false)
+    }
   }
 
   private async playFrameSequence(startFrame: number, endFrame: number): Promise<void> {
@@ -102,6 +128,10 @@ export class TurboPadlock extends Container {
 
   public getIsUnlocked(): boolean {
     return this.isUnlocked
+  }
+
+  public getIsAnimating(): boolean {
+    return this.isAnimating
   }
 
   public setPosition(x: number, y: number): void {

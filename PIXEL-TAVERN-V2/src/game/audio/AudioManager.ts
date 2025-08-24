@@ -118,6 +118,14 @@ export class AudioManager {
       loop: false,
       category: 'sfx'
     },
+    LOCK_SOUND: {
+      id: 'lock_sound',
+      name: 'Lock Sound',
+      url: '/assets/images/UI Sounds/lock-sound.mp3',
+      volume: 0.8,
+      loop: false,
+      category: 'sfx'
+    },
     SWORD_UNSHEATH: {
       id: 'sword_unsheath',
       name: 'Sword Unsheath',
@@ -139,7 +147,7 @@ export class AudioManager {
   async init(): Promise<void> {
     try {
       // Prioritize UI sounds for immediate responsiveness
-      const prioritySounds = ['UI_CLICK', 'SPIN_SOUND', 'SPIN_SOUND_1', 'SPIN_SOUND_2', 'SPIN_SOUND_3', 'SPIN_SOUND_4', 'SPIN_SOUND_5', 'REEL_STOP']
+      const prioritySounds = ['UI_CLICK', 'LOCK_SOUND', 'SPIN_SOUND', 'SPIN_SOUND_1', 'SPIN_SOUND_2', 'SPIN_SOUND_3', 'SPIN_SOUND_4', 'SPIN_SOUND_5', 'REEL_STOP']
       const otherSounds = Object.values(this.AUDIO_TRACKS)
         .filter(track => !prioritySounds.includes(track.id.toUpperCase()))
 
