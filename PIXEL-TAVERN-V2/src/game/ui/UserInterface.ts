@@ -479,13 +479,11 @@ export class UserInterface {
     // Turbo contraption switch
     const turboSwitch = document.getElementById('turbo-contraption-switch')
     turboSwitch?.addEventListener('click', (e) => {
-      console.log('Turbo switch clicked!')
       e.preventDefault()
       e.stopPropagation()
       
       // Prevent turbo toggle during spin
       if (this.state.isSpinning || this.state.isAutoSpinning) {
-        console.log('Cannot toggle turbo while spinning')
         return
       }
       
@@ -495,7 +493,6 @@ export class UserInterface {
       // Provide immediate visual and state feedback
       const currentState = this.state.isInstantMode
       const newState = !currentState
-      console.log('Immediate visual update from', currentState, 'to', newState)
       
       // Update internal state immediately
       this.state.isInstantMode = newState
@@ -511,7 +508,6 @@ export class UserInterface {
       this.onGameAction?.('updatePadlockImmediate', newState)
       
       // Send the toggle action and let the game state machine handle the update
-      console.log('Sending toggleTurbo action')
       this.onGameAction?.('toggleTurbo')
     })
   }
@@ -795,13 +791,10 @@ export class UserInterface {
     // Update turbo switch visual state
     const turboSwitch = document.getElementById('turbo-contraption-switch')
     if (turboSwitch) {
-      console.log('Updating turbo switch visual state, isInstantMode:', this.state.isInstantMode)
       if (this.state.isInstantMode) {
         turboSwitch.classList.add('unlocked')
-        console.log('Added unlocked class')
       } else {
         turboSwitch.classList.remove('unlocked')
-        console.log('Removed unlocked class')
       }
     }
 

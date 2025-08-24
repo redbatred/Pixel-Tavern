@@ -241,7 +241,6 @@ export class PixelTavernGame {
           break
         case 'updatePadlockImmediate':
           // Immediately update padlock animation without waiting for state machine
-          console.log('Immediate padlock update:', payload)
           this.turboPadlock.setUnlocked(payload, false)
           break
         case 'setBet':
@@ -394,7 +393,6 @@ export class PixelTavernGame {
 
     // Update turbo padlock state only if it actually changed
     if (this.turboPadlock.getIsUnlocked() !== context.isInstantMode) {
-      console.log('Padlock state changed, updating from', this.turboPadlock.getIsUnlocked(), 'to', context.isInstantMode)
       this.turboPadlock.setUnlocked(context.isInstantMode, false)
     }
 
@@ -581,19 +579,13 @@ export class PixelTavernGame {
         // Calculate when to start sparks (e.g., 75% through the spin duration)
         const sparksStartDelay = duration * 0.75 // Start sparks at 75% of spin duration
         
-        console.log('Turbo mode off, will start sparks effect at', sparksStartDelay, 'ms (75% of', duration, 'ms)')
-        
-        // Start sparks effect when spin is nearing the end
+        // Start sparks effect when slot spin is nearing the end
         setTimeout(() => {
-          console.log('Spin nearing end, starting sparks effect')
           this.sparksEffect.startEffect()
-        }, sparksStartDelay)
-        
-        // Stop sparks effect after the spin fully completes
+        }, sparksStartDelay)                // Stop sparks effect after the spin fully completes
         setTimeout(() => {
-          console.log('Spin fully stopped, stopping sparks effect')
           this.sparksEffect.stopEffect()
-        }, duration + 1000) // Give extra 1500ms after spin stops for sparks to finish
+        }, duration + 800) // Give extra 800ms after spin stops for sparks to finish
       } else {
         // Make sure sparks are off if turbo mode is on
         this.sparksEffect.stopEffect()
@@ -773,16 +765,6 @@ export class PixelTavernGame {
     this.sparksEffect.x = slotMachineX + sparksOffsetX
     this.sparksEffect.y = slotMachineY + sparksOffsetY
     this.sparksEffect.scale.set(scale * 1.0) // Same scale as game for better visibility
-    
-    console.log('Sparks effect positioned at:', {
-      x: this.sparksEffect.x,
-      y: this.sparksEffect.y,
-      scale: this.sparksEffect.scale.x,
-      padlockX: slotMachineX + scaledOffsetX,
-      padlockY: slotMachineY + scaledOffsetY,
-      screenWidth,
-      screenHeight
-    })
     
     // Position win animation at center of screen
     this.winAnimation.container.x = screenWidth / 2
@@ -1027,16 +1009,12 @@ export class PixelTavernGame {
     
     // Prevent turbo toggle during spin
     if (stateValue === 'spinning') {
-      console.log('Cannot toggle turbo while spinning')
       return
     }
     
-    console.log('toggleTurbo called, current isInstantMode:', context.isInstantMode)
     if (context.isInstantMode) {
-      console.log('Disabling turbo')
       this.gameActor.send({ type: 'DISABLE_TURBO' })
     } else {
-      console.log('Enabling turbo')
       this.gameActor.send({ type: 'ENABLE_TURBO' })
     }
   }

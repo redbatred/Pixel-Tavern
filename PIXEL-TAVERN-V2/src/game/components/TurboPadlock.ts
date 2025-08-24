@@ -38,7 +38,6 @@ export class TurboPadlock extends Container {
       // Set anchor to center
       this.padlockSprite.anchor.set(0.5, 0.5)
       
-      console.log(`Loaded ${this.frames.length} padlock frames`)
     } catch (error) {
       console.error('Failed to load padlock textures:', error)
       throw error
@@ -48,20 +47,16 @@ export class TurboPadlock extends Container {
   private async animate(): Promise<void> {
     if (this.isAnimating || this.frames.length === 0) return
     
-    console.log('Starting padlock animation, isUnlocked:', this.isUnlocked)
     this.isAnimating = true
     
     if (this.isUnlocked) {
       // When turbo is enabled (unlocked=true), padlock should lock (frame 0 to 13)
-      console.log('Animating padlock lock: frame 0 to 13')
       await this.playFrameSequence(0, 13)
     } else {
       // When turbo is disabled (unlocked=false), padlock should unlock (frame 13 to 0)
-      console.log('Animating padlock unlock: frame 13 to 0')
       await this.playFrameSequence(13, 0)
     }
     
-    console.log('Padlock animation completed')
     this.isAnimating = false
   }
 
@@ -89,7 +84,6 @@ export class TurboPadlock extends Container {
   }
 
   public setUnlocked(unlocked: boolean, immediate = false): void {
-    console.log('Padlock setUnlocked called:', unlocked, 'immediate:', immediate, 'current state:', this.isUnlocked)
     this.isUnlocked = unlocked
     
     if (immediate) {
@@ -97,16 +91,12 @@ export class TurboPadlock extends Container {
       // When unlocked=true (turbo enabled), show locked padlock (frame 13)
       // When unlocked=false (turbo disabled), show unlocked padlock (frame 0)
       const frameIndex = unlocked ? 13 : 0
-      console.log('Setting immediate frame:', frameIndex)
       if (this.frames[frameIndex]) {
         this.padlockSprite.texture = this.frames[frameIndex]
       }
     } else if (!this.isAnimating) {
       // Animate to the new state
-      console.log('Starting padlock animation')
       this.animate()
-    } else {
-      console.log('Padlock is already animating, skipping')
     }
   }
 

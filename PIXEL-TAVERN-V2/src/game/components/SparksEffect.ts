@@ -42,7 +42,6 @@ export class SparksEffect extends Container {
       if (gifTextures && gifTextures.length) {
         this.createInstances(gifTextures)
         this.isInitialized = true
-        console.log('Sparks effect initialized with', this.sparksSprites.length, 'sprites')
         return
       }
     }
@@ -53,7 +52,6 @@ export class SparksEffect extends Container {
   // Build textures from a GIF file if available - same logic as BloodSplatEffectBackground
   private async buildFromGif(url: string): Promise<Texture[] | null> {
     try {
-      console.log('Loading sparks texture from:', url)
       // Dynamic import so app works without the package if not used
       const mod: any = await import('gifuct-js')
       const parseGIF = mod.parseGIF as (buf: ArrayBuffer) => any
@@ -120,7 +118,6 @@ export class SparksEffect extends Container {
         textures.push(Texture.from(canvas))
       }
       
-      console.log('Sparks gif loaded successfully with', textures.length, 'frames')
       return textures
     } catch (e) {
       console.error('Failed to load sparks gif:', e)
@@ -167,7 +164,6 @@ export class SparksEffect extends Container {
       // Start playing immediately for debugging
       spark.play()
       
-      console.log(`Created spark ${index} at position:`, spark.x, spark.y, 'rotation:', rotationDegrees, 'degrees')
     })
   }
 
@@ -175,43 +171,26 @@ export class SparksEffect extends Container {
    * Start the sparks effect animation
    */
   public startEffect(): void {
-    console.log('startEffect called, isInitialized:', this.isInitialized, 'isPlaying:', this.isPlaying, 'sprites count:', this.sparksSprites.length)
-    console.log('Sparks effect position:', this.x, this.y)
-    console.log('Sparks effect scale:', this.scale.x, this.scale.y)
-    console.log('Sparks effect visible:', this.visible)
-    console.log('Container children count:', this.children.length)
-    
     if (!this.isInitialized) {
-      console.log('Sparks not initialized yet, skipping startEffect')
       return
     }
     
     if (this.isPlaying || this.sparksSprites.length === 0) {
-      console.log('Skipping startEffect - already playing or no sprites')
       return
     }
     
     this.isPlaying = true
     this.visible = true // Make sure container is visible
-    console.log('Starting sparks effect with', this.sparksSprites.length, 'sprites')
     
     // Show and start all sparks with slight delays for a cascading effect
     this.sparksSprites.forEach((spark, index) => {
-      const delay = index * 100 // 100ms delay between each spark
+      const delay = index * 50 // 50ms delay between each spark (reduced from 100ms)
       
       setTimeout(() => {
         if (this.isPlaying) {
           spark.visible = true
           spark.alpha = SparksEffectConfig.ALPHA
           spark.play()
-          console.log(`Started spark ${index} at global position:`, {
-            x: this.x + spark.x,
-            y: this.y + spark.y,
-            visible: spark.visible,
-            alpha: spark.alpha,
-            scale: spark.scale.x,
-            playing: spark.playing
-          })
         }
       }, delay)
     })
@@ -224,7 +203,6 @@ export class SparksEffect extends Container {
     if (!this.isPlaying) return
     
     this.isPlaying = false
-    console.log('Stopping sparks effect')
     
     // Hide and stop all sparks
     this.sparksSprites.forEach(spark => {
