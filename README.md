@@ -1,6 +1,6 @@
 # 🎰 Pixel Tavern V2 - Medieval Fantasy Slot Game
 
-![Pixel Tavern Game Screenshot](./assets/screenshot.webp)
+![Pixel Tavern Game Screenshot](./public/assets/images/image.png)
 
 A beautifully crafted medieval fantasy slot machine game built with modern web technologies. Experience the magic of a tavern setting with pixel-perfect graphics, immersive audio, and smooth animations.
 
