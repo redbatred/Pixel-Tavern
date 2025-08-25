@@ -204,7 +204,7 @@ PIXEL-TAVERN-V2/
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.
 
 ## 🙏 Acknowledgments
 
