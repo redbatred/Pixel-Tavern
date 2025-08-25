@@ -658,18 +658,62 @@ export class AudioManager {
     this.sfxEnabled = enabled
   }
 
-  // Pause/Resume for page visibility
+  // Pause/Resume for page visibility - Enhanced to handle spinning sounds
   pauseForVisibility(): void {
+    // Pause background music
     if (this.backgroundMusicInstance && this.isBackgroundMusicPlaying && !this.wasPlayingBeforePause) {
       this.pauseBackgroundMusic()
       this.wasPlayingBeforePause = true
     }
+    
+    // Pause all spinning sounds (they should resume from where they left off)
+    this.pauseAllSpinningSounds()
   }
 
   resumeFromVisibility(): void {
+    // Resume background music
     if (this.backgroundMusicInstance && this.wasPlayingBeforePause && !this.isMuted && this.musicEnabled) {
       this.resumeBackgroundMusic()
       this.wasPlayingBeforePause = false
+    }
+    
+    // Resume spinning sounds if they were playing
+    this.resumeAllSpinningSounds()
+  }
+
+  // Pause all spinning sounds while preserving their state
+  private pauseAllSpinningSounds(): void {
+    try {
+      for (let i = 1; i <= 5; i++) {
+        const soundId = `SPIN_SOUND_${i}` as keyof typeof this.AUDIO_TRACKS
+        const track = this.AUDIO_TRACKS[soundId]
+        
+        if (track && sound.exists(track.id) && this.playingLoopIds.has(track.id)) {
+          // Use the sound library's pause method
+          sound.pause(track.id)
+          console.log(`⏸️ Paused spinning sound for column ${i}`)
+        }
+      }
+    } catch (error) {
+      console.warn('Error pausing spinning sounds:', error)
+    }
+  }
+
+  // Resume all spinning sounds from where they were paused
+  private resumeAllSpinningSounds(): void {
+    try {
+      for (let i = 1; i <= 5; i++) {
+        const soundId = `SPIN_SOUND_${i}` as keyof typeof this.AUDIO_TRACKS
+        const track = this.AUDIO_TRACKS[soundId]
+        
+        if (track && sound.exists(track.id) && this.playingLoopIds.has(track.id)) {
+          // Use the sound library's resume method
+          sound.resume(track.id)
+          console.log(`▶️ Resumed spinning sound for column ${i}`)
+        }
+      }
+    } catch (error) {
+      console.warn('Error resuming spinning sounds:', error)
     }
   }
 

@@ -26,6 +26,8 @@ export class SlotMachine {
   private effectsPool: Graphics[] = [] // Pool for graphics objects
   private frameCount: number = 0 // For performance monitoring
   private lastLightningTime: number = 0 // For frame-rate independent lightning animations
+  private currentSpinTweens: any[] = [] // Store current spin GSAP tweens for pause/resume
+  private isSpinPaused: boolean = false
 
   constructor(app: Application) {
     this.app = app
@@ -236,11 +238,17 @@ export class SlotMachine {
         let lastTime = performance.now()
         
         const spinEffects = this.spinEffects
+        const slotMachine = this // Store reference for the onUpdate function
         
-        gsap.to({}, {
+        const tween = gsap.to({}, {
           duration: spinDuration / 1000,
           ease: 'power2.out',
           onUpdate: function() {
+            // Check if spin is paused
+            if (slotMachine.isSpinPaused) {
+              return // Skip update when paused
+            }
+            
             // Make animation frame-rate independent using delta time
             const currentTime = performance.now()
             const deltaTime = (currentTime - lastTime) / 16.67 // Normalize to 60fps (16.67ms per frame)
@@ -267,6 +275,12 @@ export class SlotMachine {
             }
           },
           onComplete: () => {
+            // Remove this tween from the active list
+            const index = slotMachine.currentSpinTweens.indexOf(tween)
+            if (index > -1) {
+              slotMachine.currentSpinTweens.splice(index, 1)
+            }
+            
             // Snap to clean position
             column.y = originalY
             
@@ -285,6 +299,9 @@ export class SlotMachine {
             resolve()
           }
         })
+        
+        // Store the tween for pause/resume functionality
+        this.currentSpinTweens.push(tween)
       })
     })
 
@@ -794,6 +811,39 @@ export class SlotMachine {
     this.effectsPool.length = 0
     
     this.container.destroy({ children: true })
+  }
+
+  /**
+   * Pause all current spinning animations
+   */
+  pauseSpinning(): void {
+    this.isSpinPaused = true
+    this.currentSpinTweens.forEach(tween => {
+      if (tween && tween.pause) {
+        tween.pause()
+      }
+    })
+    console.log(`⏸️ Paused ${this.currentSpinTweens.length} spin tweens`)
+  }
+
+  /**
+   * Resume all paused spinning animations
+   */
+  resumeSpinning(): void {
+    this.isSpinPaused = false
+    this.currentSpinTweens.forEach(tween => {
+      if (tween && tween.resume) {
+        tween.resume()
+      }
+    })
+    console.log(`▶️ Resumed ${this.currentSpinTweens.length} spin tweens`)
+  }
+
+  /**
+   * Check if currently spinning
+   */
+  isCurrentlySpinning(): boolean {
+    return this.currentSpinTweens.length > 0 && this.isSpinning
   }
 
   // Performance monitoring

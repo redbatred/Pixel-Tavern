@@ -14,10 +14,14 @@ export interface GameContext {
   animationSpeed: "very-slow" | "slow" | "normal" | "fast" | "very-fast";
   autoSpinDelay: number;
   isInstantMode: boolean;
+  previousState?: string; // Store previous state for pause/resume
   slotResults?: number[][];
   winAmount?: number;
   winningPositions?: Array<{ payline: number; positions: [number, number][] }>;
   winningCharacter?: number | null;
+  
+  // Pause/resume state tracking  
+  isResumingFromPause?: boolean;
 }
 
 export type GameEvent =
@@ -203,6 +207,9 @@ export const gameStateMachine = setup({
     disableInstantMode: assign({
       isInstantMode: false,
     }),
+    clearResumeFlag: assign({
+      isResumingFromPause: false,
+    }),
   },
   delays: {
     spinDuration: ({ context }) => {
@@ -322,11 +329,14 @@ export const gameStateMachine = setup({
             context.isAutoSpinning && !context.stopAutoSpinAfterRound,
           actions: ["requestAutoSpinStop"],
         },
-        PAUSE: "paused",
+        PAUSE: {
+          target: "paused",
+          actions: assign({ previousState: () => 'idle' })
+        },
       },
     },
     spinning: {
-      entry: ["decrementAutoSpinCount"],
+      entry: ["decrementAutoSpinCount", "clearResumeFlag"],
       on: {
         SPIN_COMPLETE: {
           target: "checkingWin",
@@ -334,6 +344,10 @@ export const gameStateMachine = setup({
         },
         REQUEST_AUTO_SPIN_STOP: {
           actions: ["requestAutoSpinStop"],
+        },
+        PAUSE: {
+          target: "paused",
+          actions: assign({ previousState: () => 'spinning' })
         },
       },
     },
@@ -479,7 +493,10 @@ export const gameStateMachine = setup({
           target: "spinning",
           actions: ["deductBet", "clearWinState"],
         },
-        PAUSE: "paused",
+        PAUSE: {
+          target: "paused",
+          actions: assign({ previousState: () => 'autoSpinDelay' })
+        },
       },
     },
     checkingAutoSpinContinue: {
@@ -566,8 +583,35 @@ export const gameStateMachine = setup({
       ],
     },
     paused: {
+      entry: assign({
+        // Store the previous state when pausing
+        previousState: ({ context }) => context.previousState || 'idle'
+      }),
       on: {
-        RESUME: "idle",
+        RESUME: [
+          {
+            // Resume to autoSpinDelay if we were in that state
+            target: "autoSpinDelay",
+            guard: ({ context }) => context.previousState === 'autoSpinDelay',
+            actions: assign({ isResumingFromPause: false })
+          },
+          {
+            // Resume to spinning if we were spinning
+            target: "spinning", 
+            guard: ({ context }) => context.previousState === 'spinning',
+            actions: assign({ isResumingFromPause: true })
+          },
+          {
+            // Resume to idle by default
+            target: "idle",
+            actions: assign({ isResumingFromPause: false })
+          }
+        ],
+        SPIN_COMPLETE: {
+          // Allow spin completion even while paused
+          target: "checkingWin",
+          actions: "setSlotResults",
+        },
         TOGGLE_AUTO_SPIN: {
           target: "idle",
           actions: "toggleAutoSpin",

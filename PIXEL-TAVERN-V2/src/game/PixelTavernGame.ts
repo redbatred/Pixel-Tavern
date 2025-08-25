@@ -21,8 +21,10 @@ import { GameConfig } from './config/GameConfig'
 import { DeviceUtils } from './utils/DeviceUtils'
 import { PerformanceOptimizer } from './utils/performanceOptimizer'
 import { OptimizedAnimations } from './utils/optimizedAnimations'
+import { pauseManager } from './utils/PauseManager'
 import { checkWins, getSpinDuration, getScrollSpeed, getWinTier } from './utils/winChecker'
 import './ui/SpinEffects.css'
+import './ui/pause-styles.css'
 
 export class PixelTavernGame {
   private app: Application
@@ -45,6 +47,8 @@ export class PixelTavernGame {
   private assetLoader: AssetLoader
   private isInitialized = false
   private autoSpinTimeout: number | null = null
+  private autoSpinStartTime: number | null = null
+  private autoSpinDelay: number | null = null
   private resizeTimeout: number | null = null
   private isMobile: boolean = false
 
@@ -151,6 +155,9 @@ export class PixelTavernGame {
 
       // Setup game scene
       this.setupScene()
+
+      // Initialize comprehensive pause system
+      this.initPauseManager()
 
       // Setup event listeners
       this.setupEventListeners()
@@ -410,13 +417,17 @@ export class PixelTavernGame {
     // Handle audio based on state
     switch (stateValue) {
       case 'spinning':
-        if (!this.isHandlingSpin) {
+        if (!this.isHandlingSpin && !context.isResumingFromPause) {
           this.isHandlingSpin = true
           // Hide win animation if transitioning from win display
           this.winAnimation.hide()
           this.audioManager.startAllColumnSpinSounds() // Start all column spinning sounds
           this.slotMachine.startSpinEffects() // Start lightning effects
           this.handleSpin()
+        } else if (context.isResumingFromPause) {
+          // We're resuming from pause - don't restart the spin
+          console.log('🎮 Resuming spinning from pause - not restarting animation')
+          // The clearResumeFlag action will be called automatically by the state machine entry
         }
         break
       case 'checkingWin':
@@ -646,12 +657,41 @@ export class PixelTavernGame {
     // Clear any existing timeout
     if (this.autoSpinTimeout) {
       clearTimeout(this.autoSpinTimeout)
+      this.autoSpinTimeout = null
+    }
+    
+    // Store timing information for pause/resume
+    this.autoSpinDelay = context.autoSpinDelay
+    this.autoSpinStartTime = Date.now()
+    
+    // Check if paused before setting timeout
+    if (pauseManager.getIsPaused()) {
+      console.log('⏸️ Game is paused, storing auto-spin delay for resume')
+      
+      // Store timeout state in pause manager
+      pauseManager.storeTimeout('autoSpin', () => {
+        this.gameActor.send({ type: 'AUTO_SPIN_TIMEOUT' })
+      }, this.autoSpinDelay!, this.autoSpinStartTime!)
+      
+      return
     }
     
     // Set new timeout for auto-spin
     this.autoSpinTimeout = window.setTimeout(() => {
+      this.autoSpinTimeout = null
+      this.autoSpinStartTime = null
+      this.autoSpinDelay = null
+      
+      // Check again if paused when timeout fires
+      if (pauseManager.getIsPaused()) {
+        console.log('⏸️ Game paused during auto-spin delay, not continuing')
+        return
+      }
+      
       this.gameActor.send({ type: 'AUTO_SPIN_TIMEOUT' })
     }, context.autoSpinDelay)
+    
+    console.log(`🔄 Auto-spin timeout set for ${context.autoSpinDelay}ms`)
   }
 
   private setupScene(): void {
@@ -916,22 +956,125 @@ export class PixelTavernGame {
     }
   }
 
+  private initPauseManager(): void {
+    console.log('🎮 Initializing enhanced pause system')
+    
+    // Initialize pause manager with PIXI app
+    pauseManager.initialize(this.app)
+    
+    // Register slot machine for direct pause/resume control
+    pauseManager.registerSlotMachine(this.slotMachine)
+
+    // Register audio manager pause/resume callbacks
+    pauseManager.onPause(() => {
+      console.log('🔇 Pausing audio systems')
+      this.audioManager.pauseForVisibility()
+      
+      // Store auto-spin timeout state when paused
+      if (this.autoSpinTimeout && this.autoSpinStartTime && this.autoSpinDelay) {
+        console.log('⏱️ Storing auto-spin timeout state for resume')
+        
+        // Clear the current timeout
+        clearTimeout(this.autoSpinTimeout)
+        this.autoSpinTimeout = null
+        
+        // Store the timeout state in pause manager
+        pauseManager.storeTimeout('autoSpin', () => {
+          this.gameActor.send({ type: 'AUTO_SPIN_TIMEOUT' })
+        }, this.autoSpinDelay, this.autoSpinStartTime)
+      }
+      
+      // Pause the state machine
+      this.gameActor.send({ type: 'PAUSE' })
+    })
+
+    pauseManager.onResume(() => {
+      console.log('🔊 Resuming audio systems')
+      this.audioManager.resumeFromVisibility()
+      
+      // Resume the state machine first
+      this.gameActor.send({ type: 'RESUME' })
+      
+      // Check if we need to restore auto-spin timeout
+      const storedTimeout = pauseManager.getStoredTimeout('autoSpin')
+      if (storedTimeout) {
+        console.log(`⏱️ Restoring auto-spin timeout with ${storedTimeout.remainingTime}ms remaining`)
+        
+        if (storedTimeout.remainingTime > 0) {
+          this.autoSpinTimeout = window.setTimeout(() => {
+            this.autoSpinTimeout = null
+            this.autoSpinStartTime = null
+            this.autoSpinDelay = null
+            storedTimeout.callback()
+          }, storedTimeout.remainingTime)
+        } else {
+          // Timeout should fire immediately
+          setTimeout(() => storedTimeout.callback(), 0)
+        }
+      }
+    })
+
+    // Register custom animation pause callbacks for components
+    pauseManager.onPause(() => {
+      console.log('🎬 Pausing component animations')
+      
+      // Pause any custom component animations that use setTimeout/requestAnimationFrame
+      // These components will need to check pauseManager.getIsPaused() in their animation loops
+      this.pauseComponentAnimations()
+    })
+
+    pauseManager.onResume(() => {
+      console.log('🎬 Resuming component animations')
+      this.resumeComponentAnimations()
+    })
+
+    // The PauseManager handles:
+    // - PIXI.js ticker pause/resume (most effective for PIXI animations)
+    // - AnimatedSprite pause/resume (handles sprite animations)
+    // - CSS animation pausing via .game-paused class
+    // - Audio manager pause/resume
+    // - Game-specific timeout management
+    // - Component-specific animation callbacks
+  }
+
+  private pauseComponentAnimations(): void {
+    // Components that use custom animation loops should check pauseManager.getIsPaused()
+    // This is safer than trying to intercept their timers
+    
+    // The WinAnimation component uses requestAnimationFrame - PIXI ticker pause will handle this
+    // The TurboPadlock uses setTimeout - it should check isPaused in its animation loop
+    // AnimatedSprites are handled automatically by PauseManager
+  }
+
+  private resumeComponentAnimations(): void {
+    // Most animations will resume automatically when PIXI ticker resumes
+    // Components with custom loops will check pauseManager.getIsPaused() and continue
+  }
+
   private setupEventListeners(): void {
-    // Visibility change handling
+    // Comprehensive pause system - handles all game systems
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) {
+        console.log('🎮 Page hidden - pausing all game systems')
+        pauseManager.pause()
         this.gameActor.send({ type: 'PAUSE' })
       } else {
+        console.log('🎮 Page visible - resuming all game systems')
+        pauseManager.resume()
         this.gameActor.send({ type: 'RESUME' })
       }
     })
 
-    // Window focus/blur handling
+    // Window focus/blur handling with comprehensive pause
     window.addEventListener('blur', () => {
+      console.log('🎮 Window lost focus - pausing all game systems')
+      pauseManager.pause()
       this.gameActor.send({ type: 'PAUSE' })
     })
 
     window.addEventListener('focus', () => {
+      console.log('🎮 Window focused - resuming all game systems')
+      pauseManager.resume()
       this.gameActor.send({ type: 'RESUME' })
     })
     
@@ -1064,6 +1207,9 @@ export class PixelTavernGame {
   }
 
   public destroy(): void {
+    // Cleanup comprehensive pause system
+    pauseManager.destroy()
+    
     // Clear timeouts
     if (this.autoSpinTimeout) {
       clearTimeout(this.autoSpinTimeout)

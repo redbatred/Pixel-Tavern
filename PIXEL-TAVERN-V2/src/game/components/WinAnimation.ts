@@ -1,5 +1,6 @@
 import { Application, Container, Sprite, Assets, Graphics, Text, Texture, Rectangle, AnimatedSprite } from 'pixi.js'
 import { gsap } from 'gsap'
+import { pauseManager } from '../utils/PauseManager'
 
 // Leaf effect configuration - easily adjustable
 const LeafEffectConfig = {
@@ -627,6 +628,13 @@ export class WinAnimation {
     const maxLoops = isMage ? 1 : 2 // Play once for mage, twice for knight
     
     const animate = (currentTime: number) => {
+      // Check if game is paused
+      if (pauseManager.getIsPaused()) {
+        // Continue checking when game resumes
+        this.animationFrameId = requestAnimationFrame(animate)
+        return
+      }
+      
       // Stop animation if no longer animating
       if (!this.isAnimating) {
         if (this.animationFrameId) {

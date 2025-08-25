@@ -1,0 +1,49 @@
+/* Global pause system for CSS animations and transitions */
+
+/* When game is paused, stop all animations and transitions */
+.game-paused * {
+  animation-play-state: paused !important;
+  transition: none !important;
+}
+
+/* Preserve critical UI animations that should continue during pause */
+.game-paused .critical-ui-animation {
+  animation-play-state: running !important;
+  transition: all 0.3s ease !important;
+}
+
+/* Modal and overlay animations should continue */
+.game-paused .modal,
+.game-paused .overlay,
+.game-paused .info-modal,
+.game-paused .settings-modal,
+.game-paused .auto-spin-modal {
+  animation-play-state: running !important;
+  transition: all 0.3s ease !important;
+}
+
+/* Button hover states should still work */
+.game-paused button:hover,
+.game-paused .button:hover {
+  transition: all 0.2s ease !important;
+}
+
+/* Keep orientation overlay functional */
+.game-paused .orientation-overlay {
+  animation-play-state: running !important;
+  transition: all 0.3s ease !important;
+}
+
+/* Pause indicator (optional) */
+.game-paused::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.1);
+  pointer-events: none;
+  z-index: 9999;
+  transition: opacity 0.3s ease;
+}

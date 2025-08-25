@@ -1,5 +1,6 @@
 import { Container, Sprite, Texture, Assets } from 'pixi.js'
 import { AudioManager } from '../audio/AudioManager'
+import { pauseManager } from '../utils/PauseManager'
 
 export class TurboPadlock extends Container {
   private padlockSprite: Sprite
@@ -92,6 +93,13 @@ export class TurboPadlock extends Container {
       let currentFrame = startFrame
       
       const animateFrame = () => {
+        // Check if game is paused
+        if (pauseManager.getIsPaused()) {
+          // Wait and check again later when game resumes
+          setTimeout(animateFrame, this.animationSpeed)
+          return
+        }
+        
         if (this.frames[currentFrame]) {
           this.padlockSprite.texture = this.frames[currentFrame]
         }
